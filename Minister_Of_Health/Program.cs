@@ -1,4 +1,4 @@
-using Minister_Of_Health.Components;
+using Minister_Of_Time.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
