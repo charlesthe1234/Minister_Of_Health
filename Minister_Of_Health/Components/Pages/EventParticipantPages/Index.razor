@@ -1,0 +1,43 @@
+﻿@page "/eventparticipants"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Minister_Of_Time.Domain
+@using Minister_Of_Time.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="eventparticipants/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.EventParticipant">
+    <PropertyColumn Property="eventparticipant => eventparticipant.UserId" />
+    <PropertyColumn Property="eventparticipant => eventparticipant.CalendarEventId" />
+    <PropertyColumn Property="eventparticipant => eventparticipant.EventRoleId" />
+    <PropertyColumn Property="eventparticipant => eventparticipant.ParticipationStatus" />
+    <PropertyColumn Property="eventparticipant => eventparticipant.DateCreated" />
+    <PropertyColumn Property="eventparticipant => eventparticipant.DateUpdated" />
+    <PropertyColumn Property="eventparticipant => eventparticipant.CreatedBy" />
+    <PropertyColumn Property="eventparticipant => eventparticipant.UpdatedBy" />
+
+    <TemplateColumn Context="eventparticipant">
+        <a href="@($"eventparticipants/edit?id={eventparticipant.Id}")">Edit</a> |
+        <a href="@($"eventparticipants/details?id={eventparticipant.Id}")">Details</a> |
+        <a href="@($"eventparticipants/delete?id={eventparticipant.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private Minister_Of_TimeContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

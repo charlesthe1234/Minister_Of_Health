@@ -1,0 +1,62 @@
+﻿@page "/eventroles/details"
+@using Microsoft.EntityFrameworkCore
+@using Minister_Of_Time.Domain
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>EventRole</h2>
+    <hr />
+    @if (eventrole is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">RoleName</dt>
+            <dd class="col-sm-10">@eventrole.RoleName</dd>
+            <dt class="col-sm-2">CanEditCalendarEventDetails</dt>
+            <dd class="col-sm-10">@eventrole.CanEditCalendarEventDetails</dd>
+            <dt class="col-sm-2">CanInviteOthers</dt>
+            <dd class="col-sm-10">@eventrole.CanInviteOthers</dd>
+            <dt class="col-sm-2">CanChangeLocation</dt>
+            <dd class="col-sm-10">@eventrole.CanChangeLocation</dd>
+            <dt class="col-sm-2">CanChangeDateTime</dt>
+            <dd class="col-sm-10">@eventrole.CanChangeDateTime</dd>
+            <dt class="col-sm-2">DateCreated</dt>
+            <dd class="col-sm-10">@eventrole.DateCreated</dd>
+            <dt class="col-sm-2">DateUpdated</dt>
+            <dd class="col-sm-10">@eventrole.DateUpdated</dd>
+            <dt class="col-sm-2">CreatedBy</dt>
+            <dd class="col-sm-10">@eventrole.CreatedBy</dd>
+            <dt class="col-sm-2">UpdatedBy</dt>
+            <dd class="col-sm-10">@eventrole.UpdatedBy</dd>
+        </dl>
+        <div>
+            <a href="@($"/eventroles/edit?id={eventrole.Id}")">Edit</a> |
+            <a href="@($"/eventroles")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private EventRole? eventrole;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        eventrole = await context.EventRole.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (eventrole is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

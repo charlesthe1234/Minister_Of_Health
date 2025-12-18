@@ -1,0 +1,84 @@
+﻿@page "/activities/create"
+@using Microsoft.EntityFrameworkCore
+@using Minister_Of_Time.Domain
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h2>Activity</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Activity" OnValidSubmit="AddActivity" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert"/>
+            <div class="mb-3">
+                <label for="name" class="form-label">Name:</label> 
+                <InputText id="name" @bind-Value="Activity.Name" class="form-control" /> 
+                <ValidationMessage For="() => Activity.Name" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="startdate" class="form-label">StartDate:</label> 
+                <InputDate id="startdate" @bind-Value="Activity.StartDate" class="form-control" /> 
+                <ValidationMessage For="() => Activity.StartDate" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="description" class="form-label">Description:</label> 
+                <InputText id="description" @bind-Value="Activity.Description" class="form-control" /> 
+                <ValidationMessage For="() => Activity.Description" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="defaultstressvalue" class="form-label">DefaultStressValue:</label> 
+                <InputNumber id="defaultstressvalue" @bind-Value="Activity.DefaultStressValue" class="form-control" /> 
+                <ValidationMessage For="() => Activity.DefaultStressValue" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="userid" class="form-label">UserId:</label> 
+                <InputNumber id="userid" @bind-Value="Activity.UserId" class="form-control" /> 
+                <ValidationMessage For="() => Activity.UserId" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="datecreated" class="form-label">DateCreated:</label> 
+                <InputDate id="datecreated" @bind-Value="Activity.DateCreated" class="form-control" /> 
+                <ValidationMessage For="() => Activity.DateCreated" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="dateupdated" class="form-label">DateUpdated:</label> 
+                <InputDate id="dateupdated" @bind-Value="Activity.DateUpdated" class="form-control" /> 
+                <ValidationMessage For="() => Activity.DateUpdated" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="createdby" class="form-label">CreatedBy:</label> 
+                <InputText id="createdby" @bind-Value="Activity.CreatedBy" class="form-control" /> 
+                <ValidationMessage For="() => Activity.CreatedBy" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="updatedby" class="form-label">UpdatedBy:</label> 
+                <InputText id="updatedby" @bind-Value="Activity.UpdatedBy" class="form-control" /> 
+                <ValidationMessage For="() => Activity.UpdatedBy" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/activities">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private Activity Activity { get; set; } = new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddActivity()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Activity.Add(Activity);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/activities");
+    }
+}

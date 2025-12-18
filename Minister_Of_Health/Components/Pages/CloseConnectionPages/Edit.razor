@@ -1,0 +1,129 @@
+﻿@page "/closeconnections/edit"
+@using Microsoft.EntityFrameworkCore
+@using Minister_Of_Time.Domain
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>CloseConnection</h2>
+<hr />
+@if (CloseConnection is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="CloseConnection" OnValidSubmit="UpdateCloseConnection" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="CloseConnection.Id" value="@CloseConnection.Id" />
+                <div class="mb-3">
+                    <label for="userid" class="form-label">UserId:</label>
+                    <InputNumber id="userid" @bind-Value="CloseConnection.UserId" class="form-control" />
+                    <ValidationMessage For="() => CloseConnection.UserId" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="connecteduserid" class="form-label">ConnectedUserId:</label>
+                    <InputNumber id="connecteduserid" @bind-Value="CloseConnection.ConnectedUserId" class="form-control" />
+                    <ValidationMessage For="() => CloseConnection.ConnectedUserId" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="connectiontype" class="form-label">ConnectionType:</label>
+                    <InputText id="connectiontype" @bind-Value="CloseConnection.ConnectionType" class="form-control" />
+                    <ValidationMessage For="() => CloseConnection.ConnectionType" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="viewlifecalendar" class="form-label">ViewLifeCalendar:</label>
+                    <InputCheckbox id="viewlifecalendar" @bind-Value="CloseConnection.ViewLifeCalendar" class="form-check-input" />
+                    <ValidationMessage For="() => CloseConnection.ViewLifeCalendar" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="viewworkcalendar" class="form-label">ViewWorkCalendar:</label>
+                    <InputCheckbox id="viewworkcalendar" @bind-Value="CloseConnection.ViewWorkCalendar" class="form-check-input" />
+                    <ValidationMessage For="() => CloseConnection.ViewWorkCalendar" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="datecreated" class="form-label">DateCreated:</label>
+                    <InputDate id="datecreated" @bind-Value="CloseConnection.DateCreated" class="form-control" />
+                    <ValidationMessage For="() => CloseConnection.DateCreated" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="dateupdated" class="form-label">DateUpdated:</label>
+                    <InputDate id="dateupdated" @bind-Value="CloseConnection.DateUpdated" class="form-control" />
+                    <ValidationMessage For="() => CloseConnection.DateUpdated" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="createdby" class="form-label">CreatedBy:</label>
+                    <InputText id="createdby" @bind-Value="CloseConnection.CreatedBy" class="form-control" />
+                    <ValidationMessage For="() => CloseConnection.CreatedBy" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="updatedby" class="form-label">UpdatedBy:</label>
+                    <InputText id="updatedby" @bind-Value="CloseConnection.UpdatedBy" class="form-control" />
+                    <ValidationMessage For="() => CloseConnection.UpdatedBy" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/closeconnections">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private CloseConnection? CloseConnection { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        CloseConnection ??= await context.CloseConnection.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (CloseConnection is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateCloseConnection()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(CloseConnection!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!CloseConnectionExists(CloseConnection!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/closeconnections");
+    }
+
+    private bool CloseConnectionExists(int id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.CloseConnection.Any(e => e.Id == id);
+    }
+}

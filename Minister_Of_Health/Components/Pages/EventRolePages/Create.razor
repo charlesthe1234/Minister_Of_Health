@@ -1,0 +1,84 @@
+﻿@page "/eventroles/create"
+@using Microsoft.EntityFrameworkCore
+@using Minister_Of_Time.Domain
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h2>EventRole</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="EventRole" OnValidSubmit="AddEventRole" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert"/>
+            <div class="mb-3">
+                <label for="rolename" class="form-label">RoleName:</label> 
+                <InputText id="rolename" @bind-Value="EventRole.RoleName" class="form-control" /> 
+                <ValidationMessage For="() => EventRole.RoleName" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="caneditcalendareventdetails" class="form-label">CanEditCalendarEventDetails:</label> 
+                <InputCheckbox id="caneditcalendareventdetails" @bind-Value="EventRole.CanEditCalendarEventDetails" class="form-check-input" /> 
+                <ValidationMessage For="() => EventRole.CanEditCalendarEventDetails" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="caninviteothers" class="form-label">CanInviteOthers:</label> 
+                <InputCheckbox id="caninviteothers" @bind-Value="EventRole.CanInviteOthers" class="form-check-input" /> 
+                <ValidationMessage For="() => EventRole.CanInviteOthers" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="canchangelocation" class="form-label">CanChangeLocation:</label> 
+                <InputCheckbox id="canchangelocation" @bind-Value="EventRole.CanChangeLocation" class="form-check-input" /> 
+                <ValidationMessage For="() => EventRole.CanChangeLocation" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="canchangedatetime" class="form-label">CanChangeDateTime:</label> 
+                <InputCheckbox id="canchangedatetime" @bind-Value="EventRole.CanChangeDateTime" class="form-check-input" /> 
+                <ValidationMessage For="() => EventRole.CanChangeDateTime" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="datecreated" class="form-label">DateCreated:</label> 
+                <InputDate id="datecreated" @bind-Value="EventRole.DateCreated" class="form-control" /> 
+                <ValidationMessage For="() => EventRole.DateCreated" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="dateupdated" class="form-label">DateUpdated:</label> 
+                <InputDate id="dateupdated" @bind-Value="EventRole.DateUpdated" class="form-control" /> 
+                <ValidationMessage For="() => EventRole.DateUpdated" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="createdby" class="form-label">CreatedBy:</label> 
+                <InputText id="createdby" @bind-Value="EventRole.CreatedBy" class="form-control" /> 
+                <ValidationMessage For="() => EventRole.CreatedBy" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="updatedby" class="form-label">UpdatedBy:</label> 
+                <InputText id="updatedby" @bind-Value="EventRole.UpdatedBy" class="form-control" /> 
+                <ValidationMessage For="() => EventRole.UpdatedBy" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/eventroles">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private EventRole EventRole { get; set; } = new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddEventRole()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.EventRole.Add(EventRole);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/eventroles");
+    }
+}
