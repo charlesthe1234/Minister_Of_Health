@@ -1,24 +1,19 @@
-﻿/* --- Background Container --- */
-.work-background {
-    /* Set your background image for the Work Page */
-    background-image: url('/images/Work.png'); /* IMPORTANT: Use your actual image name here */
+﻿.work-background {
+    background-image: url('/images/Work.png'); 
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     min-height: 100vh;
     width: 100%;
-    /* CRITICAL: Allows child elements (the links) to be absolutely positioned relative to this container */
     position: relative;
 }
 
-/* --- Logo & Quote Block (Top Left Corner) --- */
 .work-header-block {
     position: absolute;
     top: 50px;
     left: 50px;
     text-align: left;
     color: white;
-    /* Optional: A dark background to ensure readability over the library shelves */
     background-color: rgba(0, 0, 0, 0.7);
     padding: 15px;
     border-radius: 5px;
@@ -44,41 +39,33 @@
     font-style: italic;
 }
 
-/* --- General Link Styling --- */
 .work-link {
-    /* Style for all links */
-    position: absolute; /* Allows manual positioning */
-    color: #40f0ff; /* Light blue/cyan color to match the holograms */
+    position: absolute; 
+    color: #40f0ff; 
     font-size: 1.2em;
     text-decoration: none;
     font-weight: bold;
-    /* Neon glow effect for high-tech look */
     text-shadow: 0 0 10px #40f0ff, 0 0 20px #0000ff;
     padding: 5px 10px;
     border-radius: 3px;
     border: 1px solid #40f0ff;
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent dark background */
+    background-color: rgba(0, 0, 0, 0.5); 
 }
 
-/* --- Specific Link Positioning (CRITICAL for matching the image) --- */
-
-/* Positioning 'Vision (Calender)' over the left holographic screen */
 .vision-link {
     bottom: 30%;
     left: 20%;
-    transform: rotate(-10deg); /* Slight rotation to match screen angle */
+    transform: rotate(-10deg);
 }
 
-/* Positioning 'Statistics' over the abacus */
 .statistics-link {
     bottom: 35%;
-    left: 48%; /* Adjust to center over the abacus */
+    left: 48%; 
     text-align: center;
 }
 
-/* Positioning 'Urgent Importance Matrix' over the right holographic screen */
 .matrix-link {
     bottom: 30%;
     right: 25%;
-    transform: rotate(10deg); /* Slight rotation to match screen angle */
+    transform: rotate(10deg); 
 }

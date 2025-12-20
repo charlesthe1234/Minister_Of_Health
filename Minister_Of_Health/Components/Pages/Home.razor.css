@@ -1,5 +1,5 @@
 ﻿.home-background {
-    background-image: url('/images/LoginAndHome.png');
+    background-image: url('/videos/LoginPageBackground.mp4');
     background-size: cover;
     background-position: center bottom;
     background-repeat: no-repeat;
@@ -14,7 +14,7 @@
 .content-container {
     display: flex;
     flex-direction: column;
-    align-items: center; 
+    align-items: center; S
     text-align: center;
     color: white; 
 }
