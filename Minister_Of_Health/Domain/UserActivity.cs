@@ -1,6 +1,6 @@
 ﻿namespace Minister_Of_Time.Domain
 {
-    public class Activity : BaseDomainModel
+    public class UserActivity : BaseDomainModel
     {
         public string Name { get; set; } = string.Empty;
         public DateTime StartDate { get; set; }

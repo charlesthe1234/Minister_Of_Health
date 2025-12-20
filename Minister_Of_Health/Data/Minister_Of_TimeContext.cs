@@ -4,10 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Minister_Of_Time.Domain;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
 
 namespace Minister_Of_Time.Data
 {
-    public class Minister_Of_TimeContext : DbContext
+    public class Minister_Of_TimeContext : IdentityDbContext<User, IdentityRole<int>, int>
     {
         public Minister_Of_TimeContext (DbContextOptions<Minister_Of_TimeContext> options)
             : base(options)
@@ -18,7 +21,7 @@ namespace Minister_Of_Time.Data
         public DbSet<Minister_Of_Time.Domain.EventRole> EventRole { get; set; } = default!;
         public DbSet<Minister_Of_Time.Domain.CalendarEvent> CalendarEvent { get; set; } = default!;
         public DbSet<Minister_Of_Time.Domain.EventParticipant> EventParticipant { get; set; } = default!;
-        public DbSet<Minister_Of_Time.Domain.Activity> Activity { get; set; } = default!;
+        public DbSet<Minister_Of_Time.Domain.UserActivity> Activity { get; set; } = default!;
         public DbSet<Minister_Of_Time.Domain.CloseConnection> CloseConnection { get; set; } = default!;
         public DbSet<Minister_Of_Time.Domain.StressRecord> StressRecord { get; set; } = default!;
         protected override void OnModelCreating(ModelBuilder modelBuilder)

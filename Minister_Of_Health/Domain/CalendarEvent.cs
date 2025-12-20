@@ -17,6 +17,6 @@ namespace Minister_Of_Time.Domain
 
         // Navigation Properties
         public virtual User? HostUser { get; set; } // Link back to the User who is hosting
-        public virtual Activity? Activity { get; set; }
+        public virtual UserActivity? Activity { get; set; }
     }
 }
