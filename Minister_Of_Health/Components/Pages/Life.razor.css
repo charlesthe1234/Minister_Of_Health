@@ -1,25 +1,21 @@
-﻿/* --- Background Container --- */
-.life-background {
-    /* Assuming you have a specific background image for this page */
-    background-image: url('/images/Life.png'); /* Replace 'Life.png' with your actual image file name */
+﻿.life-background {
+    background-image: url('/images/Life.png'); 
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     min-height: 100vh;
     width: 100%;
-    /* CRITICAL: Allows child elements (the links) to be absolutely positioned relative to this container */
     position: relative;
 }
 
-/* --- Logo & Quote Block (Fixed/Central Position) --- */
 .logo-title-container {
     position: absolute;
     top: 50px;
-    left: 100px; /* Adjust this to position the logo block over the window/door area */
-    text-align: center;
+    left: 50px;
+    text-align: left;
     color: white;
-    background-color: rgba(0, 0, 0, 0.7); /* Dark semi-transparent background for readability */
-    padding: 10px 15px;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 15px;
     border-radius: 5px;
 }
 
@@ -42,10 +38,8 @@
     border: none;
 }
 
-/* --- General Link Styling --- */
 .life-link {
-    /* Style for all links */
-    position: absolute; /* Allows manual positioning */
+    position: absolute;
     color: white;
     font-size: 1.5em;
     text-decoration: none;
@@ -53,30 +47,24 @@
     text-shadow: 2px 2px 5px black;
     padding: 5px;
     border-radius: 3px;
-    background-color: rgba(0, 0, 0, 0.4); /* Optional: slight background for visibility */
+    background-color: rgba(0, 0, 0, 0.4); 
 }
 
-/* --- Specific Link Positioning (CRITICAL for matching the image) --- */
-
-/* Positioning 'Family' over the couch/door */
 .family-link {
     top: 50%;
     left: 20%;
 }
 
-/* Positioning 'Hobby' over the tall bookshelves */
 .hobby-link {
     top: 25%;
     right: 35%;
 }
 
-/* Positioning 'Health' over the dumbbell rack */
 .health-link {
     bottom: 25%;
     right: 15%;
 }
 
-/* Positioning 'Events' over the desk */
 .events-link {
     bottom: 20%;
     left: 15%;
