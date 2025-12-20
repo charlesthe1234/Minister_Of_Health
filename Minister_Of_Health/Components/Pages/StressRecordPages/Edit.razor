@@ -1,0 +1,124 @@
+﻿@page "/stressrecords/edit"
+@using Microsoft.EntityFrameworkCore
+@using Minister_Of_Time.Domain
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>StressRecord</h2>
+<hr />
+@if (StressRecord is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="StressRecord" OnValidSubmit="UpdateStressRecord" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="StressRecord.Id" value="@StressRecord.Id" />
+                <div class="mb-3">
+                    <label for="stresslevel" class="form-label">StressLevel:</label>
+                    <InputNumber id="stresslevel" @bind-Value="StressRecord.StressLevel" class="form-control" />
+                    <ValidationMessage For="() => StressRecord.StressLevel" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="fatiguelevel" class="form-label">FatigueLevel:</label>
+                    <InputNumber id="fatiguelevel" @bind-Value="StressRecord.FatigueLevel" class="form-control" />
+                    <ValidationMessage For="() => StressRecord.FatigueLevel" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="userid" class="form-label">UserId:</label>
+                    <InputNumber id="userid" @bind-Value="StressRecord.UserId" class="form-control" />
+                    <ValidationMessage For="() => StressRecord.UserId" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="calendareventid" class="form-label">CalendarEventId:</label>
+                    <InputNumber id="calendareventid" @bind-Value="StressRecord.CalendarEventId" class="form-control" />
+                    <ValidationMessage For="() => StressRecord.CalendarEventId" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="datecreated" class="form-label">DateCreated:</label>
+                    <InputDate id="datecreated" @bind-Value="StressRecord.DateCreated" class="form-control" />
+                    <ValidationMessage For="() => StressRecord.DateCreated" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="dateupdated" class="form-label">DateUpdated:</label>
+                    <InputDate id="dateupdated" @bind-Value="StressRecord.DateUpdated" class="form-control" />
+                    <ValidationMessage For="() => StressRecord.DateUpdated" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="createdby" class="form-label">CreatedBy:</label>
+                    <InputText id="createdby" @bind-Value="StressRecord.CreatedBy" class="form-control" />
+                    <ValidationMessage For="() => StressRecord.CreatedBy" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="updatedby" class="form-label">UpdatedBy:</label>
+                    <InputText id="updatedby" @bind-Value="StressRecord.UpdatedBy" class="form-control" />
+                    <ValidationMessage For="() => StressRecord.UpdatedBy" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/stressrecords">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private StressRecord? StressRecord { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        StressRecord ??= await context.StressRecord.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (StressRecord is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateStressRecord()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(StressRecord!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!StressRecordExists(StressRecord!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/stressrecords");
+    }
+
+    private bool StressRecordExists(int id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.StressRecord.Any(e => e.Id == id);
+    }
+}

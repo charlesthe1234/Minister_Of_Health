@@ -1,0 +1,87 @@
+﻿@page "/eventroles/delete"
+@using Microsoft.EntityFrameworkCore
+@using Minister_Of_Time.Domain
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Delete</PageTitle>
+
+<h1>Delete</h1>
+
+<p>Are you sure you want to delete this?</p>
+<div>
+    <h2>EventRole</h2>
+    <hr />
+    @if (eventrole is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">RoleName</dt>
+            <dd class="col-sm-10">@eventrole.RoleName</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">CanEditCalendarEventDetails</dt>
+            <dd class="col-sm-10">@eventrole.CanEditCalendarEventDetails</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">CanInviteOthers</dt>
+            <dd class="col-sm-10">@eventrole.CanInviteOthers</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">CanChangeLocation</dt>
+            <dd class="col-sm-10">@eventrole.CanChangeLocation</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">CanChangeDateTime</dt>
+            <dd class="col-sm-10">@eventrole.CanChangeDateTime</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">DateCreated</dt>
+            <dd class="col-sm-10">@eventrole.DateCreated</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">DateUpdated</dt>
+            <dd class="col-sm-10">@eventrole.DateUpdated</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">CreatedBy</dt>
+            <dd class="col-sm-10">@eventrole.CreatedBy</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">UpdatedBy</dt>
+            <dd class="col-sm-10">@eventrole.UpdatedBy</dd>
+        </dl>
+        <EditForm method="post" Model="eventrole" OnValidSubmit="DeleteEventRole" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(eventrole is null)">Delete</button> |
+            <a href="/eventroles">Back to List</a>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private EventRole? eventrole;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        eventrole = await context.EventRole.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (eventrole is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task DeleteEventRole()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.EventRole.Remove(eventrole!);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/eventroles");
+    }
+}

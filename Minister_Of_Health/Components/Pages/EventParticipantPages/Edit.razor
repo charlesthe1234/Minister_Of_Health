@@ -1,0 +1,124 @@
+﻿@page "/eventparticipants/edit"
+@using Microsoft.EntityFrameworkCore
+@using Minister_Of_Time.Domain
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>EventParticipant</h2>
+<hr />
+@if (EventParticipant is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="EventParticipant" OnValidSubmit="UpdateEventParticipant" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="EventParticipant.Id" value="@EventParticipant.Id" />
+                <div class="mb-3">
+                    <label for="userid" class="form-label">UserId:</label>
+                    <InputNumber id="userid" @bind-Value="EventParticipant.UserId" class="form-control" />
+                    <ValidationMessage For="() => EventParticipant.UserId" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="calendareventid" class="form-label">CalendarEventId:</label>
+                    <InputNumber id="calendareventid" @bind-Value="EventParticipant.CalendarEventId" class="form-control" />
+                    <ValidationMessage For="() => EventParticipant.CalendarEventId" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="eventroleid" class="form-label">EventRoleId:</label>
+                    <InputNumber id="eventroleid" @bind-Value="EventParticipant.EventRoleId" class="form-control" />
+                    <ValidationMessage For="() => EventParticipant.EventRoleId" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="participationstatus" class="form-label">ParticipationStatus:</label>
+                    <InputText id="participationstatus" @bind-Value="EventParticipant.ParticipationStatus" class="form-control" />
+                    <ValidationMessage For="() => EventParticipant.ParticipationStatus" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="datecreated" class="form-label">DateCreated:</label>
+                    <InputDate id="datecreated" @bind-Value="EventParticipant.DateCreated" class="form-control" />
+                    <ValidationMessage For="() => EventParticipant.DateCreated" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="dateupdated" class="form-label">DateUpdated:</label>
+                    <InputDate id="dateupdated" @bind-Value="EventParticipant.DateUpdated" class="form-control" />
+                    <ValidationMessage For="() => EventParticipant.DateUpdated" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="createdby" class="form-label">CreatedBy:</label>
+                    <InputText id="createdby" @bind-Value="EventParticipant.CreatedBy" class="form-control" />
+                    <ValidationMessage For="() => EventParticipant.CreatedBy" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="updatedby" class="form-label">UpdatedBy:</label>
+                    <InputText id="updatedby" @bind-Value="EventParticipant.UpdatedBy" class="form-control" />
+                    <ValidationMessage For="() => EventParticipant.UpdatedBy" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/eventparticipants">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private EventParticipant? EventParticipant { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        EventParticipant ??= await context.EventParticipant.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (EventParticipant is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateEventParticipant()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(EventParticipant!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!EventParticipantExists(EventParticipant!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/eventparticipants");
+    }
+
+    private bool EventParticipantExists(int id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.EventParticipant.Any(e => e.Id == id);
+    }
+}

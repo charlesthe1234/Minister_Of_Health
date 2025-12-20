@@ -1,0 +1,83 @@
+﻿@page "/stressrecords/delete"
+@using Microsoft.EntityFrameworkCore
+@using Minister_Of_Time.Domain
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Delete</PageTitle>
+
+<h1>Delete</h1>
+
+<p>Are you sure you want to delete this?</p>
+<div>
+    <h2>StressRecord</h2>
+    <hr />
+    @if (stressrecord is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">StressLevel</dt>
+            <dd class="col-sm-10">@stressrecord.StressLevel</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">FatigueLevel</dt>
+            <dd class="col-sm-10">@stressrecord.FatigueLevel</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">UserId</dt>
+            <dd class="col-sm-10">@stressrecord.UserId</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">CalendarEventId</dt>
+            <dd class="col-sm-10">@stressrecord.CalendarEventId</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">DateCreated</dt>
+            <dd class="col-sm-10">@stressrecord.DateCreated</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">DateUpdated</dt>
+            <dd class="col-sm-10">@stressrecord.DateUpdated</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">CreatedBy</dt>
+            <dd class="col-sm-10">@stressrecord.CreatedBy</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">UpdatedBy</dt>
+            <dd class="col-sm-10">@stressrecord.UpdatedBy</dd>
+        </dl>
+        <EditForm method="post" Model="stressrecord" OnValidSubmit="DeleteStressRecord" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(stressrecord is null)">Delete</button> |
+            <a href="/stressrecords">Back to List</a>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private StressRecord? stressrecord;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        stressrecord = await context.StressRecord.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (stressrecord is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task DeleteStressRecord()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.StressRecord.Remove(stressrecord!);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/stressrecords");
+    }
+}

@@ -1,0 +1,60 @@
+﻿@page "/eventparticipants/details"
+@using Microsoft.EntityFrameworkCore
+@using Minister_Of_Time.Domain
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>EventParticipant</h2>
+    <hr />
+    @if (eventparticipant is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">UserId</dt>
+            <dd class="col-sm-10">@eventparticipant.UserId</dd>
+            <dt class="col-sm-2">CalendarEventId</dt>
+            <dd class="col-sm-10">@eventparticipant.CalendarEventId</dd>
+            <dt class="col-sm-2">EventRoleId</dt>
+            <dd class="col-sm-10">@eventparticipant.EventRoleId</dd>
+            <dt class="col-sm-2">ParticipationStatus</dt>
+            <dd class="col-sm-10">@eventparticipant.ParticipationStatus</dd>
+            <dt class="col-sm-2">DateCreated</dt>
+            <dd class="col-sm-10">@eventparticipant.DateCreated</dd>
+            <dt class="col-sm-2">DateUpdated</dt>
+            <dd class="col-sm-10">@eventparticipant.DateUpdated</dd>
+            <dt class="col-sm-2">CreatedBy</dt>
+            <dd class="col-sm-10">@eventparticipant.CreatedBy</dd>
+            <dt class="col-sm-2">UpdatedBy</dt>
+            <dd class="col-sm-10">@eventparticipant.UpdatedBy</dd>
+        </dl>
+        <div>
+            <a href="@($"/eventparticipants/edit?id={eventparticipant.Id}")">Edit</a> |
+            <a href="@($"/eventparticipants")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private EventParticipant? eventparticipant;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        eventparticipant = await context.EventParticipant.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (eventparticipant is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

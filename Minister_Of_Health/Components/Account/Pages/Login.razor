@@ -1,0 +1,127 @@
+﻿@page "/Account/Login"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Identity
+@using Minister_Of_Time.Data
+@using Minister_Of_Time.Domain
+
+@inject SignInManager<User> SignInManager
+@inject ILogger<Login> Logger
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Log in</PageTitle>
+
+<div class="login-page-wrapper">
+    @* --- Background Video --- *@
+    <video autoplay muted loop playsinline class="background-video">
+        <source src="/videos/LoginPageBackground.mp4" type="video/mp4">
+    </video>
+
+    <div class="content-overlay">
+        @* --- Branding Section from your Home Page --- *@
+        @* currently empty *@
+
+        @* --- Login Form Section --- *@
+        <div class="login-card">
+            <StatusMessage Message="@errorMessage" />
+            <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+                <div class = "login-form-container">
+
+                <DataAnnotationsValidator />
+
+                <p class="login-instruction">Please key in your user name and password</p>
+
+                <div class="form-floating mb-3">
+                    <InputText @bind-Value="Input.Email" class="form-control text-dark" autocomplete="username" placeholder="name@example.com" />
+                    <label class="text-dark">Email</label>
+                    <ValidationMessage For="() => Input.Email" class="text-danger" />
+                </div>
+
+                <div class="form-floating mb-3">
+                    <InputText type="password" @bind-Value="Input.Password" class="form-control text-dark" autocomplete="current-password" placeholder="password" />
+                    <label class="text-dark">Password</label>
+                    <ValidationMessage For="() => Input.Password" class="text-danger" />
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3 text-white">
+                    <label class="form-check-label">
+                        <InputCheckbox @bind-Value="Input.RememberMe" class="form-check-input" /> Remember me
+                    </label>
+                    <a href="Account/ForgotPassword" class="text-info small">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="w-100 btn btn-lg btn-primary mb-3">Log in</button>
+
+                <p class="text-white small">
+                    New here? <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" class="text-info">Register Sire</a>
+                </p>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? errorMessage;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HttpMethods.IsGet(HttpContext.Request.Method))
+        {
+            // Clear the existing external cookie to ensure a clean login process
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+        }
+    }
+
+    public async Task LoginUser()
+    {
+        // This doesn't count login failures towards account lockout
+        // To enable password failures to trigger account lockout, set lockoutOnFailure: true
+        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+        if (result.Succeeded)
+        {
+            Logger.LogInformation("User logged in.");
+            RedirectManager.RedirectTo(ReturnUrl);
+        }
+        else if (result.RequiresTwoFactor)
+        {
+            RedirectManager.RedirectTo(
+                "Account/LoginWith2fa",
+                new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
+        }
+        else if (result.IsLockedOut)
+        {
+            Logger.LogWarning("User account locked out.");
+            RedirectManager.RedirectTo("Account/Lockout");
+        }
+        else
+        {
+            errorMessage = "Error: Invalid login attempt.";
+        }
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+
+        [Display(Name = "Remember me?")]
+        public bool RememberMe { get; set; }
+    }
+}
