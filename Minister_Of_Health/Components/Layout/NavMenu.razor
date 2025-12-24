@@ -1,17 +1,23 @@
 ﻿@implements IDisposable
 @inject NavigationManager NavigationManager
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Minister_Of_Time</a>
-    </div>
-</div>
 
 <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="horizontal-nav">
+            <div class="brand-container">
+                <img src="images/SmallLogo.png" alt="Minister of Time Logo" class="brand-logo" />
+                <p class="logo-name"> MINISTER OF TIME</p>
+            </div>
+
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Login
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="home">
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>

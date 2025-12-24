@@ -51,17 +51,20 @@
         text-decoration: underline;
     }
 
-/* === Login Card === */
+/* === Login & Register Card === */
 .login-card {
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(8px);
-    padding: 32px;
-    border-radius: 14px;
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(12px);
+    /* Changed padding: 40px to 32px top/bottom to save space */
+    padding: 32px 40px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
     color: white;
-    /* THIS controls the box size */
     width: 100%;
-    max-width: 360px; /* ← adjust this (320–380px sweet spot) */
+    max-width: 420px;
+    /* Center the card and give it breathing room */
+    margin: 20px auto;
+    transition: transform 0.3s ease;
 }
 
 /* === Inner form container === */
@@ -77,9 +80,8 @@
     font-size: 1rem;
 }
 
-/* === Floating labels alignment === */
 .login-card .form-floating {
-    width: 100%;
+    margin-bottom: 1rem !important;
 }
 
 /* === Button === */
