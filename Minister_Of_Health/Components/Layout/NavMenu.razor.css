@@ -1,4 +1,21 @@
-﻿.nav-scrollable {
+﻿.brand-container {
+    position: absolute;
+    left: 1rem;
+    display: flex;
+    align-items: center; /* Vertically centers logo and text together */
+    gap: 10px; /* Space between logo and "MINISTER OF TIME" */
+}
+
+.logo-name{
+    color: white;
+    align-items: center;
+}
+
+.brand-logo {
+    width:40px;
+}
+
+.nav-scrollable {
     display: block !important;
 }
 
@@ -8,6 +25,7 @@
     justify-content: center;
     align-items: center;
     padding: 0 1rem;
+    position: relative;
 }
 
 .nav-item {

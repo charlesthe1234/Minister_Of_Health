@@ -17,45 +17,59 @@
 
 <PageTitle>Register</PageTitle>
 
-<h1>Register</h1>
+<div class="login-page-wrapper">
+    @* --- Background Video --- *@
+    <video autoplay muted loop playsinline class="background-video">
+        <source src="/videos/LoginPageBackground.mp4" type="video/mp4">
+    </video>
 
-<div class="row">
-    <div class="col-md-4">
-        <StatusMessage Message="@Message" />
-        <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
-            <DataAnnotationsValidator />
-            <h2>Create a new account.</h2>
-            <hr />
-            <ValidationSummary class="text-danger" role="alert" />
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.FullName" class="form-control" autocomplete="username" aria-required="true" placeholder="Bill" />
-                <label for="name">FullName</label>
-                <ValidationMessage For="() => Input.FullName" class="text-danger" />
-            </div>
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                <label for="email">Email</label>
-                <ValidationMessage For="() => Input.Email" class="text-danger" />
-            </div>
-            <div class="form-floating mb-3">
-                <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label for="password">Password</label>
-                <ValidationMessage For="() => Input.Password" class="text-danger" />
-            </div>
-            <div class="form-floating mb-3">
-                <InputText type="password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label for="confirm-password">Confirm Password</label>
-                <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
-            </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
-        </EditForm>
-    </div>
-    <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to register.</h3>
-            <hr />
-            <ExternalLoginPicker />
-        </section>
+    <div class="content-overlay">
+        @* --- Registration Card (Reusing Login Card CSS) --- *@
+        <div class="login-card">
+            <StatusMessage Message="@Message" />
+
+            <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
+                <div class="login-form-container">
+                    <DataAnnotationsValidator />
+
+                    <h2 class="text-center text-white mb-2">Create Account</h2>
+                    <p class="login-instruction">Please enter your details, Sire.</p>
+                    <hr class="text-white" />
+
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.FullName" class="form-control text-dark" autocomplete="name" placeholder="Full Name" />
+                        <label class="text-dark">Full Name</label>
+                        <ValidationMessage For="() => Input.FullName" class="text-danger" />
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.Email" class="form-control text-dark" autocomplete="username" placeholder="name@example.com" />
+                        <label class="text-dark">Email</label>
+                        <ValidationMessage For="() => Input.Email" class="text-danger" />
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <InputText type="password" @bind-Value="Input.Password" class="form-control text-dark" autocomplete="new-password" placeholder="password" />
+                        <label class="text-dark">Password</label>
+                        <ValidationMessage For="() => Input.Password" class="text-danger" />
+                    </div>
+
+                    <div class="form-floating mb-4">
+                        <InputText type="password" @bind-Value="Input.ConfirmPassword" class="form-control text-dark" autocomplete="new-password" placeholder="confirm password" />
+                        <label class="text-dark">Confirm Password</label>
+                        <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+                    </div>
+
+                    <button type="submit" class="w-100 btn btn-lg btn-primary mb-3">Register</button>
+
+                    <div class="text-center">
+                        <p class="text-white small">
+                            Already a member? <a href="/" class="text-info">Log in here</a>
+                        </p>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
     </div>
 </div>
 
