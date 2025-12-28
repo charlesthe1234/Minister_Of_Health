@@ -1,0 +1,141 @@
+﻿/* Ensure the dashboard fills the available space */
+.dashboard-container {
+    display: flex;
+    height: calc(100vh - 56px); /* Adjusts for the top navbar height */
+    width: 100%;
+    overflow: hidden;
+    position: absolute;
+    top: 56px;
+    left: 0;
+}
+
+/* SIDEBAR STYLES */
+.sidebar-dark {
+    width: 300px;
+    background: #1a1a1a;
+    color: white;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #333;
+}
+
+.agenda-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #2a2a2a;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+    .dot.work {
+        background: #007aff;
+    }
+
+    .dot.life {
+        background: #34c759;
+    }
+
+.event-name {
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.event-time {
+    font-size: 0.8rem;
+    color: #aaa;
+}
+
+/* MAIN CALENDAR GRID */
+.calendar-main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background: white;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: auto repeat(6, 1fr); /* Header + 6 rows of dates */
+    flex-grow: 1;
+    border-top: 1px solid #dee2e6;
+    border-left: 1px solid #dee2e6;
+}
+
+.grid-header-day {
+    background: #f8f9fa;
+    text-align: center;
+    padding: 10px;
+    font-weight: bold;
+    font-size: 0.75rem;
+    color: #6c757d;
+    border-right: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.calendar-cell {
+    min-height: 100px;
+    background: white;
+    padding: 8px;
+    border-right: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    flex-direction: column;
+    transition: background 0.2s;
+}
+
+    .calendar-cell:hover:not(.empty) {
+        background: #f1f3f5;
+        cursor: pointer;
+    }
+
+    .calendar-cell.is-today {
+        background: #fff9db;
+    }
+
+.day-num {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+/* EVENT PILLS */
+.event-pills-container {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.event-pill {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+    .event-pill.work {
+        background: #e7f3ff;
+        color: #007aff;
+    }
+
+    .event-pill.life {
+        background: #eafaf1;
+        color: #34c759;
+    }
+
+/* BLUR & MODAL */
+.blur-content {
+    filter: blur(5px);
+    pointer-events: none;
+}

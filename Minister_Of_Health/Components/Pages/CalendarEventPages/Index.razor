@@ -1,47 +1,186 @@
 ﻿@page "/calendarevents"
 @using Microsoft.EntityFrameworkCore
-@using Microsoft.AspNetCore.Components.QuickGrid
 @using Minister_Of_Time.Domain
 @using Minister_Of_Time.Data
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+
 @implements IAsyncDisposable
 @inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Calendar Dashboard</PageTitle>
 
-<h1>Index</h1>
+<div class="dashboard-container @(showPopup ? "blur-content" : "")">
+    <aside class="sidebar-dark">
+        <div class="sidebar-header">
+            <h2 class="text-white">@displayDate.ToString("MMMM")</h2>
+            <p class="text-muted">@displayDate.Year</p>
+        </div>
 
-<p>
-    <a href="calendarevents/create">Create New</a>
-</p>
+        <button class="btn btn-primary w-100 my-4" @onclick='() => NavigationManager.NavigateTo("/calendarevents/create")'>
+            + Create Event
+        </button>
 
-<QuickGrid Class="table" Items="context.CalendarEvent">
-    <PropertyColumn Property="calendarevent => calendarevent.EventName" />
-    <PropertyColumn Property="calendarevent => calendarevent.Location" />
-    <PropertyColumn Property="calendarevent => calendarevent.StartDateTime" />
-    <PropertyColumn Property="calendarevent => calendarevent.EndDateTime" />
-    <PropertyColumn Property="calendarevent => calendarevent.CalendarType" />
-    <PropertyColumn Property="calendarevent => calendarevent.Status" />
-    <PropertyColumn Property="calendarevent => calendarevent.HostUserId" />
-    <PropertyColumn Property="calendarevent => calendarevent.ActivityId" />
-    <PropertyColumn Property="calendarevent => calendarevent.DateCreated" />
-    <PropertyColumn Property="calendarevent => calendarevent.DateUpdated" />
-    <PropertyColumn Property="calendarevent => calendarevent.CreatedBy" />
-    <PropertyColumn Property="calendarevent => calendarevent.UpdatedBy" />
+        <div class="mini-agenda">
+            <h6 class="text-uppercase text-info small fw-bold">Upcoming Today</h6>
+            @foreach (var ev in userEvents.Where(e => e.StartDateTime.Date == DateTime.Today).Take(3))
+            {
+                <div class="agenda-card">
+                    <span class="dot @ev.CalendarType?.ToLower()"></span>
+                    <div class="agenda-info">
+                        <div class="event-name">@ev.EventName</div>
+                        <div class="event-time">@ev.StartDateTime.ToString("h:mm tt")</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </aside>
 
-    <TemplateColumn Context="calendarevent">
-        <a href="@($"calendarevents/edit?id={calendarevent.Id}")">Edit</a> |
-        <a href="@($"calendarevents/details?id={calendarevent.Id}")">Details</a> |
-        <a href="@($"calendarevents/delete?id={calendarevent.Id}")">Delete</a>
-    </TemplateColumn>
-</QuickGrid>
+    <main class="calendar-main">
+        <header class="grid-nav d-flex justify-content-between align-items-center p-3">
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary" @onclick="() => ChangeMonth(-1)">Previous</button>
+                <button class="btn btn-sm btn-outline-secondary" @onclick="() => ChangeMonth(1)">Next</button>
+            </div>
+            <h4 class="mb-0">@displayDate.ToString("MMMM yyyy")</h4>
+            <div class="view-toggle">
+                <span class="badge bg-primary">Month</span>
+            </div>
+        </header>
+
+        <div class="calendar-grid">
+            @foreach (var dayName in Enum.GetNames(typeof(DayOfWeek)))
+            {
+                <div class="grid-header-day">@dayName.Substring(0, 3).ToUpper()</div>
+            }
+
+            @foreach (var day in daysInMonth)
+            {
+                <div class="calendar-cell @(day == DateTime.MinValue ? "empty" : "") @(day.Date == DateTime.Today ? "is-today" : "")"
+                     @onclick="() => OpenDayDetails(day)">
+                    @if (day != DateTime.MinValue)
+                    {
+                        <span class="day-num">@day.Day</span>
+                        <div class="event-pills-container">
+                            @foreach (var ev in userEvents.Where(e => e.StartDateTime.Date == day.Date))
+                            {
+                                <div class="event-pill @ev.CalendarType?.ToLower()">@ev.EventName</div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </main>
+</div>
+
+@if (showPopup)
+{
+    <div class="modal-overlay" @onclick="ClosePopup">
+        <div class="modal-window" @onclick:stopPropagation="true">
+            <div class="modal-header d-flex justify-content-between">
+                <h4 class="mb-0">Events for @selectedDate?.ToString("MMMM dd, yyyy")</h4>
+                <button type="button" class="btn-close" @onclick="ClosePopup"></button>
+            </div>
+            <div class="modal-body mt-3">
+                @if (selectedDayEvents.Any())
+                {
+                    @foreach (var ev in selectedDayEvents)
+                    {
+                        <div class="event-detail-item border-bottom pb-3 mb-3">
+                            <h5 class="text-primary">@ev.EventName</h5>
+                            <div class="row small">
+                                <div class="col-6"><strong>Time:</strong> @ev.StartDateTime.ToString("h:mm tt")</div>
+                                <div class="col-6"><strong>Type:</strong> @ev.CalendarType</div>
+                                <div class="col-12 mt-1"><strong>Location:</strong> @ev.Location</div>
+                            </div>
+                            <div class="mt-2 text-muted">@ev.CreatedBy (Host)</div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted">
+                        <p>No events found for this day.</p>
+                        <button class="btn btn-sm btn-link" @onclick='() => NavigationManager.NavigateTo("/calendarevents/create")'>Add one now</button>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="ClosePopup">Close</button>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private Minister_Of_TimeContext context = default!;
 
-    protected override void OnInitialized()
+    // CALENDAR DATA VARIABLES
+    private DateTime displayDate = DateTime.Today;
+    private List<DateTime> daysInMonth = new();
+    private List<CalendarEvent> userEvents = new();
+    private int currentUserId;
+
+    // POPUP VARIABLES
+    private bool showPopup = false;
+    private DateTime? selectedDate;
+    private List<CalendarEvent> selectedDayEvents = new();
+
+    protected override async Task OnInitializedAsync()
     {
         context = DbFactory.CreateDbContext();
+
+        // Get the logged in user's ID
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim != null) int.TryParse(userIdClaim.Value, out currentUserId);
+        }
+
+        await RefreshCalendarData();
     }
+
+    private async Task RefreshCalendarData()
+    {
+        daysInMonth.Clear();
+        var firstDay = new DateTime(displayDate.Year, displayDate.Month, 1);
+
+        // Add padding for start of month
+        int padding = (int)firstDay.DayOfWeek;
+        for (int i = 0; i < padding; i++) daysInMonth.Add(DateTime.MinValue);
+
+        // Add actual days
+        int daysCount = DateTime.DaysInMonth(displayDate.Year, displayDate.Month);
+        for (int i = 1; i <= daysCount; i++) daysInMonth.Add(new DateTime(displayDate.Year, displayDate.Month, i));
+
+        // Fetch events linked to this user
+        userEvents = await context.CalendarEvent
+            .Where(e => e.HostUserId == currentUserId &&
+                        e.StartDateTime.Month == displayDate.Month &&
+                        e.StartDateTime.Year == displayDate.Year)
+            .ToListAsync();
+    }
+
+    private async Task ChangeMonth(int increment)
+    {
+        displayDate = displayDate.AddMonths(increment);
+        await RefreshCalendarData();
+    }
+
+    private void OpenDayDetails(DateTime day)
+    {
+        if (day == DateTime.MinValue) return;
+        selectedDate = day;
+        selectedDayEvents = userEvents.Where(e => e.StartDateTime.Date == day.Date).ToList();
+        showPopup = true;
+    }
+
+    private void ClosePopup() => showPopup = false;
 
     public async ValueTask DisposeAsync() => await context.DisposeAsync();
 }
