@@ -1,12 +1,24 @@
 ﻿@page "/home"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Authorization
+@using Minister_Of_Time.Domain
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@rendermode InteractiveServer
 
 <PageTitle>Home</PageTitle>
 
 <div class="home-background">
 
     <div class="content-container">
-
-        <h1 class="user-name">Dear Charles</h1>
+        <AuthorizeView>
+            <Authorized>
+                @* This variable is populated from the AspNetUsers table in the @code block *@
+                <h1 class="user-name">Dear @(displayName ?? "...")</h1>
+            </Authorized>
+            <NotAuthorized>
+                <h1 class="user-name">Welcome, Guest</h1>
+            </NotAuthorized>
+        </AuthorizeView>
 
         <img src="/images/BigLogo.png" class="logo-image" alt="Minister of Time Logo" />
 
@@ -24,3 +36,44 @@
     </div>
 
 </div>
+
+@code {
+    private string? displayName;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? authStateTask { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (authStateTask != null)
+        {
+            var authState = await authStateTask;
+            var user = authState.User;
+
+            if (user.Identity is not null && user.Identity.IsAuthenticated)
+            {
+                // Create a connection to the database
+                using var context = DbFactory.CreateDbContext();
+
+                // 1. Look for the user in the 'AspNetUsers' table where the email matches
+                // 2. We use Set<User>() because your snapshot maps the User class to that table
+                var dbUser = await context.Set<User>()
+                    .FirstOrDefaultAsync(u => u.Email == user.Identity.Name);
+
+                if (dbUser != null && !string.IsNullOrEmpty(dbUser.Name))
+                {
+                    // If a specific 'Name' exists in the database row, use it
+                    displayName = dbUser.Name;
+                }
+                else
+                {
+                    // Fallback to the login name (email) if the Name column is empty
+                    displayName = user.Identity.Name;
+                }
+
+                // Inform Blazor that the name has been fetched and it should refresh the screen
+                StateHasChanged();
+            }
+        }
+    }
+}
