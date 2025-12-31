@@ -50,3 +50,24 @@ h1:focus {
 .darker-border-checkbox.form-check-input {
     border-color: #929292;
 }
+
+/* Ensure the layout doesn't block clicks on the landing page */
+.page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+    position: relative;
+    z-index: 1; /* Ensure this is above the fixed background */
+}
+
+/* This is the key: ensure the article where @Body lives 
+   doesn't have an invisible background blocking the landing page */
+article.content {
+    background: transparent !important;
+    position: relative;
+    z-index: 5;
+}
