@@ -8,14 +8,13 @@
 <PageTitle>Home</PageTitle>
 
 <div class="home-background">
-
     <div class="content-container">
         <AuthorizeView>
             <Authorized>
-                @* This variable is populated from the AspNetUsers table in the @code block *@
                 <h1 class="user-name">Dear @(displayName ?? "...")</h1>
             </Authorized>
             <NotAuthorized>
+                @* if user didn't login, no name will be displayey(However if the app work normally the user can only be in this page when login in, thus this fuction is only for testing) *@
                 <h1 class="user-name">Welcome, Guest</h1>
             </NotAuthorized>
         </AuthorizeView>
@@ -25,16 +24,10 @@
         <p class="epicurus-quote">"Be moderate in order to taste the joys of life in abundance." - Epicurus</p>
 
         <div class="link-bar">
-            <a href="/work" class="work-link">
-                &lt;&lt;&lt;Work
-            </a>
-            <a href="/life" class="life-link">
-                Life&gt;&gt;&gt;
-            </a>
+            <a href="/work" class="work-link">&lt;&lt;&lt;Work</a>
+            <a href="/life" class="life-link">Life&gt;&gt;&gt;</a>
         </div>
-
     </div>
-
 </div>
 
 @code {
@@ -52,26 +45,21 @@
 
             if (user.Identity is not null && user.Identity.IsAuthenticated)
             {
-                // Create a connection to the database
                 using var context = DbFactory.CreateDbContext();
 
-                // 1. Look for the user in the 'AspNetUsers' table where the email matches
-                // 2. We use Set<User>() because your snapshot maps the User class to that table
+                string loginEmail = user.Identity.Name ?? "";
+
                 var dbUser = await context.Set<User>()
-                    .FirstOrDefaultAsync(u => u.Email == user.Identity.Name);
+                    .FirstOrDefaultAsync(u => u.Email.ToLower().Trim() == loginEmail.ToLower().Trim());
 
                 if (dbUser != null && !string.IsNullOrEmpty(dbUser.Name))
                 {
-                    // If a specific 'Name' exists in the database row, use it
                     displayName = dbUser.Name;
                 }
                 else
                 {
-                    // Fallback to the login name (email) if the Name column is empty
-                    displayName = user.Identity.Name;
+                    displayName = loginEmail;
                 }
-
-                // Inform Blazor that the name has been fetched and it should refresh the screen
                 StateHasChanged();
             }
         }
