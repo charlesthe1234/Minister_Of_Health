@@ -46,10 +46,14 @@
             </Authorized>
         </AuthorizeView>
 
-        <div class="sign-out">
-                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                    <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Sign Out
-                </NavLink>
+        <div class="nav-item px-3">
+            <form action="Account/Logout" method="post">
+                <AntiforgeryToken />
+                <input type="hidden" name="ReturnUrl" value="" />
+                <button type="submit" class="nav-link">
+                    <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
+                </button>
+            </form>
         </div>
     </nav>
 </div>
