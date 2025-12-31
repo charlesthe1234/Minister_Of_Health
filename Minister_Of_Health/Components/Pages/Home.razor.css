@@ -1,5 +1,5 @@
 ﻿.home-background {
-    background-image: url('/videos/LoginPageBackground.mp4');
+    background-image: url('/images/LoginAndHome.png');
     background-size: cover;
     background-position: center bottom;
     background-repeat: no-repeat;
@@ -20,7 +20,6 @@
 }
 
 .user-name {
-    background-color: black;
     font-size: 4em;
     font-family: serif;
     margin-bottom: 20px;
