@@ -1,0 +1,60 @@
+﻿@page "/"
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Minister of Time</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        @* The redirect is handled in OnInitialized below for better stability *@
+    </Authorized>
+    <NotAuthorized>
+        <div class="home-background">
+            <video autoplay muted loop playsinline class="background-video">
+                <source src="/videos/LoginPageBackground.mp4" type="video/mp4">
+            </video>
+
+            <div class="video-overlay"></div>
+
+            <div class="content-container">
+                <div class="glass-card">
+                    <h1 class="user-name">Greetings Sire</h1>
+
+                    <div class="logo-wrapper">
+                        <img src="/images/BigLogo.png" class="logo-image" alt="Minister of Time Logo" />
+                    </div>
+
+                    <p class="epicurus-quote">"Be moderate in order to taste the joys of life in abundance."</p>
+                    <span class="quote-author">— Epicurus</span>
+
+                    <div class="cta-section">
+                        <p class="instruction-text">Ready to establish order?</p>
+                        <div class="button-group">
+                            @* CHANGED FROM BUTTON TO A TAG *@
+                            <a href="/Account/Login" class="btn-minister primary text-decoration-none">
+                                Already have an account?
+                            </a>
+                            <a href="/Account/Register" class="btn-minister secondary text-decoration-none">
+                                Register now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        // If the user is already logged in, redirect them to the dashboard immediately
+        if (user.Identity is not null && user.Identity.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo("/calendarevents");
+        }
+    }
+}

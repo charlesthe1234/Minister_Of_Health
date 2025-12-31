@@ -1,99 +1,115 @@
 ﻿@page "/calendarevents/create"
 @using Microsoft.EntityFrameworkCore
 @using Minister_Of_Time.Domain
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+
 @inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
 
-<PageTitle>Create</PageTitle>
+<div class="container mt-5">
+    <div class="card shadow-lg p-4">
+        <h2 class="mb-4">Schedule New Event</h2>
 
-<h1>Create</h1>
-
-<h2>CalendarEvent</h2>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <EditForm method="post" Model="CalendarEvent" OnValidSubmit="AddCalendarEvent" FormName="create" Enhance>
+        <EditForm Model="CalendarEvent" OnValidSubmit="AddCalendarEvent" FormName="create">
             <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert"/>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Event Name</label>
+                    <InputText @bind-Value="CalendarEvent.EventName" class="form-control" placeholder="What's happening?" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Location</label>
+                    <InputText @bind-Value="CalendarEvent.Location" class="form-control" placeholder="Physical or Digital address" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold">Start Date & Time</label>
+                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="CalendarEvent.StartDateTime" class="form-control" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold">End Date & Time</label>
+                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="CalendarEvent.EndDateTime" class="form-control" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold">Category</label>
+                    <InputSelect @bind-Value="CalendarEvent.CalendarType" class="form-select">
+                        <option value="Work">Work</option>
+                        <option value="Life">Life</option>
+                    </InputSelect>
+                </div>
+            </div>
+
             <div class="mb-3">
-                <label for="eventname" class="form-label">EventName:</label> 
-                <InputText id="eventname" @bind-Value="CalendarEvent.EventName" class="form-control" /> 
-                <ValidationMessage For="() => CalendarEvent.EventName" class="text-danger" /> 
-            </div>        
+                <label class="form-label fw-bold">Invite Users (Comma separated emails)</label>
+                <InputTextArea @bind-Value="InvitedEmails" class="form-control" placeholder="user1@example.com, user2@example.com" rows="2" />
+                <small class="text-muted">Separate multiple emails with a comma.</small>
+            </div>
+
             <div class="mb-3">
-                <label for="location" class="form-label">Location:</label> 
-                <InputText id="location" @bind-Value="CalendarEvent.Location" class="form-control" /> 
-                <ValidationMessage For="() => CalendarEvent.Location" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="startdatetime" class="form-label">StartDateTime:</label> 
-                <InputDate id="startdatetime" @bind-Value="CalendarEvent.StartDateTime" class="form-control" /> 
-                <ValidationMessage For="() => CalendarEvent.StartDateTime" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="enddatetime" class="form-label">EndDateTime:</label> 
-                <InputDate id="enddatetime" @bind-Value="CalendarEvent.EndDateTime" class="form-control" /> 
-                <ValidationMessage For="() => CalendarEvent.EndDateTime" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="calendartype" class="form-label">CalendarType:</label> 
-                <InputText id="calendartype" @bind-Value="CalendarEvent.CalendarType" class="form-control" /> 
-                <ValidationMessage For="() => CalendarEvent.CalendarType" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="status" class="form-label">Status:</label> 
-                <InputText id="status" @bind-Value="CalendarEvent.Status" class="form-control" /> 
-                <ValidationMessage For="() => CalendarEvent.Status" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="hostuserid" class="form-label">HostUserId:</label> 
-                <InputNumber id="hostuserid" @bind-Value="CalendarEvent.HostUserId" class="form-control" /> 
-                <ValidationMessage For="() => CalendarEvent.HostUserId" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="activityid" class="form-label">ActivityId:</label> 
-                <InputNumber id="activityid" @bind-Value="CalendarEvent.ActivityId" class="form-control" /> 
-                <ValidationMessage For="() => CalendarEvent.ActivityId" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="datecreated" class="form-label">DateCreated:</label> 
-                <InputDate id="datecreated" @bind-Value="CalendarEvent.DateCreated" class="form-control" /> 
-                <ValidationMessage For="() => CalendarEvent.DateCreated" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="dateupdated" class="form-label">DateUpdated:</label> 
-                <InputDate id="dateupdated" @bind-Value="CalendarEvent.DateUpdated" class="form-control" /> 
-                <ValidationMessage For="() => CalendarEvent.DateUpdated" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="createdby" class="form-label">CreatedBy:</label> 
-                <InputText id="createdby" @bind-Value="CalendarEvent.CreatedBy" class="form-control" /> 
-                <ValidationMessage For="() => CalendarEvent.CreatedBy" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="updatedby" class="form-label">UpdatedBy:</label> 
-                <InputText id="updatedby" @bind-Value="CalendarEvent.UpdatedBy" class="form-control" /> 
-                <ValidationMessage For="() => CalendarEvent.UpdatedBy" class="text-danger" /> 
-            </div>        
-            <button type="submit" class="btn btn-primary">Create</button>
+                <label class="form-label fw-bold">Description</label>
+                <InputTextArea @bind-Value="EventDescription" class="form-control" rows="3" />
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button type="button" class="btn btn-light" @onclick='() => NavigationManager.NavigateTo("/calendarevents")'>Cancel</button>
+                <button type="submit" class="btn btn-primary px-4">Create Event</button>
+            </div>
         </EditForm>
     </div>
 </div>
 
-<div>
-    <a href="/calendarevents">Back to List</a>
-</div>
-
 @code {
-    [SupplyParameterFromForm]
-    private CalendarEvent CalendarEvent { get; set; } = new();
+    private CalendarEvent CalendarEvent { get; set; } = new() { StartDateTime = DateTime.Now, EndDateTime = DateTime.Now.AddHours(1), CalendarType = "Work" };
+    private string InvitedEmails { get; set; } = "";
+    private string EventDescription { get; set; } = "";
 
-    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddCalendarEvent()
     {
-        using var context = DbFactory.CreateDbContext();
-        context.CalendarEvent.Add(CalendarEvent);
-        await context.SaveChangesAsync();
-        NavigationManager.NavigateTo("/calendarevents");
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            using var context = DbFactory.CreateDbContext();
+
+            // 1. Auto-assign ID and Audit fields
+            CalendarEvent.HostUserId = int.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            CalendarEvent.CreatedBy = user.Identity.Name;
+            CalendarEvent.DateCreated = DateTime.Now;
+
+            // Logic: Auto-assign ActivityId based on Category
+            // In a real app, you might look up an existing activity or create a placeholder
+            CalendarEvent.ActivityId = (CalendarEvent.CalendarType == "Work") ? 1 : 2;
+
+            context.CalendarEvent.Add(CalendarEvent);
+            await context.SaveChangesAsync();
+
+            // 2. Handle Invitations
+            if (!string.IsNullOrWhiteSpace(InvitedEmails))
+            {
+                var emails = InvitedEmails.Split(',').Select(e => e.Trim()).ToList();
+                foreach (var email in emails)
+                {
+                    var invitedUser = await context.User.FirstOrDefaultAsync(u => u.Email == email);
+                    if (invitedUser != null)
+                    {
+                        context.EventParticipant.Add(new EventParticipant
+                        {
+                            CalendarEventId = CalendarEvent.Id,
+                            UserId = invitedUser.Id,
+                            ParticipationStatus = "Pending"
+                        });
+                    }
+                }
+                await context.SaveChangesAsync();
+            }
+
+            NavigationManager.NavigateTo("/calendarevents");
+        }
     }
 }
