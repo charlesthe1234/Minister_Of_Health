@@ -1,0 +1,123 @@
+﻿/* === Page Wrapper === */
+.home-background {
+    position: fixed; /* Ensures it stays behind everything even if scrolling occurs */
+    inset: 0;        /* Shorthand for top:0, left:0, right:0, bottom:0 */
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: -2;
+}
+
+/* === Background Video === */
+.background-video {
+    position: absolute;
+    inset: 0;        /* Matches your working login logic */
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+}
+
+/* === Video Overlay === */
+.video-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5); /* Slightly lightened from 0.65 to see more video detail */
+    z-index: -1;
+}
+
+/* === Content Container === */
+.content-container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 600px;
+    padding: 20px;
+    text-align: center;
+}
+
+/* === The Dark Glass Card === */
+.glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 3rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    z-index: 99;
+}
+
+/* Keep the rest of your typography and button styles below... */
+.user-name {
+    color: #ffffff;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+}
+
+.logo-image {
+    width: 180px;
+    margin-bottom: 30px;
+    filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+}
+
+.epicurus-quote {
+    color: #dddddd;
+    font-style: italic;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    margin-bottom: 5px;
+}
+
+.quote-author {
+    color: #888888;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.cta-section {
+    margin-top: 40px;
+}
+
+.instruction-text {
+    color: #aaaaaa;
+    margin-bottom: 20px;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    position: relative; /* Add this */
+    z-index: 100; /* Higher than the glass card */
+}
+
+.btn-minister {
+    display: inline-block;
+    text-decoration: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer; /* Ensures the hand icon appears */
+    border: none;
+    text-align: center;
+    position: relative; /* Add this */
+    z-index: 101; /* Ensure the link itself is clickable */
+}
+
+.btn-minister.primary {
+    background: #007aff;
+    color: white;
+}
+
+.btn-minister.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
