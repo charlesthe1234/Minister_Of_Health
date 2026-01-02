@@ -6,16 +6,18 @@
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="horizontal-nav">
 
-        <div class="brand-container">
-            <img src="images/SmallLogo.png" alt="Minister of Time Logo" class="brand-logo" />
-            <p class="logo-name"> MINISTER OF TIME</p>
+        <div class="nav-item px-3">
+            <div class="brand-container">
+                <img src="images/SmallLogo.png" alt="Minister of Time Logo" class="brand-logo" />
+                <p class="logo-name"> MINISTER OF TIME</p>
+            </div>
         </div>
 
         <AuthorizeView>
             <NotAuthorized>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                    <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Login
+                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Login @*aria-hidden is for visually impaired *@
                 </NavLink>
             </div>
             </NotAuthorized>
