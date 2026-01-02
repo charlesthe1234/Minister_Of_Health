@@ -39,7 +39,7 @@
     background-color: black;
     font-size: 1.2em;
     font-style: italic;
-    margin-bottom: 30px;
+    margin-bottom: 10px;
     text-shadow: 1px 1px 3px black;
 }
 
@@ -48,8 +48,6 @@
     display: flex;
     justify-content: space-between;
     width: 600px; 
-    position: absolute;
-    top: 55%; 
 }
 
 .work-link, .life-link {

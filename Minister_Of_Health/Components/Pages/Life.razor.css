@@ -17,6 +17,7 @@
     background-color: rgba(0, 0, 0, 0.7);
     padding: 15px;
     border-radius: 5px;
+    max-width: 300px
 }
 
 .life-main-title {
