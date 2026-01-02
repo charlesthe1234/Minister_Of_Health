@@ -1,5 +1,4 @@
 ﻿.brand-container {
-    position: absolute;
     left: 1rem;
     display: flex;
     align-items: center; /* Vertically centers logo and text together */
@@ -26,11 +25,20 @@
     align-items: center;
     padding: 0 1rem;
     position: relative;
+    width:100%
 }
 
 .nav-item {
     padding: 0 10px; /* Add spacing between links */
     white-space: nowrap;
+}
+
+.nav-item:last-child {
+    margin-left: auto;
+}
+
+.nav-item:first-child {
+    margin-right: auto;
 }
 
 .navbar-toggler {
