@@ -1,0 +1,98 @@
+﻿.about-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px;
+    /* This ensures it fits perfectly with your full-screen background */
+    min-height: 100vh;
+}
+
+.top-accent {
+    width: 200px;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, #FFD700, transparent);
+    margin-bottom: -2px; /* Pulls the card to meet the bar */
+    z-index: 10;
+}
+
+.glass-document {
+    background: rgba(15, 15, 15, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    border-radius: 4px; /* Sharp corners look more official than rounded */
+    padding: 50px;
+    max-width: 750px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    position: relative;
+    overflow: hidden;
+}
+
+    /* Add a subtle "M" watermark in the background */
+    .glass-document::before {
+        content: "M";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 30rem;
+        color: rgba(255, 255, 255, 0.02);
+        font-family: 'serif';
+        z-index: -1;
+    }
+
+.document-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.mini-seal {
+    width: 60px;
+    filter: sepia(1) saturate(5) hue-rotate(10deg); /* Makes logo look gold */
+    margin-bottom: 15px;
+}
+
+.ministry-title {
+    font-family: 'Times New Roman', serif;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    font-size: 1.2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: inline-block;
+    padding-bottom: 10px;
+}
+
+.mandate-box {
+    margin-bottom: 35px;
+}
+
+.gold-label {
+    color: #FFD700;
+    font-family: 'Georgia', serif;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+.mandate-text {
+    color: #d1d1d1;
+    font-family: 'Georgia', serif;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    font-style: italic;
+}
+
+.signature-line {
+    margin-top: 50px;
+    border-top: 1px solid rgba(255, 215, 0, 0.2);
+    padding-top: 20px;
+    text-align: center;
+    color: #888;
+}
+
+.script-font {
+    font-family: 'Brush Script MT', cursive; /* Or any script font you have */
+    font-size: 1.8rem;
+    color: #FFD700;
+}

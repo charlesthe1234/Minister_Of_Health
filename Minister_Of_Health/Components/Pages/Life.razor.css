@@ -69,3 +69,28 @@
     bottom: 20%;
     left: 15%;
 }
+
+.charts-wrapper {
+    display: flex;
+    flex-wrap: wrap; /* Allows charts to stack on small screens */
+    justify-content: center;
+    gap: 30px;
+    padding: 20px;
+    z-index: 10;
+    position: relative;
+}
+
+.chart-box {
+    background: rgba(255, 255, 255, 0.05); /* Glassmorphism effect */
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 20px;
+    width: 350px; /* Adjust size as needed */
+}
+
+/* Ensure the canvas doesn't break its container */
+canvas {
+    max-width: 100% !important;
+    height: auto !important;
+}
