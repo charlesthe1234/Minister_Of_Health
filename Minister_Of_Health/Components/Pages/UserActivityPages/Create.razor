@@ -1,0 +1,78 @@
+﻿@page "/useractivities/create"
+@using Microsoft.EntityFrameworkCore
+@using Minister_Of_Time.Domain
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject NavigationManager NavigationManager
+
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+
+<div class="container mt-5">
+    <div class="card shadow p-4">
+        <h2>Define New Activity</h2>
+
+        <EditForm Model="UserActivity" OnValidSubmit="AddUserActivity" FormName="createActivity">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Activity Name</label>
+                <InputText @bind-Value="UserActivity.Name" class="form-control" placeholder="e.g., Strategic Planning" />
+                <ValidationMessage For="() => UserActivity.Name" />
+            </div>
+
+            @* Note: No UserId input here. It is handled in @code *@
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Save Activity</button>
+                <button type="button" class="btn btn-secondary" @onclick='() => NavigationManager.NavigateTo("/useractivities")'>Cancel</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? authStateTask { get; set; }
+
+    private UserActivity UserActivity { get; set; } = new();
+    private int? currentDbUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (authStateTask != null)
+        {
+            var authState = await authStateTask;
+            var user = authState.User;
+
+            if (user.Identity is not null && user.Identity.IsAuthenticated)
+            {
+                using var context = DbFactory.CreateDbContext();
+                string loginEmail = user.Identity.Name ?? "";
+
+                // Look up the internal Database ID for this email
+                var dbUser = await context.Set<User>()
+                    .FirstOrDefaultAsync(u => u.Email.ToLower().Trim() == loginEmail.ToLower().Trim());
+
+                if (dbUser != null)
+                {
+                    currentDbUserId = dbUser.Id;
+                }
+            }
+        }
+    }
+
+    private async Task AddUserActivity()
+    {
+        if (currentDbUserId == null) return; // Safety check
+
+        using var context = DbFactory.CreateDbContext();
+
+        // Assign the ID we retrieved during Initialization
+        UserActivity.UserId = currentDbUserId.Value;
+
+        context.UserActivity.Add(UserActivity);
+        await context.SaveChangesAsync();
+
+        NavigationManager.NavigateTo("/calendarevents/create"); // Go back to making an event
+    }
+}

@@ -21,7 +21,7 @@ namespace Minister_Of_Time.Data
         public DbSet<Minister_Of_Time.Domain.EventRole> EventRole { get; set; } = default!;
         public DbSet<Minister_Of_Time.Domain.CalendarEvent> CalendarEvent { get; set; } = default!;
         public DbSet<Minister_Of_Time.Domain.EventParticipant> EventParticipant { get; set; } = default!;
-        public DbSet<Minister_Of_Time.Domain.UserActivity> Activity { get; set; } = default!;
+        public DbSet<Minister_Of_Time.Domain.UserActivity> UserActivity { get; set; } = default!;
         public DbSet<Minister_Of_Time.Domain.CloseConnection> CloseConnection { get; set; } = default!;
         public DbSet<Minister_Of_Time.Domain.StressRecord> StressRecord { get; set; } = default!;
         protected override void OnModelCreating(ModelBuilder modelBuilder)
