@@ -82,9 +82,9 @@
             CalendarEvent.CreatedBy = user.Identity.Name;
             CalendarEvent.DateCreated = DateTime.Now;
 
-            // Logic: Auto-assign ActivityId based on Category
+            // Logic: Auto-assign UserActivityId based on Category
             // In a real app, you might look up an existing activity or create a placeholder
-            CalendarEvent.ActivityId = (CalendarEvent.CalendarType == "Work") ? 1 : 2;
+            CalendarEvent.UserActivityId = (CalendarEvent.CalendarType == "Work") ? 1 : 2;
 
             context.CalendarEvent.Add(CalendarEvent);
             await context.SaveChangesAsync();

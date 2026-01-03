@@ -58,9 +58,9 @@ else
                     <ValidationMessage For="() => CalendarEvent.HostUserId" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="activityid" class="form-label">ActivityId:</label>
-                    <InputNumber id="activityid" @bind-Value="CalendarEvent.ActivityId" class="form-control" />
-                    <ValidationMessage For="() => CalendarEvent.ActivityId" class="text-danger" />
+                    <label for="useractivityid" class="form-label">UserActivityId:</label>
+                    <InputNumber id="useractivityid" @bind-Value="CalendarEvent.UserActivityId" class="form-control" />
+                    <ValidationMessage For="() => CalendarEvent.UserActivityId" class="text-danger" />
                 </div>
                 <div class="mb-3">
                     <label for="datecreated" class="form-label">DateCreated:</label>
@@ -110,8 +110,6 @@ else
         }
     }
 
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task UpdateCalendarEvent()
     {
         using var context = DbFactory.CreateDbContext();
