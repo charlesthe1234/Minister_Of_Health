@@ -1,4 +1,4 @@
-﻿@page "/activities"
+﻿@page "/useractivities"
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using Minister_Of_Time.Domain
@@ -14,7 +14,7 @@
     <a href="activities/create">Create New</a>
 </p>
 
-<QuickGrid Class="table" Items="context.Activity">
+<QuickGrid Class="table" Items="context.UserActivity">
     <PropertyColumn Property="activity => activity.Name" />
     <PropertyColumn Property="activity => activity.StartDate" />
     <PropertyColumn Property="activity => activity.Description" />

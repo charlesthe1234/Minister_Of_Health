@@ -4,6 +4,7 @@ namespace Minister_Of_Time.Domain
 {
     public class CalendarEvent : BaseDomainModel
     {
+
         public string EventName { get; set; } = string.Empty;
         public string? Location { get; set; }
         public DateTime StartDateTime { get; set; }
@@ -13,10 +14,10 @@ namespace Minister_Of_Time.Domain
 
         // Foreign Keys 
         public int HostUserId { get; set; }
-        public int ActivityId { get; set; }
+        public int UserActivityId { get; set; }
 
         // Navigation Properties
         public virtual User? HostUser { get; set; } // Link back to the User who is hosting
-        public virtual UserActivity? Activity { get; set; }
+        public virtual UserActivity? UserActivity { get; set; }
     }
 }
