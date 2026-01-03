@@ -4,6 +4,7 @@ namespace Minister_Of_Time.Domain
 {
     public class CalendarEvent : BaseDomainModel
     {
+
         public string EventName { get; set; } = string.Empty;
         public string? Location { get; set; }
         public DateTime StartDateTime { get; set; }

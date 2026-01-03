@@ -65,15 +65,20 @@
                     {
                         <span class="day-num">@day.Day</span>
                         <div class="event-pills-container">
-                            @foreach (var ev in userEvents.Where(e => e.StartDateTime.Date == day.Date))
+                            @* Show events if 'day' is between Start and End dates (inclusive) *@
+                            @foreach (var ev in userEvents.Where(e => day.Date >= e.StartDateTime.Date && day.Date <= e.EndDateTime.Date))
                             {
-                                <div class="event-pill @ev.CalendarType?.ToLower()">@ev.EventName</div>
+                                @* Add a 'multi-day' class if you want to style stretched events differently *@
+                                <div class="event-pill @ev.CalendarType?.ToLower() @(ev.StartDateTime.Date != ev.EndDateTime.Date ? "is-multi-day" : "")">
+                                    @ev.EventName
+                                </div>
                             }
                         </div>
                     }
                 </div>
             }
         </div>
+        
     </main>
 </div>
 
