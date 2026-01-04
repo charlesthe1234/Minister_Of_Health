@@ -11,6 +11,7 @@ namespace Minister_Of_Time.Domain
         public DateTime EndDateTime { get; set; }
         public string? CalendarType { get; set; }
         public string? Status { get; set; }
+        public string? Description { get; set; }
 
         // Foreign Keys 
         public int HostUserId { get; set; }
