@@ -139,3 +139,8 @@
     filter: blur(5px);
     pointer-events: none;
 }
+
+.event-pill.is-multi-day {
+    border-radius: 0; /* Makes them look connected across cells */
+    margin-bottom: 2px;
+}

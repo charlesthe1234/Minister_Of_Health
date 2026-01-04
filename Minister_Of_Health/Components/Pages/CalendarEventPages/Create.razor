@@ -20,7 +20,7 @@
                     <label class="form-label fw-bold">Event Name</label>
                     <InputText @bind-Value="CalendarEvent.EventName" class="form-control" placeholder="What's happening?" />
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md6 mb-3">
                     <label class="form-label fw-bold">Location</label>
                     <InputText @bind-Value="CalendarEvent.Location" class="form-control" placeholder="Physical or Digital address" />
                 </div>
@@ -29,19 +29,33 @@
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <label class="form-label fw-bold">Start Date & Time</label>
-                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="CalendarEvent.StartDateTime" class="form-control" />
+                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="CalendarEvent.StartDateTime" @bind-Value:after="SyncDates"  class="form-control" />
                 </div>
                 <div class="col-md-4 mb-3">
                     <label class="form-label fw-bold">End Date & Time</label>
                     <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="CalendarEvent.EndDateTime" class="form-control" />
                 </div>
+                
+                @* UPDATED: Using the Activity Name as the "Key" for the UserActivity table *@
                 <div class="col-md-4 mb-3">
-                    <label class="form-label fw-bold">Category</label>
-                    <InputSelect @bind-Value="CalendarEvent.CalendarType" class="form-select">
-                        <option value="Work">Work</option>
-                        <option value="Life">Life</option>
-                    </InputSelect>
+                    <label class="form-label fw-bold">Activity Type</label>
+                    <input list="activity-suggestions" @bind="InputActivityName" class="form-control" placeholder="e.g., Training, Meeting" />
+                    <datalist id="activity-suggestions">
+                        @foreach (var suggestion in Suggestions)
+                        {
+                            <option value="@suggestion.Name" />
+                        }
+                    </datalist>
                 </div>
+            </div>
+
+            @* Keep your Category for color/sorting purposes if you like *@
+            <div class="mb-3">
+                <label class="form-label fw-bold">Category (Color Grouping)</label>
+                <InputSelect @bind-Value="CalendarEvent.CalendarType" class="form-select">
+                    <option value="Work">Work</option>
+                    <option value="Life">Life</option>
+                </InputSelect>
             </div>
 
             <div class="mb-3">
@@ -64,32 +78,81 @@
 </div>
 
 @code {
-    private CalendarEvent CalendarEvent { get; set; } = new() { StartDateTime = DateTime.Now, EndDateTime = DateTime.Now.AddHours(1), CalendarType = "Work" };
-    private string InvitedEmails { get; set; } = "";
-    private string EventDescription { get; set; } = "";
+    [SupplyParameterFromForm]
+    public CalendarEvent CalendarEvent { get; set; } = new() 
+    { 
+        StartDateTime = DateTime.Now, 
+        EndDateTime = DateTime.Now.AddHours(1), 
+        CalendarType = "Work" 
+    };
+
+    [SupplyParameterFromForm]
+    public string InvitedEmails { get; set; } = "";
+
+    [SupplyParameterFromForm]
+    public string EventDescription { get; set; } = "";
+
+    [SupplyParameterFromForm]
+    public string InputActivityName { get; set; } = "General";
+
+    private List<UserActivity> Suggestions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userIdStr = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (int.TryParse(userIdStr, out int currentUserId))
+        {
+            using var context = DbFactory.CreateDbContext();
+            // Load existing activities so the user can select them from the list
+            Suggestions = await context.UserActivity
+                .Where(a => a.UserId == currentUserId)
+                .ToListAsync();
+        }
+    }
 
     private async Task AddCalendarEvent()
     {
+        // 1. Validation Check to ensure end date is not before start date
+        if (CalendarEvent.EndDateTime < CalendarEvent.StartDateTime)
+        {
+            // Force them to be equal if the user tried to cheat
+            CalendarEvent.EndDateTime = CalendarEvent.StartDateTime;
+        }
+
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
         if (user.Identity?.IsAuthenticated == true)
         {
             using var context = DbFactory.CreateDbContext();
+            int currentUserId = int.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-            // 1. Auto-assign ID and Audit fields
-            CalendarEvent.HostUserId = int.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            // 1. FIND OR CREATE ACTIVITY
+            var activityName = string.IsNullOrWhiteSpace(InputActivityName) ? "General" : InputActivityName.Trim();
+            
+            var activity = await context.UserActivity
+                .FirstOrDefaultAsync(a => a.Name.ToLower() == activityName.ToLower() && a.UserId == currentUserId);
+
+            if (activity == null)
+            {
+                activity = new UserActivity { Name = activityName, UserId = currentUserId };
+                context.UserActivity.Add(activity);
+                await context.SaveChangesAsync(); // Generates the new ID
+            }
+
+            // 2. ASSIGN FOREIGN KEYS & AUDIT INFO
+            CalendarEvent.HostUserId = currentUserId;
+            CalendarEvent.UserActivityId = activity.Id; // The actual ID for the DB constraint
             CalendarEvent.CreatedBy = user.Identity.Name;
             CalendarEvent.DateCreated = DateTime.Now;
-
-            // Logic: Auto-assign ActivityId based on Category
-            // In a real app, you might look up an existing activity or create a placeholder
-            CalendarEvent.ActivityId = (CalendarEvent.CalendarType == "Work") ? 1 : 2;
 
             context.CalendarEvent.Add(CalendarEvent);
             await context.SaveChangesAsync();
 
-            // 2. Handle Invitations
+            // 3. HANDLE INVITATIONS (Your existing logic)
             if (!string.IsNullOrWhiteSpace(InvitedEmails))
             {
                 var emails = InvitedEmails.Split(',').Select(e => e.Trim()).ToList();
@@ -110,6 +173,17 @@
             }
 
             NavigationManager.NavigateTo("/calendarevents");
+        }
+    }
+
+    // Method added to ensure end date is not before start date
+    private void SyncDates()
+    {
+        // If the start date is now AFTER the end date, move the end date forward
+        if (CalendarEvent.StartDateTime > CalendarEvent.EndDateTime)
+        {
+            // Set end date to 1 hour after start date by default
+            CalendarEvent.EndDateTime = CalendarEvent.StartDateTime.AddHours(1);
         }
     }
 }
