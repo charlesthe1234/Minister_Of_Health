@@ -1,6 +1,5 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,58 +10,95 @@
     <link rel="icon" type="image/png" href="/images/SmallLogo.png" />
     <HeadOutlet />
 </head>
-
 <body>
     <Routes />
     <script src="_framework/blazor.web.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-        window.renderLifeCharts = () => {
-            // 1. Render Pie Chart
-            var pieCanvas = document.getElementById('lifePieChart');
-            if (pieCanvas) {
-                new Chart(pieCanvas, {
-                    type: 'pie',
-                    data: {
-                        labels: ['Family', 'Hobby', 'Health', 'Events'],
-                        datasets: [{
-                            data: [40, 15, 25, 20],
-                            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
-                        }]
-                    }
-                });
+        window.renderLifeCharts = (labels, dataValues) => {
+            // STEP 1: Check what reached the browser from C#
+            console.log("DEBUG JS 1: Function triggered by Blazor");
+            console.log("DEBUG JS 2: Labels received from C#:", labels);
+            console.log("DEBUG JS 3: Values received from C#:", dataValues);
+
+            // --- LINE CHART (Hardcoded) ---
+            const lineCtx = document.getElementById('lifeLineChart');
+            if (lineCtx) {
+                try {
+                    let existingLine = Chart.getChart("lifeLineChart");
+                    if (existingLine) existingLine.destroy();
+
+                    new Chart(lineCtx, {
+                        type: 'line',
+                        data: {
+                            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                            datasets: [{
+                                label: 'Weekly Activity',
+                                data: [65, 59, 80, 81, 56, 55, 40],
+                                borderColor: '#FFD700',
+                                backgroundColor: 'rgba(255, 215, 0, 0.2)',
+                                fill: true,
+                                tension: 0.1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { labels: { color: 'white' } } },
+                            scales: {
+                                y: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                                x: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+                            }
+                        }
+                    });
+                    console.log("DEBUG JS 4: Line Chart rendered successfully.");
+                } catch (err) {
+                    console.error("DEBUG JS ERROR (Line Chart):", err);
+                }
             }
 
-            // 2. Render Line Chart
-            var lineCanvas = document.getElementById('lifeLineChart');
-            if (lineCanvas) {
-                new Chart(lineCanvas, {
-                    type: 'line',
-                    data: {
-                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                        datasets: [{
-                            label: 'Activity Level',
-                            data: [65, 59, 80, 81, 56, 55, 40],
-                            fill: false,
-                            borderColor: '#FFD700', // Gold color for the Minister
-                            tension: 0.1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { labels: { color: 'white' } } // Makes legend text readable on black
-                        },
-                        scales: {
-                            y: { ticks: { color: 'white' } }, // Makes axis numbers readable
-                            x: { ticks: { color: 'white' } }
-                        }
+            // --- PIE CHART (Database Driven) ---
+            const pieCtx = document.getElementById('lifePieChart');
+            if (pieCtx) {
+                try {
+                    // Safety check: if C# sent nothing, warn us
+                    if (!labels || labels.length === 0) {
+                        console.warn("DEBUG JS 5: Pie Chart has 0 items. It will be an empty box.");
                     }
-                });
+
+                    let existingPie = Chart.getChart("lifePieChart");
+                    if (existingPie) existingPie.destroy();
+
+                    new Chart(pieCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: dataValues,
+                                backgroundColor: [
+                                    '#FF6384', '#36A2EB', '#FFCE56',
+                                    '#4BC0C0', '#9966FF', '#FF9F40'
+                                ],
+                                borderColor: 'rgba(255, 255, 255, 0.2)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { color: 'white' }
+                                }
+                            }
+                        }
+                    });
+                    console.log("DEBUG JS 6: Pie Chart rendered with", labels.length, "slices.");
+                } catch (err) {
+                    console.error("DEBUG JS ERROR (Pie Chart):", err);
+                }
             }
         };
     </script>
 </body>
-
 </html>

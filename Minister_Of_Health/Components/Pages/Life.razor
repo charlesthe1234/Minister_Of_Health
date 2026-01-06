@@ -1,38 +1,101 @@
 ﻿@page "/life"
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@using Minister_Of_Time.Domain
 @rendermode InteractiveServer
+
 @inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthStateProvider
+@inject UserManager<User> UserManager
+@inject IDbContextFactory<Minister_Of_TimeContext> DbFactory
+
 <PageTitle>Life Page</PageTitle>
 
 <div class="life-background">
-
-        <div class="charts-wrapper">
-            <div class="chart-box">
-                <h2 style="color: white;">Distribution</h2>
-                <canvas id="lifePieChart"></canvas>
-            </div>
-
-            <div class="chart-box">
-                <h2 style="color: white;">Weekly Progress</h2>
-                <canvas id="lifeLineChart"></canvas>
-            </div>
+    <div class="charts-wrapper">
+        <div class="chart-box">
+            <h2 style="color: white;">Weekly Progress</h2>
+            <canvas id="lifeLineChart"></canvas>
         </div>
+
+        <div class="chart-box">
+            <h2 style="color: white;">Distribution</h2>
+            <canvas id="lifePieChart"></canvas>
+        </div>
+    </div>
 
     <div class="logo-title-container">
         <img src="/images/BigLogo.png" class="life-logo-image" alt="Minister of Time Logo" />
-        <h1 class="life-main-title">Dear Charles</h1>
-        <blockquote class="life-quote">"Caring for yourself is not self-indulgence, it is self-preservation, and that is an act of political warfare."</blockquote>
+        <h1 class="life-main-title">Dear @DisplayName</h1>
+        <blockquote class="life-quote">"Caring for yourself is not self-indulgence, it is self-preservation."</blockquote>
     </div>
-
     <a href="/home" class="life-link events-link">Back</a>
-
 </div>
 
 @code {
+    private string DisplayName = "User";
+    private List<double> chartData = new();
+    private List<string> chartLabels = new();
+
+    // 1. Keep your OnInitializedAsync but ONLY for the DisplayName
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userClaims = authState.User;
+        if (userClaims.Identity?.IsAuthenticated == true)
+        {
+            using var context = DbFactory.CreateDbContext();
+            var userIdString = UserManager.GetUserId(userClaims);
+            var dbUser = await context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userIdString);
+            if (dbUser != null) DisplayName = dbUser.Name ?? "User";
+        }
+    }
+
+    // 2. PASTE THE NEW CODE HERE (Replacing the old OnAfterRenderAsync)
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await JSRuntime.InvokeVoidAsync("renderLifeCharts"); @*call from app.raozr*@
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                var userIdString = UserManager.GetUserId(user);
+
+                // This will appear in Visual Studio Output
+                Console.WriteLine($"CONNECTED USER ID: {userIdString}");
+
+                using var context = DbFactory.CreateDbContext();
+
+                // Fetch events
+                var events = await context.CalendarEvent
+                    .Where(e => e.HostUserId.ToString() == userIdString)
+                    .ToListAsync();
+
+                Console.WriteLine($"MATCHES FOUND: {events.Count}");
+
+                if (events.Any())
+                {
+                    var groupedData = events
+                        .GroupBy(e => e.CalendarType ?? "Other")
+                        .Select(g => new
+                        {
+                            Category = g.Key,
+                            Minutes = g.Sum(e => (e.EndDateTime - e.StartDateTime).TotalMinutes)
+                        }).ToList();
+
+                    chartLabels = groupedData.Select(x => x.Category).ToList();
+                    chartData = groupedData.Select(x => x.Minutes).ToList();
+
+                    // Send to the JS receiver we fixed earlier
+                    await JSRuntime.InvokeVoidAsync("renderLifeCharts", chartLabels, chartData);
+
+                    // Tell Blazor to refresh the UI since we just updated chartLabels/Data
+                    StateHasChanged();
+                }
+            }
         }
     }
 }
