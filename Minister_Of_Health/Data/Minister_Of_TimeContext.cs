@@ -4,20 +4,21 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Minister_Of_Time.Domain;
+using Minister_Of_Time.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 
 namespace Minister_Of_Time.Data
 {
-    public class Minister_Of_TimeContext : IdentityDbContext<User, IdentityRole<int>, int>
+    public class Minister_Of_TimeContext : IdentityDbContext<User>
     {
         public Minister_Of_TimeContext (DbContextOptions<Minister_Of_TimeContext> options)
             : base(options)
         {
         }
 
-        public DbSet<Minister_Of_Time.Domain.User> User { get; set; } = default!;
+        public DbSet<Minister_Of_Time.Data.User> User { get; set; } = default!;
         public DbSet<Minister_Of_Time.Domain.EventRole> EventRole { get; set; } = default!;
         public DbSet<Minister_Of_Time.Domain.CalendarEvent> CalendarEvent { get; set; } = default!;
         public DbSet<Minister_Of_Time.Domain.EventParticipant> EventParticipant { get; set; } = default!;

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Minister_Of_Time.Data;
 
 namespace Minister_Of_Time.Domain
 {
@@ -8,7 +9,7 @@ namespace Minister_Of_Time.Domain
         public int FatigueLevel { get; set; }
 
         // Foreign Key IDs
-        public int UserId { get; set; }
+        public String UserId { get; set; } 
         public int CalendarEventId { get; set; }
 
         // Navigation Properties 

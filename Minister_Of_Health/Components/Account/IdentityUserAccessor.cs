@@ -1,4 +1,4 @@
-﻿using Minister_Of_Time.Domain;
+﻿using Minister_Of_Time.Data;
 using Microsoft.AspNetCore.Identity;
 
 namespace Minister_Of_Time.Components.Account

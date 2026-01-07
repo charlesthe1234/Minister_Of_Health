@@ -1,4 +1,6 @@
-﻿namespace Minister_Of_Time.Domain
+﻿using Minister_Of_Time.Data;
+
+namespace Minister_Of_Time.Domain
 {
     public class UserActivity : BaseDomainModel
     {
@@ -8,7 +10,7 @@
         public int DefaultStressValue { get; set; }
 
         // Relationship: Activity belongs to a User (the creator)
-        public int UserId { get; set; }
+        public String UserId { get; set; }
         public virtual User? User { get; set; }
 
         // Optional: Navigation property to see all events using this activity

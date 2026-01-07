@@ -4,7 +4,6 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
 @using System.ComponentModel.DataAnnotations
-
 @inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthStateProvider
@@ -40,15 +39,18 @@
                     <InputDate Type="InputDateType.DateTimeLocal"
                                @bind-Value="Input.StartDateTime"
                                @bind-Value:after="SyncDates"
+                               step="60"
                                class="form-control" />
                 </div>
                 <div class="col-md-4 mb-3">
                     <label class="form-label fw-bold">End Date & Time</label>
-                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="Input.EndDateTime" class="form-control" />
+                    <InputDate Type="InputDateType.DateTimeLocal"
+                               @bind-Value="Input.EndDateTime"
+                               step="60"
+                               class="form-control" />
                 </div>
                 <div class="col-md-4 mb-3">
                     <label class="form-label fw-bold">Activity Type</label>
-                    @* CHANGED: Use InputText instead of <input> so validation triggers correctly *@
                     <InputText list="activity-suggestions"
                                @bind-Value="Input.ActivityName"
                                class="form-control"
@@ -83,9 +85,7 @@
             </div>
 
             <div class="d-flex justify-content-end gap-2 mt-4">
-                @* CHANGED: Using a standard link (<a>) styled as a button for navigation *@
                 <a href="/calendarevents" class="btn btn-light border">Cancel</a>
-
                 <button type="submit" class="btn btn-primary px-4">Create Event</button>
             </div>
         </EditForm>
@@ -96,37 +96,63 @@
     private string? errorMessage;
     private List<UserActivity> Suggestions = new();
 
+    private List<(string Email, string RoleName)> ParseInvites(string input)
+    {
+        var list = new List<(string, string)>();
+        if (string.IsNullOrWhiteSpace(input)) return list;
+
+        var parts = input.Split(',');
+        foreach (var p in parts)
+        {
+            var trimmed = p.Trim();
+            var match = System.Text.RegularExpressions.Regex.Match(trimmed, @"^([^(\s]+)(?:\((.+?)\))?$");
+
+            if (match.Success)
+                list.Add((match.Groups[1].Value.Trim(), match.Groups[2].Value.Trim()));
+            else
+                list.Add((trimmed, "Viewer"));
+        }
+        return list;
+    }
+
     [SupplyParameterFromForm]
     private EventInputModel Input { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
-        // Default values for new form
+        var now = DateTime.Now;
+        var cleanNow = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0);
+
         if (Input.StartDateTime == default)
         {
-            Input.StartDateTime = DateTime.Now;
-            Input.EndDateTime = DateTime.Now.AddHours(1);
+            Input.StartDateTime = cleanNow;
+            Input.EndDateTime = cleanNow.AddHours(1);
         }
 
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         var userIdStr = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (int.TryParse(userIdStr, out int currentUserId))
+        // Corrected to use string comparison
+        if (!string.IsNullOrEmpty(userIdStr))
         {
             using var context = DbFactory.CreateDbContext();
             Suggestions = await context.UserActivity
-                .Where(a => a.UserId == currentUserId)
+                .Where(a => a.UserId == userIdStr)
                 .ToListAsync();
         }
     }
 
     private void SyncDates()
     {
+        Input.StartDateTime = new DateTime(
+            Input.StartDateTime.Year, Input.StartDateTime.Month, Input.StartDateTime.Day,
+            Input.StartDateTime.Hour, Input.StartDateTime.Minute, 0);
+
         if (Input.StartDateTime >= Input.EndDateTime)
         {
             Input.EndDateTime = Input.StartDateTime.AddHours(1);
-            StateHasChanged();  // This tells Blazor to refresh the UI immediately
+            StateHasChanged();
         }
     }
 
@@ -134,7 +160,6 @@
     {
         errorMessage = "";
 
-        // Final Logic Validation
         if (Input.EndDateTime <= Input.StartDateTime)
         {
             errorMessage = "Error: Start date must be before the end date.";
@@ -147,9 +172,10 @@
         if (user.Identity?.IsAuthenticated == true)
         {
             using var context = DbFactory.CreateDbContext();
-            int currentUserId = int.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-            // 1. Find or Create Activity
+            // Corrected: Removed int.Parse and handled as string
+            string currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+
             var actName = string.IsNullOrWhiteSpace(Input.ActivityName) ? "General" : Input.ActivityName.Trim();
             var activity = await context.UserActivity
                 .FirstOrDefaultAsync(a => a.Name.ToLower() == actName.ToLower() && a.UserId == currentUserId);
@@ -161,7 +187,6 @@
                 await context.SaveChangesAsync();
             }
 
-            // 2. Map Input to Domain Model
             var newEvent = new CalendarEvent
             {
                 EventName = Input.EventName,
@@ -173,14 +198,33 @@
                 UserActivityId = activity.Id,
                 CreatedBy = user.Identity.Name,
                 DateCreated = DateTime.Now,
-                Description = Input.Description // Make sure this property exists in your domain model
+                Description = Input.Description
             };
 
             context.CalendarEvent.Add(newEvent);
+
+            var inviteDetails = ParseInvites(Input.InvitedEmails);
+
+            if (inviteDetails.Any())
+            {
+                var roles = await context.EventRole.ToDictionaryAsync(r => r.RoleName.ToLower(), r => r.Id);
+
+                foreach (var item in inviteDetails)
+                {
+                    roles.TryGetValue(item.RoleName.ToLower(), out int roleId);
+                    if (roleId == 0) roleId = 2;
+
+                    context.EventParticipant.Add(new EventParticipant
+                    {
+                        CalendarEvent = newEvent,
+                        InviteeEmail = item.Email,
+                        EventRoleId = roleId,
+                        ParticipationStatus = "Pending"
+                    });
+                }
+            }
+
             await context.SaveChangesAsync();
-
-            // 3. Invitations... (Existing logic omitted for brevity, use Input.InvitedEmails)
-
             NavigationManager.NavigateTo("/calendarevents");
         }
     }

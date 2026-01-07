@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-
+using Minister_Of_Time.Data;
 namespace Minister_Of_Time.Domain
 {
     public class CalendarEvent : BaseDomainModel
@@ -14,7 +14,7 @@ namespace Minister_Of_Time.Domain
         public string? Description { get; set; }
 
         // Foreign Keys 
-        public int HostUserId { get; set; }
+        public String HostUserId { get; set; }
         public int UserActivityId { get; set; }
 
         // Navigation Properties
