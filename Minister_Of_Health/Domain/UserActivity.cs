@@ -9,6 +9,7 @@
 
         // Relationship: Activity belongs to a User (the creator)
         public int UserId { get; set; }
+        public string? ActivityType { get; set; }
         public virtual User? User { get; set; }
 
         // Optional: Navigation property to see all events using this activity

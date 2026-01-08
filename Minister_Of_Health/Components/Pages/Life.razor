@@ -68,6 +68,7 @@
 
                 // Fetch events
                 var events = await context.CalendarEvent
+                    .Include(e => e.UserActivity)
                     .Where(e => e.HostUserId.ToString() == userIdString)
                     .ToListAsync();
 
@@ -76,7 +77,7 @@
                 if (events.Any())
                 {
                     var groupedData = events
-                        .GroupBy(e => e.UserActivityId.ToString() ?? "Other")//This line will determine the category of pie chart
+                        .GroupBy(e => e.UserActivity?.ActivityType ?? "Other")//This line will determine the category of pie chart
                         .Select(g => new
                         {
                             Category = g.Key,
