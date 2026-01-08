@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace Minister_Of_Time.Migrations
 {
     /// <inheritdoc />
-    public partial class dbfix : Migration
+    public partial class initialseed : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -349,6 +351,54 @@ namespace Minister_Of_Time.Migrations
                         principalTable: "CalendarEvent",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.InsertData(
+                table: "AspNetRoles",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[,]
+                {
+                    { "ad2bcf0c-20db-474f-8407-5a6b159518ba", null, "Administrator", "ADMINISTRATOR" },
+                    { "bd2bcf0c-20db-474f-8407-5a6b159518bb", null, "User", "USER" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "AspNetUsers",
+                columns: new[] { "Id", "AccessFailedCount", "Address", "Birthday", "ConcurrencyStamp", "ContactNumber", "Email", "EmailConfirmed", "Gender", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
+                values: new object[,]
+                {
+                    { "3781efa7-66dc-47f0-860f-e506d04102e4", 0, null, null, "8638fd01-3929-4e5a-82d4-4df28636fc3a", null, "admin@localhost.com", true, "Male", false, null, "Admin", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAEHwsiV60fqyB+tedu2DHwEfIlHxZm7cM67d6V+GD/QHy4NAcH5g+XfJ7HsQJj0lZjA==", null, false, "5aabb841-5759-432c-8ee9-7b0518cc20b2", false, "admin@localhost.com" },
+                    { "4781efa7-66dc-47f0-860f-e506d04102e5", 0, null, null, "489dca2f-bbe4-4da0-8fd1-8ef77ba7dd87", null, "user@localhost.com", true, "Male", false, null, "BumXing", "USER@LOCALHOST.COM", "USER@LOCALHOST.COM", "AQAAAAIAAYagAAAAELYbTLmnjcDxUE9zJdUZNJktEGGDcMEUs1uLEWd//LCFpdPHgt5D+Dq8ZCx207l4DA==", null, false, "01fe783c-e74d-4ced-adfe-ebd49d516dea", false, "user@localhost.com" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "EventRole",
+                columns: new[] { "Id", "CanChangeDateTime", "CanChangeLocation", "CanEditCalendarEventDetails", "CanInviteOthers", "CreatedBy", "DateCreated", "DateUpdated", "RoleName", "UpdatedBy" },
+                values: new object[,]
+                {
+                    { 1, false, false, false, false, "System", new DateTime(2026, 1, 8, 12, 8, 54, 992, DateTimeKind.Local).AddTicks(4723), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Organizer", null },
+                    { 2, false, false, false, false, "System", new DateTime(2026, 1, 8, 12, 8, 54, 992, DateTimeKind.Local).AddTicks(4739), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Viewer", null },
+                    { 3, false, false, false, false, "System", new DateTime(2026, 1, 8, 12, 8, 54, 992, DateTimeKind.Local).AddTicks(4741), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Editor", null }
+                });
+
+            migrationBuilder.InsertData(
+                table: "AspNetUserRoles",
+                columns: new[] { "RoleId", "UserId" },
+                values: new object[] { "ad2bcf0c-20db-474f-8407-5a6b159518ba", "3781efa7-66dc-47f0-860f-e506d04102e4" });
+
+            migrationBuilder.InsertData(
+                table: "UserActivity",
+                columns: new[] { "Id", "CreatedBy", "DateCreated", "DateUpdated", "DefaultStressValue", "Description", "Name", "StartDate", "UpdatedBy", "UserId" },
+                values: new object[] { 1, "System", new DateTime(2026, 1, 8, 12, 8, 55, 84, DateTimeKind.Local).AddTicks(4426), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 5, null, "General Activity", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "3781efa7-66dc-47f0-860f-e506d04102e4" });
+
+            migrationBuilder.InsertData(
+                table: "CalendarEvent",
+                columns: new[] { "Id", "CalendarType", "CreatedBy", "DateCreated", "DateUpdated", "Description", "EndDateTime", "EventName", "HostUserId", "Location", "StartDateTime", "Status", "UpdatedBy", "UserActivityId" },
+                values: new object[,]
+                {
+                    { 1, "Work", "System", new DateTime(2026, 1, 8, 12, 8, 55, 84, DateTimeKind.Local).AddTicks(4702), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, new DateTime(2026, 1, 10, 11, 0, 0, 0, DateTimeKind.Unspecified), "Project Launch Meeting", "3781efa7-66dc-47f0-860f-e506d04102e4", "Conference Room A", new DateTime(2026, 1, 10, 9, 0, 0, 0, DateTimeKind.Unspecified), null, null, 1 },
+                    { 2, "Life", "System", new DateTime(2026, 1, 8, 12, 8, 55, 84, DateTimeKind.Local).AddTicks(4705), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, new DateTime(2026, 1, 11, 19, 0, 0, 0, DateTimeKind.Unspecified), "Gym Session", "3781efa7-66dc-47f0-860f-e506d04102e4", "Local Fitness Center", new DateTime(2026, 1, 11, 17, 30, 0, 0, DateTimeKind.Unspecified), null, null, 1 },
+                    { 3, "Work", "System", new DateTime(2026, 1, 8, 12, 8, 55, 84, DateTimeKind.Local).AddTicks(4708), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, new DateTime(2026, 1, 12, 15, 30, 0, 0, DateTimeKind.Unspecified), "User's Private Workshop", "4781efa7-66dc-47f0-860f-e506d04102e5", "Online", new DateTime(2026, 1, 12, 14, 0, 0, 0, DateTimeKind.Unspecified), null, null, 1 }
                 });
 
             migrationBuilder.CreateIndex(
