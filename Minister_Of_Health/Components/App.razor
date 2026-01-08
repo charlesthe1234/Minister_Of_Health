@@ -22,7 +22,7 @@
             console.log("DEBUG JS 2: Labels received from C#:", labels);
             console.log("DEBUG JS 3: Values received from C#:", dataValues);
 
-            // --- LINE CHART (Hardcoded) ---
+            //LINE CHART
             const lineCtx = document.getElementById('lifeLineChart');
             if (lineCtx) {
                 try {
@@ -57,11 +57,10 @@
                 }
             }
 
-            // --- PIE CHART (Database Driven) ---
+            //PIE CHART
             const pieCtx = document.getElementById('lifePieChart');
             if (pieCtx) {
                 try {
-                    // Safety check: if C# sent nothing, warn us
                     if (!labels || labels.length === 0) {
                         console.warn("DEBUG JS 5: Pie Chart has 0 items. It will be an empty box.");
                     }
@@ -95,7 +94,7 @@
                     });
                     console.log("DEBUG JS 6: Pie Chart rendered with", labels.length, "slices.");
                 } catch (err) {
-                    console.error("DEBUG JS ERROR (Pie Chart):", err);
+                    console.error("DEBUG JS ERROR (Pie Chart):", err);//Show in console if pie chart error
                 }
             }
         };

@@ -38,7 +38,6 @@
     private List<double> chartData = new();
     private List<string> chartLabels = new();
 
-    // 1. Keep your OnInitializedAsync but ONLY for the DisplayName
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
@@ -52,7 +51,6 @@
         }
     }
 
-    // 2. PASTE THE NEW CODE HERE (Replacing the old OnAfterRenderAsync)
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -64,8 +62,7 @@
             {
                 var userIdString = UserManager.GetUserId(user);
 
-                // This will appear in Visual Studio Output
-                Console.WriteLine($"CONNECTED USER ID: {userIdString}");
+                Console.WriteLine($"CONNECTED USER ID: {userIdString}");// Check user ID
 
                 using var context = DbFactory.CreateDbContext();
 
@@ -74,12 +71,12 @@
                     .Where(e => e.HostUserId.ToString() == userIdString)
                     .ToListAsync();
 
-                Console.WriteLine($"MATCHES FOUND: {events.Count}");
+                Console.WriteLine($"MATCHES FOUND: {events.Count}");// Check how many events were found
 
                 if (events.Any())
                 {
                     var groupedData = events
-                        .GroupBy(e => e.CalendarType ?? "Other")
+                        .GroupBy(e => e.UserActivityId.ToString() ?? "Other")//This line will determine the category of pie chart
                         .Select(g => new
                         {
                             Category = g.Key,
@@ -89,10 +86,8 @@
                     chartLabels = groupedData.Select(x => x.Category).ToList();
                     chartData = groupedData.Select(x => x.Minutes).ToList();
 
-                    // Send to the JS receiver we fixed earlier
+                    // Send to the JS code
                     await JSRuntime.InvokeVoidAsync("renderLifeCharts", chartLabels, chartData);
-
-                    // Tell Blazor to refresh the UI since we just updated chartLabels/Data
                     StateHasChanged();
                 }
             }
