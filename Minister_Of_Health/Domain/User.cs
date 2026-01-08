@@ -10,7 +10,7 @@ namespace Minister_Of_Time.Domain
         public string? Address { get; set; }
         public required string? Gender { get; set; } = string.Empty;
 
-        // This property is NOT stored in the DB, it's calculated on the fly
+        // This property is NOT stored in the DB, it's calculated on the fly.
         public int? Age
         {
             get
