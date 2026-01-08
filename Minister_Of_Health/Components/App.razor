@@ -88,6 +88,21 @@
                                 legend: {
                                     position: 'bottom',
                                     labels: { color: 'white' }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let totalMinutes = context.parsed; // This is your dataValue
+                                            let hours = Math.floor(totalMinutes / 60);
+                                            let mins = Math.round(totalMinutes % 60);
+
+                                            // Formats to "Activity: 02h 30m"
+                                            let timeString = hours.toString().padStart(2, '0') + 'h ' +
+                                                             mins.toString().padStart(2, '0') + 'm';
+
+                                            return context.label + ': ' + timeString;
+                                        }
+                                    }
                                 }
                             }
                         }
