@@ -12,7 +12,7 @@ namespace Minister_Of_Time.Domain
         public virtual User? User { get; set; }
 
         // The person they are connected to
-        public int ConnectedUserId { get; set; }
+        public string ConnectedUserId { get; set; }
 
         [ForeignKey("ConnectedUserId")]
         public virtual User? ConnectedUser { get; set; }
