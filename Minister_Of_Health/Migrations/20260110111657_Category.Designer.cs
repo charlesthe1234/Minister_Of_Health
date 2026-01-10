@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Minister_Of_Time.Data;
 
@@ -11,9 +12,11 @@ using Minister_Of_Time.Data;
 namespace Minister_Of_Time.Migrations
 {
     [DbContext(typeof(Minister_Of_TimeContext))]
-    partial class Minister_Of_TimeContextModelSnapshot : ModelSnapshot
+    [Migration("20260110111657_Category")]
+    partial class Category
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

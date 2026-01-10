@@ -25,7 +25,7 @@
             <div class="mb-3">
                 <label class="form-label fw-bold">Activity Type</label>
                 <InputSelect @bind-Value="UserActivity.ActivityType" class="form-select">
-                    <option value="">-- Select a Category --</option>
+                    <option value="">-- Select an activity type --</option>
                     <option value="Work">Work</option>
                     <option value="Meeting">Meeting</option>
                     <option value="Hobby">Hobby</option>
@@ -34,6 +34,17 @@
                     <option value="General Events">General Events</option>
                 </InputSelect>
                 <ValidationMessage For="() => UserActivity.ActivityType" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Category</label>
+                <InputSelect @bind-Value="UserActivity.Category" class="form-select">
+                    <option value="">-- Select a Category --</option>
+                    <option value="Work">Work</option>
+                    <option value="Life">Life</option>
+                    <option value="Others">Others</option>
+                </InputSelect>
+                <ValidationMessage For="() => UserActivity.Category" />
             </div>
 
             <div class="mb-3">
