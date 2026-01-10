@@ -1,0 +1,212 @@
+﻿@page "/calendarevents/manage-invites/{EventId:int}"
+@using Microsoft.EntityFrameworkCore
+@using Minister_Of_Time.Domain
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Manage Invites: @eventName</h2>
+        <a href="/calendarevents" class="btn btn-outline-secondary btn-sm">Back to Calendar</a>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p>Loading participants...</p>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Known Users (@knownParticipants.Count)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    @foreach (var p in knownParticipants)
+                    {
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3 border rounded bg-white shadow-sm d-flex flex-column h-100">
+                                <div class="fw-bold text-truncate mb-2">@p.InviteeEmail</div>
+                                <div class="mb-3">
+                                    <span class="p-2 rounded text-center d-block fw-bold @GetStatusClass(p.ParticipationStatus)">
+                                        @p.ParticipationStatus
+                                    </span>
+                                </div>
+                                <div class="mt-auto d-flex gap-2">
+                                    <button class="btn btn-sm btn-light border flex-grow-1" @onclick="() => OpenManagePopup(p)">Manage</button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => ShowRemoveConfirmation(p)">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Unknown Users (@unknownParticipants.Count)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    @foreach (var p in unknownParticipants)
+                    {
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3 border rounded bg-light d-flex flex-column h-100">
+                                <div class="text-muted text-truncate mb-2">@p.InviteeEmail</div>
+                                <div class="mb-3">
+                                    <span class="p-2 rounded text-center d-block fw-bold @GetStatusClass(p.ParticipationStatus)">
+                                        @p.ParticipationStatus
+                                    </span>
+                                </div>
+                                <div class="mt-auto d-flex gap-2">
+                                    <button class="btn btn-sm btn-light border flex-grow-1" @onclick="() => OpenManagePopup(p)">Manage</button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => ShowRemoveConfirmation(p)">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@* --- POPUPS --- *@
+
+@if (showRemovePopup)
+{
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirm Removal</h5>
+                    <button type="button" class="btn-close" @onclick="() => showRemovePopup = false"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to remove <strong>@selectedParticipant?.InviteeEmail</strong> from this event?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => showRemovePopup = false">Cancel</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmRemove">Remove Participant</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showManagePopup)
+{
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered shadow-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Manage Participant</h5>
+                    <button type="button" class="btn-close" @onclick="() => showManagePopup = false"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label fw-bold">Email</label>
+                    <input class="form-control mb-3" value="@selectedParticipant?.InviteeEmail" readonly />
+
+                    <label class="form-label fw-bold">Participation Status</label>
+                    <select class="form-select" @bind="tempStatus">
+                        <option value="Pending">Pending</option>
+                        <option value="Accepted">Accepted</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border" @onclick="() => showManagePopup = false">Close</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveChanges">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int EventId { get; set; }
+    private string eventName = "Event";
+    private bool isLoading = true;
+    private List<EventParticipant> knownParticipants = new();
+    private List<EventParticipant> unknownParticipants = new();
+
+    // Popup State
+    private bool showRemovePopup = false;
+    private bool showManagePopup = false;
+    private EventParticipant? selectedParticipant;
+    private string tempStatus = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadParticipants();
+    }
+
+    private async Task LoadParticipants()
+    {
+        isLoading = true;
+        using var context = DbFactory.CreateDbContext();
+        var ev = await context.CalendarEvent.FindAsync(EventId);
+        eventName = ev?.EventName ?? "Event";
+
+        var all = await context.EventParticipant
+            .Where(p => p.CalendarEventId == EventId)
+            .ToListAsync();
+
+        knownParticipants = all.Where(p => p.UserId != null).ToList();
+        unknownParticipants = all.Where(p => p.UserId == null).ToList();
+        isLoading = false;
+    }
+
+    private string GetStatusClass(string? status) => status switch
+    {
+        "Accepted" => "bg-success text-white",
+        "Rejected" => "bg-danger text-white",
+        _ => "bg-warning text-dark" // Pending
+    };
+
+    private void ShowRemoveConfirmation(EventParticipant p)
+    {
+        selectedParticipant = p;
+        showRemovePopup = true;
+    }
+
+    private async Task ConfirmRemove()
+    {
+        if (selectedParticipant != null)
+        {
+            using var context = DbFactory.CreateDbContext();
+            context.EventParticipant.Remove(selectedParticipant);
+            await context.SaveChangesAsync();
+            showRemovePopup = false;
+            await LoadParticipants();
+        }
+    }
+
+    private void OpenManagePopup(EventParticipant p)
+    {
+        selectedParticipant = p;
+        tempStatus = p.ParticipationStatus ?? "Pending";
+        showManagePopup = true;
+    }
+
+    private async Task SaveChanges()
+    {
+        if (selectedParticipant != null)
+        {
+            using var context = DbFactory.CreateDbContext();
+            var p = await context.EventParticipant.FindAsync(selectedParticipant.Id);
+            if (p != null)
+            {
+                p.ParticipationStatus = tempStatus;
+                await context.SaveChangesAsync();
+            }
+            showManagePopup = false;
+            await LoadParticipants();
+        }
+    }
+}

@@ -7,6 +7,7 @@
 @inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
 
 <div class="container mt-5">
     <div class="card shadow-lg p-4">
@@ -14,7 +15,9 @@
 
         @if (!string.IsNullOrEmpty(errorMessage))
         {
-            <div class="alert alert-danger shadow-sm">@errorMessage</div>
+            <div class="alert alert-danger shadow-sm">
+                <i class="bi bi-exclamation-octagon-fill me-2"></i> @errorMessage
+            </div>
         }
 
         <EditForm Model="Input" OnValidSubmit="AddCalendarEvent" FormName="createEventForm">
@@ -23,60 +26,63 @@
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">Event Name</label>
-                    <InputText @bind-Value="Input.EventName" class="form-control" placeholder="What's happening?" />
-                    <ValidationMessage For="() => Input.EventName" class="text-danger" />
+                    <InputText @bind-Value="Input.EventName" class="form-control" />
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">Location</label>
-                    <InputText @bind-Value="Input.Location" class="form-control" placeholder="Physical or Digital address" />
-                    <ValidationMessage For="() => Input.Location" class="text-danger" />
+                    <InputText @bind-Value="Input.Location" class="form-control" />
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <label class="form-label fw-bold">Start Date & Time</label>
-                    <InputDate Type="InputDateType.DateTimeLocal"
-                               @bind-Value="Input.StartDateTime"
-                               @bind-Value:after="SyncDates"
-                               step="60"
-                               class="form-control" />
+                    <input type="datetime-local" class="form-control"
+                           value="@Input.StartDateTime.ToString("yyyy-MM-ddTHH:mm")"
+                           @onchange="OnStartDateChanged" />
                 </div>
                 <div class="col-md-4 mb-3">
                     <label class="form-label fw-bold">End Date & Time</label>
-                    <InputDate Type="InputDateType.DateTimeLocal"
-                               @bind-Value="Input.EndDateTime"
-                               step="60"
-                               class="form-control" />
+                    <input type="datetime-local" class="form-control"
+                           value="@Input.EndDateTime.ToString("yyyy-MM-ddTHH:mm")"
+                           @onchange="OnEndDateChanged" />
                 </div>
                 <div class="col-md-4 mb-3">
                     <label class="form-label fw-bold">Activity Type</label>
-                    <InputText list="activity-suggestions"
-                               @bind-Value="Input.ActivityName"
-                               class="form-control"
-                               placeholder="e.g., Training" />
-
-                    <datalist id="activity-suggestions">
-                        @foreach (var suggestion in Suggestions)
-                        {
-                            <option value="@suggestion.Name" />
-                        }
-                    </datalist>
-                    <ValidationMessage For="() => Input.ActivityName" class="text-danger" />
+                    <InputText list="activity-suggestions" @bind-Value="Input.ActivityName" class="form-control" />
                 </div>
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-bold">Category</label>
-                <InputSelect @bind-Value="Input.CalendarType" class="form-select">
-                    <option value="Work">Work</option>
-                    <option value="Life">Life</option>
-                </InputSelect>
-            </div>
+                <label class="form-label fw-bold d-block">Invite Users</label>
 
-            <div class="mb-3">
-                <label class="form-label fw-bold">Invite Users (Emails)</label>
-                <InputTextArea @bind-Value="Input.InvitedEmails" class="form-control" rows="2" />
+                <div class="mb-2 p-2 border rounded bg-light" style="min-height: 40px; font-size: 0.9rem;">
+                    <span class="fw-bold me-2">Verification Status:</span>
+                    @if (!inviteStatusList.Any())
+                    {
+                        <span class="text-muted italic">No emails entered yet...</span>
+                    }
+                    @foreach (var status in inviteStatusList)
+                    {
+                        @if (status.IsDuplicate)
+                        {
+                            <span class="badge bg-danger me-1" title="Duplicate or Host Email">
+                                @status.Email <i class="bi bi-exclamation-triangle"></i> !
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge @(status.IsRegistered ? "bg-success" : "bg-warning text-dark") me-1">
+                                @status.Email @(status.IsRegistered ? "✓" : "?")
+                            </span>
+                        }
+                    }
+                </div>
+
+                <InputTextArea @bind-Value="Input.InvitedEmails"
+                               @oninput="OnInviteInputChanged"
+                               class="form-control" rows="2"
+                               placeholder="user@example.com, unknown@example.com (Editor)" />
             </div>
 
             <div class="mb-3">
@@ -86,160 +92,184 @@
 
             <div class="d-flex justify-content-end gap-2 mt-4">
                 <a href="/calendarevents" class="btn btn-light border">Cancel</a>
-                <button type="submit" class="btn btn-primary px-4">Create Event</button>
+                <button type="submit" class="btn btn-primary px-4" disabled="@isSubmitting">
+                    @if (isSubmitting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    Create Event
+                </button>
             </div>
         </EditForm>
     </div>
 </div>
 
 @code {
+    [SupplyParameterFromQuery] public string? Date { get; set; }
     private string? errorMessage;
+    private bool isSubmitting = false;
     private List<UserActivity> Suggestions = new();
+    private List<EmailStatus> inviteStatusList = new();
+
+    private class EmailStatus
+    {
+        public string Email { get; set; } = "";
+        public bool IsRegistered { get; set; }
+        public bool IsDuplicate { get; set; }
+    }
+
+    [SupplyParameterFromForm] private EventInputModel Input { get; set; } = new();
+
+    private void OnStartDateChanged(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var newDate))
+        {
+            Input.StartDateTime = newDate;
+            if (Input.StartDateTime >= Input.EndDateTime) Input.EndDateTime = Input.StartDateTime.AddHours(1);
+            StateHasChanged();
+        }
+    }
+
+    private void OnEndDateChanged(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var newDate))
+        {
+            Input.EndDateTime = newDate;
+            if (Input.EndDateTime <= Input.StartDateTime) Input.StartDateTime = Input.EndDateTime.AddHours(-1);
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnInviteInputChanged(ChangeEventArgs e)
+    {
+        var input = e.Value?.ToString() ?? "";
+        Input.InvitedEmails = input;
+        var parsed = ParseInvites(input);
+        var newList = new List<EmailStatus>();
+        var seenEmails = new HashSet<string>();
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var currentUserEmail = authState.User.FindFirst(ClaimTypes.Email)?.Value?.ToLower();
+
+        using var context = DbFactory.CreateDbContext();
+        foreach (var item in parsed)
+        {
+            var emailLower = item.Email.ToLower();
+
+            // Flag as duplicate if seen before OR if it is the host's own email
+            bool isSelf = emailLower == currentUserEmail;
+            bool duplicate = seenEmails.Contains(emailLower) || isSelf;
+            seenEmails.Add(emailLower);
+
+            var exists = await context.Users.AnyAsync(u => u.Email.ToLower() == emailLower);
+            newList.Add(new EmailStatus { Email = item.Email, IsRegistered = exists, IsDuplicate = duplicate });
+        }
+        inviteStatusList = newList;
+
+        if (!inviteStatusList.Any(x => x.IsDuplicate)) errorMessage = null;
+        StateHasChanged();
+    }
 
     private List<(string Email, string RoleName)> ParseInvites(string input)
     {
         var list = new List<(string, string)>();
         if (string.IsNullOrWhiteSpace(input)) return list;
-
-        var parts = input.Split(',');
-        foreach (var p in parts)
+        foreach (var p in input.Split(','))
         {
             var trimmed = p.Trim();
+            if (string.IsNullOrEmpty(trimmed)) continue;
             var match = System.Text.RegularExpressions.Regex.Match(trimmed, @"^([^(\s]+)(?:\((.+?)\))?$");
-
-            if (match.Success)
-                list.Add((match.Groups[1].Value.Trim(), match.Groups[2].Value.Trim()));
-            else
-                list.Add((trimmed, "Viewer"));
+            if (match.Success) list.Add((match.Groups[1].Value.Trim(), match.Groups[2].Value.Trim()));
+            else list.Add((trimmed, "Viewer"));
         }
         return list;
     }
 
-    [SupplyParameterFromForm]
-    private EventInputModel Input { get; set; } = new();
-
     protected override async Task OnInitializedAsync()
     {
-        var now = DateTime.Now;
-        var cleanNow = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0);
-
-        if (Input.StartDateTime == default)
+        if (!string.IsNullOrEmpty(Date) && DateTime.TryParse(Date, out var passedDate))
         {
-            Input.StartDateTime = cleanNow;
-            Input.EndDateTime = cleanNow.AddHours(1);
+            var now = DateTime.Now;
+            Input.StartDateTime = new DateTime(passedDate.Year, passedDate.Month, passedDate.Day, now.Hour, 0, 0);
+            Input.EndDateTime = Input.StartDateTime.AddHours(1);
+        }
+        else if (Input.StartDateTime == default)
+        {
+            var now = DateTime.Now;
+            Input.StartDateTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0);
+            Input.EndDateTime = Input.StartDateTime.AddHours(1);
         }
 
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        var userIdStr = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        // Corrected to use string comparison
+        var userIdStr = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!string.IsNullOrEmpty(userIdStr))
         {
             using var context = DbFactory.CreateDbContext();
-            Suggestions = await context.UserActivity
-                .Where(a => a.UserId == userIdStr)
-                .ToListAsync();
-        }
-    }
-
-    private void SyncDates()
-    {
-        Input.StartDateTime = new DateTime(
-            Input.StartDateTime.Year, Input.StartDateTime.Month, Input.StartDateTime.Day,
-            Input.StartDateTime.Hour, Input.StartDateTime.Minute, 0);
-
-        if (Input.StartDateTime >= Input.EndDateTime)
-        {
-            Input.EndDateTime = Input.StartDateTime.AddHours(1);
-            StateHasChanged();
+            Suggestions = await context.UserActivity.Where(a => a.UserId == userIdStr).ToListAsync();
         }
     }
 
     private async Task AddCalendarEvent()
     {
-        errorMessage = "";
-
-        if (Input.EndDateTime <= Input.StartDateTime)
+        if (inviteStatusList.Any(x => x.IsDuplicate))
         {
-            errorMessage = "Error: Start date must be before the end date.";
+            errorMessage = "Please remove duplicates or your own email from the invite list.";
             return;
         }
 
+        isSubmitting = true;
+        errorMessage = null;
+
+        using var context = DbFactory.CreateDbContext();
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
+        string currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
 
-        if (user.Identity?.IsAuthenticated == true)
+        var actName = string.IsNullOrWhiteSpace(Input.ActivityName) ? "General" : Input.ActivityName.Trim();
+        var activity = await context.UserActivity.FirstOrDefaultAsync(a => a.Name.ToLower() == actName.ToLower() && a.UserId == currentUserId);
+        if (activity == null)
         {
-            using var context = DbFactory.CreateDbContext();
-
-            // Corrected: Removed int.Parse and handled as string
-            string currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
-
-            var actName = string.IsNullOrWhiteSpace(Input.ActivityName) ? "General" : Input.ActivityName.Trim();
-            var activity = await context.UserActivity
-                .FirstOrDefaultAsync(a => a.Name.ToLower() == actName.ToLower() && a.UserId == currentUserId);
-
-            if (activity == null)
-            {
-                activity = new UserActivity { Name = actName, UserId = currentUserId };
-                context.UserActivity.Add(activity);
-                await context.SaveChangesAsync();
-            }
-
-            var newEvent = new CalendarEvent
-            {
-                EventName = Input.EventName,
-                Location = Input.Location,
-                StartDateTime = Input.StartDateTime,
-                EndDateTime = Input.EndDateTime,
-                CalendarType = Input.CalendarType,
-                HostUserId = currentUserId,
-                UserActivityId = activity.Id,
-                CreatedBy = user.Identity.Name,
-                DateCreated = DateTime.Now,
-                Description = Input.Description
-            };
-
-            context.CalendarEvent.Add(newEvent);
-
-            var inviteDetails = ParseInvites(Input.InvitedEmails);
-
-            if (inviteDetails.Any())
-            {
-                var roles = await context.EventRole.ToDictionaryAsync(r => r.RoleName.ToLower(), r => r.Id);
-
-                foreach (var item in inviteDetails)
-                {
-                    roles.TryGetValue(item.RoleName.ToLower(), out int roleId);
-                    if (roleId == 0) roleId = 2;
-
-                    context.EventParticipant.Add(new EventParticipant
-                    {
-                        CalendarEvent = newEvent,
-                        InviteeEmail = item.Email,
-                        EventRoleId = roleId,
-                        ParticipationStatus = "Pending"
-                    });
-                }
-            }
-
+            activity = new UserActivity { Name = actName, UserId = currentUserId };
+            context.UserActivity.Add(activity);
             await context.SaveChangesAsync();
-            NavigationManager.NavigateTo("/calendarevents");
         }
+
+        var newEvent = new CalendarEvent
+        {
+            EventName = Input.EventName,
+            Location = Input.Location,
+            StartDateTime = Input.StartDateTime,
+            EndDateTime = Input.EndDateTime,
+            CalendarType = Input.CalendarType,
+            HostUserId = currentUserId,
+            UserActivityId = activity.Id,
+            CreatedBy = authState.User.Identity?.Name,
+            DateCreated = DateTime.Now,
+            Description = Input.Description
+        };
+        context.CalendarEvent.Add(newEvent);
+
+        foreach (var item in inviteStatusList)
+        {
+            var regUser = await context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == item.Email.ToLower());
+            context.EventParticipant.Add(new EventParticipant
+            {
+                CalendarEvent = newEvent,
+                UserId = regUser?.Id,
+                InviteeEmail = item.Email,
+                EventRoleId = 2,
+                ParticipationStatus = "Pending"
+            });
+        }
+
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/calendarevents?success=true");
     }
 
     private sealed class EventInputModel
     {
-        [Required(ErrorMessage = "Some of the required fields are empty")]
-        public string EventName { get; set; } = "";
-
-        [Required(ErrorMessage = "Some of the required fields are empty")]
-        public string Location { get; set; } = "";
-
-        [Required(ErrorMessage = "Some of the required fields are empty")]
+        [Required] public string EventName { get; set; } = "";
+        [Required] public string Location { get; set; } = "";
         public string ActivityName { get; set; } = "General";
-
         public DateTime StartDateTime { get; set; }
         public DateTime EndDateTime { get; set; }
         public string CalendarType { get; set; } = "Work";

@@ -23,7 +23,7 @@
         </div>
 
         <button class="btn btn-primary w-100 my-4"
-                @onclick='() => NavigationManager.NavigateTo($"/calendarevents/create?initialDate={DateTime.Today:yyyy-MM-dd}")'>
+                @onclick='() => NavigationManager.NavigateTo($"/calendarevents/create?date={DateTime.Today:yyyy-MM-dd}")'>
             + Create Event
         </button>
 
@@ -54,6 +54,15 @@
             </div>
         </header>
 
+        @* SUCCESS TOAST *@
+        @if (Success)
+        {
+            <div class="alert alert-success alert-dismissible fade show mx-3 shadow-sm" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> Event created successfully!
+                <button type="button" class="btn-close" @onclick="() => Success = false"></button>
+            </div>
+        }
+
         <div class="calendar-grid">
             @foreach (var dayName in Enum.GetNames(typeof(DayOfWeek)))
             {
@@ -66,7 +75,15 @@
                      @onclick="() => OpenDayDetails(day)">
                     @if (day != DateTime.MinValue)
                     {
-                        <span class="day-num">@day.Day</span>
+                        <div class="d-flex justify-content-between align-items-start">
+                            <span class="day-num">@day.Day</span>
+                            @* NEW: QUICK ADD BUTTON IN CELL *@
+                            <a href="/calendarevents/create?date=@day.ToString("yyyy-MM-dd")"
+                               class="btn btn-link p-0 text-primary opacity-50 hover-opacity-100"
+                               @onclick:stopPropagation="true" title="Add Event">
+                                <i class="bi bi-plus-circle-fill"></i>
+                            </a>
+                        </div>
                         <div class="event-pills-container">
                             @foreach (var ev in userEvents.Where(e => day.Date >= e.StartDateTime.Date && day.Date <= e.EndDateTime.Date))
                             {
@@ -79,7 +96,6 @@
                 </div>
             }
         </div>
-
     </main>
 </div>
 
@@ -101,9 +117,7 @@
                                 <h5 class="text-primary fw-bold">@ev.EventName</h5>
                                 <span class="badge @(ev.CalendarType == "Work" ? "bg-primary" : "bg-success")">@ev.CalendarType</span>
                             </div>
-
                             <hr class="my-2" />
-
                             <div class="row g-2">
                                 <div class="col-12">
                                     <i class="bi bi-clock"></i> <strong>Time & Duration:</strong> <br />
@@ -120,26 +134,23 @@
                                 <div class="col-12 mt-2">
                                     <i class="bi bi-geo-alt"></i> <strong>Location:</strong> @ev.Location
                                 </div>
-                                <div class="col-12 mt-2">
-                                    <i class="bi bi-person"></i> <strong>Host:</strong> @ev.CreatedBy
-                                </div>
-                                @if (!string.IsNullOrEmpty(ev.Description))
-                                {
-                                    <div class="col-12 mt-2 bg-light p-2 rounded">
-                                        <strong>Description:</strong><br />
-                                        @ev.Description
-                                    </div>
-                                }
                             </div>
                         </div>
                     }
+                    @* ALLOW CREATING ANOTHER EVENT EVEN IF SOME EXIST *@
+                    <div class="text-center mt-3">
+                        <button class="btn btn-sm btn-outline-primary"
+                                @onclick='() => NavigationManager.NavigateTo($"/calendarevents/create?date={selectedDate?.ToString("yyyy-MM-dd")}")'>
+                            + Add another event for this day
+                        </button>
+                    </div>
                 }
                 else
                 {
                     <div class="text-center py-4 text-muted">
                         <p>No events found for this day.</p>
                         <button class="btn btn-sm btn-outline-primary"
-                                @onclick='() => NavigationManager.NavigateTo($"/calendarevents/create?initialDate={selectedDate?.ToString("yyyy-MM-dd")}")'>
+                                @onclick='() => NavigationManager.NavigateTo($"/calendarevents/create?date={selectedDate?.ToString("yyyy-MM-dd")}")'>
                             Add one now
                         </button>
                     </div>
@@ -153,17 +164,12 @@
 }
 
 @code {
+    [SupplyParameterFromQuery] public bool Success { get; set; }
     private Minister_Of_TimeContext context = default!;
-
-    // CALENDAR DATA VARIABLES
     private DateTime displayDate = DateTime.Today;
     private List<DateTime> daysInMonth = new();
     private List<CalendarEvent> userEvents = new();
-
-    // CHANGED: CurrentUserId is now a string to match Identity GUID
     private string currentUserId = "";
-
-    // POPUP VARIABLES
     private bool showPopup = false;
     private DateTime? selectedDate;
     private List<CalendarEvent> selectedDayEvents = new();
@@ -171,17 +177,13 @@
     protected override async Task OnInitializedAsync()
     {
         context = DbFactory.CreateDbContext();
-
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         if (user.Identity?.IsAuthenticated == true)
         {
             var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
-
-            // CHANGED: Removed int.Parse. We assign the claim value directly to the string.
             if (userIdClaim != null) currentUserId = userIdClaim.Value;
         }
-
         await RefreshCalendarData();
     }
 
@@ -191,32 +193,21 @@
         var firstDayOfMonth = new DateTime(displayDate.Year, displayDate.Month, 1);
         var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
-        // 1. Build the calendar grid
         int padding = (int)firstDayOfMonth.DayOfWeek;
         for (int i = 0; i < padding; i++) daysInMonth.Add(DateTime.MinValue);
         int daysCount = DateTime.DaysInMonth(displayDate.Year, displayDate.Month);
         for (int i = 1; i <= daysCount; i++) daysInMonth.Add(new DateTime(displayDate.Year, displayDate.Month, i));
 
-        // 2. Fetch Events I am HOSTING
-        // CHANGED: Comparison now correctly handles string currentUserId
         var hostedEvents = await context.CalendarEvent
-            .Where(e => e.HostUserId == currentUserId &&
-                        e.StartDateTime <= lastDayOfMonth &&
-                        e.EndDateTime >= firstDayOfMonth)
+            .Where(e => e.HostUserId == currentUserId && e.StartDateTime <= lastDayOfMonth && e.EndDateTime >= firstDayOfMonth)
             .ToListAsync();
 
-        // 3. Fetch Events I was INVITED TO and ACCEPTED
-        // CHANGED: Comparison now correctly handles string currentUserId
         var joinedEvents = await context.EventParticipant
             .Include(p => p.CalendarEvent)
-            .Where(p => p.UserId == currentUserId &&
-                        p.ParticipationStatus == "Accepted" &&
-                        p.CalendarEvent.StartDateTime <= lastDayOfMonth &&
-                        p.CalendarEvent.EndDateTime >= firstDayOfMonth)
+            .Where(p => p.UserId == currentUserId && p.ParticipationStatus == "Accepted" && p.CalendarEvent.StartDateTime <= lastDayOfMonth && p.CalendarEvent.EndDateTime >= firstDayOfMonth)
             .Select(p => p.CalendarEvent)
             .ToListAsync();
 
-        // 4. Combine them into the main list
         userEvents = hostedEvents.Concat(joinedEvents).Distinct().ToList();
     }
 
@@ -230,15 +221,10 @@
     {
         if (day == DateTime.MinValue) return;
         selectedDate = day;
-
-        selectedDayEvents = userEvents
-            .Where(e => day.Date >= e.StartDateTime.Date && day.Date <= e.EndDateTime.Date)
-            .ToList();
-
+        selectedDayEvents = userEvents.Where(e => day.Date >= e.StartDateTime.Date && day.Date <= e.EndDateTime.Date).ToList();
         showPopup = true;
     }
 
     private void ClosePopup() => showPopup = false;
-
     public async ValueTask DisposeAsync() => await context.DisposeAsync();
 }
