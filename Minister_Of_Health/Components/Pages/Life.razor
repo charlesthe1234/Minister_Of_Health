@@ -1,6 +1,14 @@
 ﻿@page "/life"
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@using Minister_Of_Time.Domain
 @rendermode InteractiveServer
+
 @inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthStateProvider
+@inject UserManager<User> UserManager
+@inject IDbContextFactory<Minister_Of_TimeContext> DbFactory
 <PageTitle>Life Page</PageTitle>
 
 <div class="life-background">
@@ -28,11 +36,64 @@
 </div>
 
 @code {
+    private string DisplayName = "User";
+    private List<double> chartData = new();
+    private List<string> chartLabels = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userClaims = authState.User;
+        if (userClaims.Identity?.IsAuthenticated == true)
+        {
+            using var context = DbFactory.CreateDbContext();
+            var userIdString = UserManager.GetUserId(userClaims);
+            var dbUser = await context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userIdString);
+            if (dbUser != null) DisplayName = dbUser.Name ?? "User";
+        }
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await JSRuntime.InvokeVoidAsync("renderLifeCharts"); @*call from app.raozr*@
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                var userIdString = UserManager.GetUserId(user);
+
+                Console.WriteLine($"CONNECTED USER ID: {userIdString}");// Check user ID
+
+                using var context = DbFactory.CreateDbContext();
+
+                // Fetch events
+                var events = await context.CalendarEvent
+                    .Include(e => e.UserActivity)
+                    .Where(e => e.HostUserId.ToString() == userIdString)
+                    .ToListAsync();
+
+                Console.WriteLine($"MATCHES FOUND: {events.Count}");// Check how many events were found
+
+                if (events.Any())
+                {
+                    var groupedData = events
+                        .GroupBy(e => e.UserActivity?.ActivityType ?? "Other")//This line will determine the category of pie chart
+                        .Select(g => new
+                        {
+                            Category = g.Key,
+                            Minutes = g.Sum(e => (e.EndDateTime - e.StartDateTime).TotalMinutes)
+                        }).ToList();
+
+                    chartLabels = groupedData.Select(x => x.Category).ToList();
+                    chartData = groupedData.Select(x => x.Minutes).ToList();
+
+                    // Send to the JS code
+                    await JSRuntime.InvokeVoidAsync("renderLifeCharts", chartLabels, chartData);
+                    StateHasChanged();
+                }
+            }
         }
     }
 }

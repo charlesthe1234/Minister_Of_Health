@@ -49,30 +49,23 @@
                                step="60"
                                class="form-control" />
                 </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label fw-bold">Activity Type</label>
-                    <InputText list="activity-suggestions"
-                               @bind-Value="Input.ActivityName"
-                               class="form-control"
-                               placeholder="e.g., Training" />
-
-                    <datalist id="activity-suggestions">
-                        @foreach (var suggestion in Suggestions)
-                        {
-                            <option value="@suggestion.Name" />
-                        }
-                    </datalist>
-                    <ValidationMessage For="() => Input.ActivityName" class="text-danger" />
-                </div>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-bold">Category</label>
-                <InputSelect @bind-Value="Input.CalendarType" class="form-select">
-                    <option value="Work">Work</option>
-                    <option value="Life">Life</option>
+            <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Activity Name</label>
+                <InputSelect @bind-Value="Input.UserActivityId" class="form-select">
+                    <option value="">-- Select an Activity --</option>
+                    @foreach (var activity in Suggestions)
+                    {
+                        <option value="@activity.Id.ToString()">@activity.Name (@activity.ActivityType)</option>
+                    }
                 </InputSelect>
+                <ValidationMessage For="() => Input.UserActivityId" class="text-danger" />
             </div>
+
+            <a href="/useractivities/create" class="btn btn-primary">
+                New Activity
+            </a>
 
             <div class="mb-3">
                 <label class="form-label fw-bold">Invite Users (Emails)</label>
@@ -176,15 +169,10 @@
             // Corrected: Removed int.Parse and handled as string
             string currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
 
-            var actName = string.IsNullOrWhiteSpace(Input.ActivityName) ? "General" : Input.ActivityName.Trim();
-            var activity = await context.UserActivity
-                .FirstOrDefaultAsync(a => a.Name.ToLower() == actName.ToLower() && a.UserId == currentUserId);
-
-            if (activity == null)
+            if (Input.UserActivityId == 0)
             {
-                activity = new UserActivity { Name = actName, UserId = currentUserId };
-                context.UserActivity.Add(activity);
-                await context.SaveChangesAsync();
+                errorMessage = "Please select a valid activity.";
+                return;
             }
 
             var newEvent = new CalendarEvent
@@ -195,7 +183,7 @@
                 EndDateTime = Input.EndDateTime,
                 CalendarType = Input.CalendarType,
                 HostUserId = currentUserId,
-                UserActivityId = activity.Id,
+                UserActivityId = Input.UserActivityId,
                 CreatedBy = user.Identity.Name,
                 DateCreated = DateTime.Now,
                 Description = Input.Description
@@ -237,8 +225,9 @@
         [Required(ErrorMessage = "Some of the required fields are empty")]
         public string Location { get; set; } = "";
 
-        [Required(ErrorMessage = "Some of the required fields are empty")]
-        public string ActivityName { get; set; } = "General";
+        [Required(ErrorMessage = "Please select an activity")]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select an activity")]
+        public int UserActivityId { get; set; } // Changed from ActivityName string to int ID
 
         public DateTime StartDateTime { get; set; }
         public DateTime EndDateTime { get; set; }

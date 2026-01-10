@@ -94,7 +94,7 @@
         StateHasChanged();
     }
 
-    public void Dispose()
+    public void Dispose()//Prevent the code in other pages to run in the background
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
     }
