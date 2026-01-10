@@ -260,7 +260,7 @@ namespace Minister_Of_Time.Migrations
                         {
                             Id = "3781efa7-66dc-47f0-860f-e506d04102e4",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "8638fd01-3929-4e5a-82d4-4df28636fc3a",
+                            ConcurrencyStamp = "69ff4c39-4452-4b8c-86e4-77b7329504c5",
                             Email = "admin@localhost.com",
                             EmailConfirmed = true,
                             Gender = "Male",
@@ -268,9 +268,9 @@ namespace Minister_Of_Time.Migrations
                             Name = "Admin",
                             NormalizedEmail = "ADMIN@LOCALHOST.COM",
                             NormalizedUserName = "ADMIN@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHwsiV60fqyB+tedu2DHwEfIlHxZm7cM67d6V+GD/QHy4NAcH5g+XfJ7HsQJj0lZjA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPQEGAGJihIZAWqSrcxKcxKu3BoCg4CfjQAGItbRKSEWNFy7/CDGPoG6nsuhMuXYIg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "5aabb841-5759-432c-8ee9-7b0518cc20b2",
+                            SecurityStamp = "0c654046-1249-4138-9243-b55504ea90e4",
                             TwoFactorEnabled = false,
                             UserName = "admin@localhost.com"
                         },
@@ -278,7 +278,7 @@ namespace Minister_Of_Time.Migrations
                         {
                             Id = "4781efa7-66dc-47f0-860f-e506d04102e5",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "489dca2f-bbe4-4da0-8fd1-8ef77ba7dd87",
+                            ConcurrencyStamp = "fa4f55b8-5c37-4f90-870d-431290c19351",
                             Email = "user@localhost.com",
                             EmailConfirmed = true,
                             Gender = "Male",
@@ -286,9 +286,9 @@ namespace Minister_Of_Time.Migrations
                             Name = "BumXing",
                             NormalizedEmail = "USER@LOCALHOST.COM",
                             NormalizedUserName = "USER@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAELYbTLmnjcDxUE9zJdUZNJktEGGDcMEUs1uLEWd//LCFpdPHgt5D+Dq8ZCx207l4DA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECRqlRhbk8U8F1uPksQYstz9eXZwgmF6NA+BzcDO1FOpAkqDnDCfjBiWoRjl+7iNYA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "01fe783c-e74d-4ced-adfe-ebd49d516dea",
+                            SecurityStamp = "6fc0f52c-ead8-4b81-8834-39ad58deb859",
                             TwoFactorEnabled = false,
                             UserName = "user@localhost.com"
                         });
@@ -357,7 +357,7 @@ namespace Minister_Of_Time.Migrations
                             Id = 1,
                             CalendarType = "Work",
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 8, 12, 8, 55, 84, DateTimeKind.Local).AddTicks(4702),
+                            DateCreated = new DateTime(2026, 1, 10, 15, 19, 40, 252, DateTimeKind.Local).AddTicks(9684),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             EndDateTime = new DateTime(2026, 1, 10, 11, 0, 0, 0, DateTimeKind.Unspecified),
                             EventName = "Project Launch Meeting",
@@ -371,7 +371,7 @@ namespace Minister_Of_Time.Migrations
                             Id = 2,
                             CalendarType = "Life",
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 8, 12, 8, 55, 84, DateTimeKind.Local).AddTicks(4705),
+                            DateCreated = new DateTime(2026, 1, 10, 15, 19, 40, 252, DateTimeKind.Local).AddTicks(9691),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             EndDateTime = new DateTime(2026, 1, 11, 19, 0, 0, 0, DateTimeKind.Unspecified),
                             EventName = "Gym Session",
@@ -385,7 +385,7 @@ namespace Minister_Of_Time.Migrations
                             Id = 3,
                             CalendarType = "Work",
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 8, 12, 8, 55, 84, DateTimeKind.Local).AddTicks(4708),
+                            DateCreated = new DateTime(2026, 1, 10, 15, 19, 40, 252, DateTimeKind.Local).AddTicks(9697),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             EndDateTime = new DateTime(2026, 1, 12, 15, 30, 0, 0, DateTimeKind.Unspecified),
                             EventName = "User's Private Workshop",
@@ -543,7 +543,7 @@ namespace Minister_Of_Time.Migrations
                             CanEditCalendarEventDetails = false,
                             CanInviteOthers = false,
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 8, 12, 8, 54, 992, DateTimeKind.Local).AddTicks(4723),
+                            DateCreated = new DateTime(2026, 1, 10, 15, 19, 39, 990, DateTimeKind.Local).AddTicks(1355),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleName = "Organizer"
                         },
@@ -555,7 +555,7 @@ namespace Minister_Of_Time.Migrations
                             CanEditCalendarEventDetails = false,
                             CanInviteOthers = false,
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 8, 12, 8, 54, 992, DateTimeKind.Local).AddTicks(4739),
+                            DateCreated = new DateTime(2026, 1, 10, 15, 19, 39, 990, DateTimeKind.Local).AddTicks(1380),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleName = "Viewer"
                         },
@@ -567,7 +567,7 @@ namespace Minister_Of_Time.Migrations
                             CanEditCalendarEventDetails = false,
                             CanInviteOthers = false,
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 8, 12, 8, 54, 992, DateTimeKind.Local).AddTicks(4741),
+                            DateCreated = new DateTime(2026, 1, 10, 15, 19, 39, 990, DateTimeKind.Local).AddTicks(1384),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleName = "Editor"
                         });
@@ -623,6 +623,9 @@ namespace Minister_Of_Time.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ActivityType")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -663,7 +666,7 @@ namespace Minister_Of_Time.Migrations
                         {
                             Id = 1,
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 8, 12, 8, 55, 84, DateTimeKind.Local).AddTicks(4426),
+                            DateCreated = new DateTime(2026, 1, 10, 15, 19, 40, 252, DateTimeKind.Local).AddTicks(9221),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DefaultStressValue = 5,
                             Name = "General Activity",
