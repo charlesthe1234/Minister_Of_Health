@@ -1,4 +1,5 @@
 ﻿@page "/calendarevents/inbox"
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using Minister_Of_Time.Domain
 @using Microsoft.AspNetCore.Components.Authorization
@@ -6,6 +7,7 @@
 @inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
 @inject AuthenticationStateProvider AuthStateProvider
 @rendermode InteractiveServer
+@attribute [Authorize]
 
 <div class="container mt-4">
     <h3>My Invitations</h3>

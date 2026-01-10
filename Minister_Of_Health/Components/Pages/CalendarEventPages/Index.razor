@@ -1,11 +1,13 @@
 ﻿@page "/calendarevents"
 @rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using Minister_Of_Time.Domain
 @using Minister_Of_Time.Data
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
 
+@attribute [Authorize]
 @implements IAsyncDisposable
 @inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
 @inject NavigationManager NavigationManager
