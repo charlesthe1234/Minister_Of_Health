@@ -12,8 +12,8 @@ using Minister_Of_Time.Data;
 namespace Minister_Of_Time.Migrations
 {
     [DbContext(typeof(Minister_Of_TimeContext))]
-    [Migration("20251220032510_InitialIdentitySetup")]
-    partial class InitialIdentitySetup
+    [Migration("20260108040855_initialseed")]
+    partial class initialseed
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,13 +25,10 @@ namespace Minister_Of_Time.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -53,9 +50,23 @@ namespace Minister_Of_Time.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "ad2bcf0c-20db-474f-8407-5a6b159518ba",
+                            Name = "Administrator",
+                            NormalizedName = "ADMINISTRATOR"
+                        },
+                        new
+                        {
+                            Id = "bd2bcf0c-20db-474f-8407-5a6b159518bb",
+                            Name = "User",
+                            NormalizedName = "USER"
+                        });
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -69,8 +80,9 @@ namespace Minister_Of_Time.Migrations
                     b.Property<string>("ClaimValue")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -79,7 +91,7 @@ namespace Minister_Of_Time.Migrations
                     b.ToTable("AspNetRoleClaims", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -93,8 +105,9 @@ namespace Minister_Of_Time.Migrations
                     b.Property<string>("ClaimValue")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -103,7 +116,7 @@ namespace Minister_Of_Time.Migrations
                     b.ToTable("AspNetUserClaims", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
                         .HasColumnType("nvarchar(450)");
@@ -114,8 +127,9 @@ namespace Minister_Of_Time.Migrations
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -124,25 +138,32 @@ namespace Minister_Of_Time.Migrations
                     b.ToTable("AspNetUserLogins", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                    b.Property<string>("RoleId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("UserId", "RoleId");
 
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = "3781efa7-66dc-47f0-860f-e506d04102e4",
+                            RoleId = "ad2bcf0c-20db-474f-8407-5a6b159518ba"
+                        });
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("LoginProvider")
                         .HasColumnType("nvarchar(450)");
@@ -158,236 +179,10 @@ namespace Minister_Of_Time.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Minister_Of_Time.Domain.CalendarEvent", b =>
+            modelBuilder.Entity("Minister_Of_Time.Data.User", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ActivityId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CalendarType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DateUpdated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("EndDateTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("EventName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("HostUserId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Location")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("StartDateTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ActivityId");
-
-                    b.HasIndex("HostUserId");
-
-                    b.ToTable("CalendarEvent");
-                });
-
-            modelBuilder.Entity("Minister_Of_Time.Domain.CloseConnection", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ConnectedUserId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ConnectionType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DateUpdated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("ViewLifeCalendar")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("ViewWorkCalendar")
-                        .HasColumnType("bit");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConnectedUserId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("CloseConnection");
-                });
-
-            modelBuilder.Entity("Minister_Of_Time.Domain.EventParticipant", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CalendarEventId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DateUpdated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EventRoleId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ParticipationStatus")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CalendarEventId");
-
-                    b.HasIndex("EventRoleId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("EventParticipant");
-                });
-
-            modelBuilder.Entity("Minister_Of_Time.Domain.EventRole", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("CanChangeDateTime")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanChangeLocation")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanEditCalendarEventDetails")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanInviteOthers")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DateUpdated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("RoleName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("EventRole");
-                });
-
-            modelBuilder.Entity("Minister_Of_Time.Domain.StressRecord", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CalendarEventId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DateUpdated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("FatigueLevel")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StressLevel")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CalendarEventId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("StressRecord");
-                });
-
-            modelBuilder.Entity("Minister_Of_Time.Domain.User", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
@@ -462,6 +257,365 @@ namespace Minister_Of_Time.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "3781efa7-66dc-47f0-860f-e506d04102e4",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "8638fd01-3929-4e5a-82d4-4df28636fc3a",
+                            Email = "admin@localhost.com",
+                            EmailConfirmed = true,
+                            Gender = "Male",
+                            LockoutEnabled = false,
+                            Name = "Admin",
+                            NormalizedEmail = "ADMIN@LOCALHOST.COM",
+                            NormalizedUserName = "ADMIN@LOCALHOST.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHwsiV60fqyB+tedu2DHwEfIlHxZm7cM67d6V+GD/QHy4NAcH5g+XfJ7HsQJj0lZjA==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "5aabb841-5759-432c-8ee9-7b0518cc20b2",
+                            TwoFactorEnabled = false,
+                            UserName = "admin@localhost.com"
+                        },
+                        new
+                        {
+                            Id = "4781efa7-66dc-47f0-860f-e506d04102e5",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "489dca2f-bbe4-4da0-8fd1-8ef77ba7dd87",
+                            Email = "user@localhost.com",
+                            EmailConfirmed = true,
+                            Gender = "Male",
+                            LockoutEnabled = false,
+                            Name = "BumXing",
+                            NormalizedEmail = "USER@LOCALHOST.COM",
+                            NormalizedUserName = "USER@LOCALHOST.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAELYbTLmnjcDxUE9zJdUZNJktEGGDcMEUs1uLEWd//LCFpdPHgt5D+Dq8ZCx207l4DA==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "01fe783c-e74d-4ced-adfe-ebd49d516dea",
+                            TwoFactorEnabled = false,
+                            UserName = "user@localhost.com"
+                        });
+                });
+
+            modelBuilder.Entity("Minister_Of_Time.Domain.CalendarEvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CalendarType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EndDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EventName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HostUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Location")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserActivityId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HostUserId");
+
+                    b.HasIndex("UserActivityId");
+
+                    b.ToTable("CalendarEvent");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CalendarType = "Work",
+                            CreatedBy = "System",
+                            DateCreated = new DateTime(2026, 1, 8, 12, 8, 55, 84, DateTimeKind.Local).AddTicks(4702),
+                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EndDateTime = new DateTime(2026, 1, 10, 11, 0, 0, 0, DateTimeKind.Unspecified),
+                            EventName = "Project Launch Meeting",
+                            HostUserId = "3781efa7-66dc-47f0-860f-e506d04102e4",
+                            Location = "Conference Room A",
+                            StartDateTime = new DateTime(2026, 1, 10, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            UserActivityId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CalendarType = "Life",
+                            CreatedBy = "System",
+                            DateCreated = new DateTime(2026, 1, 8, 12, 8, 55, 84, DateTimeKind.Local).AddTicks(4705),
+                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EndDateTime = new DateTime(2026, 1, 11, 19, 0, 0, 0, DateTimeKind.Unspecified),
+                            EventName = "Gym Session",
+                            HostUserId = "3781efa7-66dc-47f0-860f-e506d04102e4",
+                            Location = "Local Fitness Center",
+                            StartDateTime = new DateTime(2026, 1, 11, 17, 30, 0, 0, DateTimeKind.Unspecified),
+                            UserActivityId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CalendarType = "Work",
+                            CreatedBy = "System",
+                            DateCreated = new DateTime(2026, 1, 8, 12, 8, 55, 84, DateTimeKind.Local).AddTicks(4708),
+                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EndDateTime = new DateTime(2026, 1, 12, 15, 30, 0, 0, DateTimeKind.Unspecified),
+                            EventName = "User's Private Workshop",
+                            HostUserId = "4781efa7-66dc-47f0-860f-e506d04102e5",
+                            Location = "Online",
+                            StartDateTime = new DateTime(2026, 1, 12, 14, 0, 0, 0, DateTimeKind.Unspecified),
+                            UserActivityId = 1
+                        });
+                });
+
+            modelBuilder.Entity("Minister_Of_Time.Domain.CloseConnection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConnectedUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ConnectionType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("ViewLifeCalendar")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ViewWorkCalendar")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConnectedUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CloseConnection");
+                });
+
+            modelBuilder.Entity("Minister_Of_Time.Domain.EventParticipant", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CalendarEventId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CustomActivity")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CustomCategory")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("EventRoleId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("InviteeEmail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ParticipationStatus")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CalendarEventId");
+
+                    b.HasIndex("EventRoleId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("EventParticipant");
+                });
+
+            modelBuilder.Entity("Minister_Of_Time.Domain.EventRole", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("CanChangeDateTime")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanChangeLocation")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanEditCalendarEventDetails")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanInviteOthers")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("EventRole");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CanChangeDateTime = false,
+                            CanChangeLocation = false,
+                            CanEditCalendarEventDetails = false,
+                            CanInviteOthers = false,
+                            CreatedBy = "System",
+                            DateCreated = new DateTime(2026, 1, 8, 12, 8, 54, 992, DateTimeKind.Local).AddTicks(4723),
+                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            RoleName = "Organizer"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CanChangeDateTime = false,
+                            CanChangeLocation = false,
+                            CanEditCalendarEventDetails = false,
+                            CanInviteOthers = false,
+                            CreatedBy = "System",
+                            DateCreated = new DateTime(2026, 1, 8, 12, 8, 54, 992, DateTimeKind.Local).AddTicks(4739),
+                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            RoleName = "Viewer"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CanChangeDateTime = false,
+                            CanChangeLocation = false,
+                            CanEditCalendarEventDetails = false,
+                            CanInviteOthers = false,
+                            CreatedBy = "System",
+                            DateCreated = new DateTime(2026, 1, 8, 12, 8, 54, 992, DateTimeKind.Local).AddTicks(4741),
+                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            RoleName = "Editor"
+                        });
+                });
+
+            modelBuilder.Entity("Minister_Of_Time.Domain.StressRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CalendarEventId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("FatigueLevel")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StressLevel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CalendarEventId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("StressRecord");
                 });
 
             modelBuilder.Entity("Minister_Of_Time.Domain.UserActivity", b =>
@@ -497,61 +651,75 @@ namespace Minister_Of_Time.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Activity");
+                    b.ToTable("UserActivity");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedBy = "System",
+                            DateCreated = new DateTime(2026, 1, 8, 12, 8, 55, 84, DateTimeKind.Local).AddTicks(4426),
+                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DefaultStressValue = 5,
+                            Name = "General Activity",
+                            StartDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            UserId = "3781efa7-66dc-47f0-860f-e506d04102e4"
+                        });
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("Minister_Of_Time.Domain.User", null)
+                    b.HasOne("Minister_Of_Time.Data.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("Minister_Of_Time.Domain.User", null)
+                    b.HasOne("Minister_Of_Time.Data.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Minister_Of_Time.Domain.User", null)
+                    b.HasOne("Minister_Of_Time.Data.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("Minister_Of_Time.Domain.User", null)
+                    b.HasOne("Minister_Of_Time.Data.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -560,32 +728,32 @@ namespace Minister_Of_Time.Migrations
 
             modelBuilder.Entity("Minister_Of_Time.Domain.CalendarEvent", b =>
                 {
-                    b.HasOne("Minister_Of_Time.Domain.UserActivity", "Activity")
-                        .WithMany("CalendarEvents")
-                        .HasForeignKey("ActivityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Minister_Of_Time.Domain.User", "HostUser")
+                    b.HasOne("Minister_Of_Time.Data.User", "HostUser")
                         .WithMany()
                         .HasForeignKey("HostUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Activity");
+                    b.HasOne("Minister_Of_Time.Domain.UserActivity", "UserActivity")
+                        .WithMany("CalendarEvents")
+                        .HasForeignKey("UserActivityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("HostUser");
+
+                    b.Navigation("UserActivity");
                 });
 
             modelBuilder.Entity("Minister_Of_Time.Domain.CloseConnection", b =>
                 {
-                    b.HasOne("Minister_Of_Time.Domain.User", "ConnectedUser")
+                    b.HasOne("Minister_Of_Time.Data.User", "ConnectedUser")
                         .WithMany()
                         .HasForeignKey("ConnectedUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Minister_Of_Time.Domain.User", "User")
+                    b.HasOne("Minister_Of_Time.Data.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -606,15 +774,12 @@ namespace Minister_Of_Time.Migrations
 
                     b.HasOne("Minister_Of_Time.Domain.EventRole", "EventRole")
                         .WithMany("EventParticipants")
-                        .HasForeignKey("EventRoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("EventRoleId");
 
-                    b.HasOne("Minister_Of_Time.Domain.User", "User")
+                    b.HasOne("Minister_Of_Time.Data.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CalendarEvent");
 
@@ -631,7 +796,7 @@ namespace Minister_Of_Time.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Minister_Of_Time.Domain.User", "User")
+                    b.HasOne("Minister_Of_Time.Data.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -644,7 +809,7 @@ namespace Minister_Of_Time.Migrations
 
             modelBuilder.Entity("Minister_Of_Time.Domain.UserActivity", b =>
                 {
-                    b.HasOne("Minister_Of_Time.Domain.User", "User")
+                    b.HasOne("Minister_Of_Time.Data.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

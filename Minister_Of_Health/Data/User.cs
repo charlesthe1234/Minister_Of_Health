@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace Minister_Of_Time.Domain
+namespace Minister_Of_Time.Data
 {
-    public class User : IdentityUser<int>
+    public class User : IdentityUser
     {
         public required string? Name { get; set; } = string.Empty;
         public string? ContactNumber { get; set; }
