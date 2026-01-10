@@ -1,0 +1,130 @@
+﻿@page "/calendarevents/inbox"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using Minister_Of_Time.Domain
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+<div class="container mt-4">
+    <h3>My Invitations</h3>
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @successMessage
+            <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
+        </div>
+    }
+
+    @if (pendingInvites.Count == 0 && string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-info">No pending invitations.</div>
+    }
+
+    @foreach (var p in pendingInvites)
+    {
+        <div class="card mb-3 p-3 shadow-sm border-start border-primary border-4">
+            <div class="d-flex justify-content-between">
+                <h5>@p.CalendarEvent?.EventName</h5>
+                <span class="badge bg-secondary">@p.EventRole?.RoleName</span>
+            </div>
+            <p class="text-muted">Organized by: @p.CalendarEvent?.CreatedBy</p>
+
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <label class="small fw-bold">Personal Activity Name</label>
+                    <input class="form-control" @bind="p.CustomActivity" placeholder="e.g. Weekly Sync" />
+                </div>
+                <div class="col-md-3">
+                    <label class="small fw-bold">Category</label>
+                    <select class="form-select" @bind="p.CustomCategory">
+                        <option value="Work">Work</option>
+                        <option value="Life">Life</option>
+                    </select>
+                </div>
+                <div class="col-md-5 d-flex align-items-end gap-2">
+                    <button class="btn btn-success flex-grow-1" @onclick='() => Respond(p, "Accepted")'>
+                        <i class="bi bi-check-lg"></i> Accept
+                    </button>
+                    <button class="btn btn-outline-danger flex-grow-1" @onclick='() => Respond(p, "Rejected")'>
+                        Reject
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<EventParticipant> pendingInvites = new();
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInvites();
+    }
+
+    private async Task LoadInvites()
+    {
+        using var context = DbFactory.CreateDbContext();
+        var user = (await AuthStateProvider.GetAuthenticationStateAsync()).User;
+        var email = user.FindFirst(ClaimTypes.Email)?.Value;
+
+        if (!string.IsNullOrEmpty(email))
+        {
+            pendingInvites = await context.EventParticipant
+                .Include(p => p.CalendarEvent)
+                .Include(p => p.EventRole)
+                .Where(p => p.InviteeEmail == email && p.ParticipationStatus == "Pending")
+                .ToListAsync();
+        }
+    }
+
+    private async Task Respond(EventParticipant p, string status)
+    {
+        successMessage = null; // Reset message
+        using var context = DbFactory.CreateDbContext();
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+
+        // CHANGED: Get the string ID directly from claims
+        var currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        // CHANGED: Use a simple string null check instead of int.TryParse
+        if (!string.IsNullOrEmpty(currentUserId))
+        {
+            // 1. Fetch the actual database record to ensure tracking
+            var dbParticipant = await context.EventParticipant
+                .FirstOrDefaultAsync(x => x.Id == p.Id);
+
+            if (dbParticipant != null)
+            {
+                // 2. Update the record
+                dbParticipant.ParticipationStatus = status;
+
+                // CHANGED: Link the string GUID to the UserId (which is now a string)
+                dbParticipant.UserId = currentUserId;
+
+                // Only map custom UI fields if they accepted
+                if (status == "Accepted")
+                {
+                    dbParticipant.CustomActivity = p.CustomActivity;
+                    dbParticipant.CustomCategory = p.CustomCategory;
+                }
+
+                // 3. Save to SQL
+                await context.SaveChangesAsync();
+
+                // 4. Update UI
+                pendingInvites.Remove(p);
+                successMessage = $"Successfully {status.ToLower()} the invitation for '{p.CalendarEvent?.EventName}'.";
+
+                StateHasChanged();
+            }
+        }
+    }
+}

@@ -1,18 +1,22 @@
-﻿namespace Minister_Of_Time.Domain
+﻿using Minister_Of_Time.Data;
+
+namespace Minister_Of_Time.Domain
 {
     public class EventParticipant : BaseDomainModel
     {
-        public int UserId { get; set; }
+        public String? UserId { get; set; } // Make nullable; we might not have a UserId until they accept
         public virtual User? User { get; set; }
 
-        // Changed from EventId to CalendarEventId
         public int CalendarEventId { get; set; }
-        // Changed from Event to CalendarEvent
         public virtual CalendarEvent? CalendarEvent { get; set; }
 
-        public int EventRoleId { get; set; }
+        public int? EventRoleId { get; set; } // Link to your EventRole table
         public virtual EventRole? EventRole { get; set; }
 
-        public string? ParticipationStatus { get; set; }
+        // --- NEW FIELDS ---
+        public string? InviteeEmail { get; set; } // To track the invite by email
+        public string? ParticipationStatus { get; set; } // "Pending", "Accepted", "Rejected"
+        public string? CustomActivity { get; set; } // The invitee's chosen activity, note to self to save under the event participants own activities
+        public string? CustomCategory { get; set; } // The invitee's chosen category (Work/Life)
     }
 }

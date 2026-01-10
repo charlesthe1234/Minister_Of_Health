@@ -35,7 +35,7 @@
     private Task<AuthenticationState>? authStateTask { get; set; }
 
     private UserActivity UserActivity { get; set; } = new();
-    private int? currentDbUserId;
+    private String? currentDbUserId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -68,7 +68,7 @@
         using var context = DbFactory.CreateDbContext();
 
         // Assign the ID we retrieved during Initialization
-        UserActivity.UserId = currentDbUserId.Value;
+        UserActivity.UserId = currentDbUserId;
 
         context.UserActivity.Add(UserActivity);
         await context.SaveChangesAsync();
