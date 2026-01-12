@@ -37,8 +37,6 @@
 
 @code {
     private string DisplayName = "User";
-    private List<double> chartData = new();
-    private List<string> chartLabels = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -63,58 +61,63 @@
             if (user.Identity?.IsAuthenticated == true)
             {
                 var userIdString = UserManager.GetUserId(user);
-
-                Console.WriteLine($"CONNECTED USER ID: {userIdString}");// Check user ID
-
                 using var context = DbFactory.CreateDbContext();
 
-                // Fetch events
+                // Fetch events including the activity details
                 var events = await context.CalendarEvent
                     .Include(e => e.UserActivity)
                     .Where(e => e.HostUserId.ToString() == userIdString)
                     .ToListAsync();
 
-                Console.WriteLine($"MATCHES FOUND: {events.Count}");// Check how many events were found
-
-                // Inside OnAfterRenderAsync, after fetching 'events'
                 if (events.Any())
                 {
-                    var groupedData = events
-                        .GroupBy(e => e.UserActivity?.ActivityType ?? "Other")//This line will determine the category of pie chart
+                    // --- 1. PREPARE PIE CHART DATA (Accumulated Minutes) ---
+                    var pieGrouped = events
+                        .GroupBy(e => e.UserActivity?.ActivityType ?? "Other")
                         .Select(g => new
                         {
                             Category = g.Key,
                             Minutes = g.Sum(e => (e.EndDateTime - e.StartDateTime).TotalMinutes)
                         }).ToList();
 
-                    var chartLabels = groupedData.Select(x => x.Category).ToList();
-                    var chartData = groupedData.Select(x => x.Minutes).ToList();
+                    var pieLabels = pieGrouped.Select(x => x.Category).ToList();
+                    var pieValues = pieGrouped.Select(x => x.Minutes).ToList();
 
-                    // Send to the JS code
-                    await JSRuntime.InvokeVoidAsync("renderLifeCharts", chartLabels, chartData);
-                    // 1. Get the last 7 days as a list of strings for the X-axis labels
+                    // --- 2. PREPARE LINE CHART DATA (Multi-series Hours) ---
+
+                    // Create the X-axis labels (Last 7 Days)
                     var lastSevenDays = Enumerable.Range(0, 7)
                         .Select(i => DateTime.Today.AddDays(-i).ToString("MM/dd"))
                         .Reverse()
                         .ToList();
 
-                    // 2. Group events by Date and count them
-                    var progressData = events
+                    // Identify all unique activity types present in the last 7 days
+                    var activityTypes = events
                         .Where(e => e.StartDateTime >= DateTime.Today.AddDays(-7))
-                        .GroupBy(e => e.StartDateTime.ToString("MM/dd"))
-                        .ToDictionary(g => g.Key, g => g.Count());
-
-                    // 3. Match the counts to the specific 7 days (filling in 0 for days with no events)
-                    var lineChartData = lastSevenDays
-                        .Select(day => progressData.ContainsKey(day) ? (double)progressData[day] : 0.0)
+                        .Select(e => e.UserActivity?.ActivityType ?? "Other")
+                        .Distinct()
                         .ToList();
 
-                    // 4. Send both data sets to JS
+                    // Create a separate data series (line) for each Activity Type
+                    var multiLineData = activityTypes.Select(type => new
+                    {
+                        Label = type,
+                        Data = lastSevenDays.Select(day =>
+                            events.Where(e => (e.UserActivity?.ActivityType ?? "Other") == type
+                                           && e.StartDateTime.ToString("MM/dd") == day)
+                                  .Sum(e => (e.EndDateTime - e.StartDateTime).TotalHours)
+                        ).ToList()
+                    }).ToList();
+
+                    // --- 3. SEND TO JAVASCRIPT ---
+                    // Passing 4 arguments: Pie Labels, Pie Values, Line Labels, Line Dataset Objects
                     await JSRuntime.InvokeVoidAsync("renderLifeCharts",
-                        chartLabels, chartData, // Pie chart data
-                        lastSevenDays, lineChartData // Line chart data
+                        pieLabels,
+                        pieValues,
+                        lastSevenDays,
+                        multiLineData
                     );
-    
+
                     StateHasChanged();
                 }
             }
