@@ -18,13 +18,13 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-        window.renderLifeCharts = (labels, dataValues) => {
-            // STEP 1: Check what reached the browser from C#
-            console.log("DEBUG JS 1: Function triggered by Blazor");
-            console.log("DEBUG JS 2: Labels received from C#:", labels);
-            console.log("DEBUG JS 3: Values received from C#:", dataValues);
+        // Catch all 4 arguments: Pie labels, Pie values, Line labels, Line values
+        window.renderLifeCharts = (pieLabels, pieValues, lineLabels, lineValues) => {
 
-            //LINE CHART
+            console.log("Pie Data:", pieLabels, pieValues);
+            console.log("Line Data:", lineLabels, lineValues);
+
+            // --- LINE CHART ---
             const lineCtx = document.getElementById('lifeLineChart');
             if (lineCtx) {
                 try {
@@ -34,84 +34,72 @@
                     new Chart(lineCtx, {
                         type: 'line',
                         data: {
-                            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                            labels: lineLabels, // Now correctly linked to the 3rd argument
                             datasets: [{
-                                label: 'Weekly Activity',
-                                data: [65, 59, 80, 81, 56, 55, 40],
+                                label: 'Activities per Day',
+                                data: lineValues, // Now correctly linked to the 4th argument
                                 borderColor: '#FFD700',
                                 backgroundColor: 'rgba(255, 215, 0, 0.2)',
                                 fill: true,
-                                tension: 0.1
+                                tension: 0.4
                             }]
                         },
                         options: {
                             responsive: true,
                             plugins: { legend: { labels: { color: 'white' } } },
                             scales: {
-                                y: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } },
-                                x: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { color: 'white', stepSize: 1 }
+                                },
+                                x: {
+                                    ticks: { color: 'white' }
+                                }
                             }
                         }
                     });
-                    console.log("DEBUG JS 4: Line Chart rendered successfully.");
                 } catch (err) {
-                    console.error("DEBUG JS ERROR (Line Chart):", err);
+                    console.error("Line Chart Error:", err);
                 }
             }
 
-            //PIE CHART
+            // --- PIE CHART ---
             const pieCtx = document.getElementById('lifePieChart');
             if (pieCtx) {
                 try {
-                    if (!labels || labels.length === 0) {
-                        console.warn("DEBUG JS 5: Pie Chart has 0 items. It will be an empty box.");
-                    }
-
                     let existingPie = Chart.getChart("lifePieChart");
                     if (existingPie) existingPie.destroy();
 
                     new Chart(pieCtx, {
                         type: 'pie',
                         data: {
-                            labels: labels,
+                            labels: pieLabels, // Linked to 1st argument
                             datasets: [{
-                                data: dataValues,
-                                backgroundColor: [
-                                    '#FF6384', '#36A2EB', '#FFCE56',
-                                    '#4BC0C0', '#9966FF', '#FF9F40'
-                                ],
-                                borderColor: 'rgba(255, 255, 255, 0.2)',
-                                borderWidth: 1
+                                data: pieValues, // Linked to 2nd argument
+                                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40']
                             }]
                         },
                         options: {
                             responsive: true,
                             plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: { color: 'white' }
-                                },
+                                legend: { position: 'bottom', labels: { color: 'white' } },
                                 tooltip: {
                                     callbacks: {
                                         label: function(context) {
-                                            let totalMinutes = context.parsed; // This is your dataValue
+                                            let totalMinutes = context.parsed;
                                             let hours = Math.floor(totalMinutes / 60);
                                             let mins = Math.round(totalMinutes % 60);
-
-                                            // Formats to "Activity: 02h 30m"
-                                            let timeString = hours.toString().padStart(2, '0') + 'h ' +
-                                                             mins.toString().padStart(2, '0') + 'm';
-
-                                            return context.label + ': ' + timeString;
+                                            return context.label + ': ' +
+                                                   hours.toString().padStart(2, '0') + 'h ' +
+                                                   mins.toString().padStart(2, '0') + 'm';
                                         }
                                     }
                                 }
                             }
                         }
                     });
-                    console.log("DEBUG JS 6: Pie Chart rendered with", labels.length, "slices.");
                 } catch (err) {
-                    console.error("DEBUG JS ERROR (Pie Chart):", err);//Show in console if pie chart error
+                    console.error("Pie Chart Error:", err);
                 }
             }
         };

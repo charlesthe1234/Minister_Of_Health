@@ -76,6 +76,7 @@
 
                 Console.WriteLine($"MATCHES FOUND: {events.Count}");// Check how many events were found
 
+                // Inside OnAfterRenderAsync, after fetching 'events'
                 if (events.Any())
                 {
                     var groupedData = events
@@ -86,11 +87,34 @@
                             Minutes = g.Sum(e => (e.EndDateTime - e.StartDateTime).TotalMinutes)
                         }).ToList();
 
-                    chartLabels = groupedData.Select(x => x.Category).ToList();
-                    chartData = groupedData.Select(x => x.Minutes).ToList();
+                    var chartLabels = groupedData.Select(x => x.Category).ToList();
+                    var chartData = groupedData.Select(x => x.Minutes).ToList();
 
                     // Send to the JS code
                     await JSRuntime.InvokeVoidAsync("renderLifeCharts", chartLabels, chartData);
+                    // 1. Get the last 7 days as a list of strings for the X-axis labels
+                    var lastSevenDays = Enumerable.Range(0, 7)
+                        .Select(i => DateTime.Today.AddDays(-i).ToString("MM/dd"))
+                        .Reverse()
+                        .ToList();
+
+                    // 2. Group events by Date and count them
+                    var progressData = events
+                        .Where(e => e.StartDateTime >= DateTime.Today.AddDays(-7))
+                        .GroupBy(e => e.StartDateTime.ToString("MM/dd"))
+                        .ToDictionary(g => g.Key, g => g.Count());
+
+                    // 3. Match the counts to the specific 7 days (filling in 0 for days with no events)
+                    var lineChartData = lastSevenDays
+                        .Select(day => progressData.ContainsKey(day) ? (double)progressData[day] : 0.0)
+                        .ToList();
+
+                    // 4. Send both data sets to JS
+                    await JSRuntime.InvokeVoidAsync("renderLifeCharts",
+                        chartLabels, chartData, // Pie chart data
+                        lastSevenDays, lineChartData // Line chart data
+                    );
+    
                     StateHasChanged();
                 }
             }
