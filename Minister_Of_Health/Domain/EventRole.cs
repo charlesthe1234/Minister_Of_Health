@@ -1,6 +1,4 @@
-﻿using Minister_Of_Time.Data;
-
-namespace Minister_Of_Time.Domain
+﻿namespace Minister_Of_Time.Domain
 {
     public class EventRole : BaseDomainModel
     {
@@ -15,4 +13,4 @@ namespace Minister_Of_Time.Domain
         // Navigation property: One role can be held by many participants
         public virtual ICollection<EventParticipant> EventParticipants { get; set; } = new List<EventParticipant>();
     }
-}
+}   

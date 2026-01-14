@@ -10,8 +10,8 @@ namespace Minister_Of_Time.Domain
         public int CalendarEventId { get; set; }
         public virtual CalendarEvent? CalendarEvent { get; set; }
 
-        public int? EventRoleId { get; set; } // Link to your EventRole table
-        public virtual EventRole? EventRole { get; set; }
+        public int EventRoleId { get; set; } // Link to your EventRole table
+        public virtual EventRole EventRole { get; set; }
 
         // --- NEW FIELDS ---
         public string? InviteeEmail { get; set; } // To track the invite by email
