@@ -1,0 +1,135 @@
+/*.manage-page {
+    position: relative;
+    min-height: 76vh;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+}*/
+
+/* Background image (use your preferred image) */
+/*.bg-image {
+    position: absolute;
+    inset: 0;
+    background-image: url('/images/LoginAndHome.png');
+    background-size: cover;
+    background-position: center;
+    filter: saturate(0.9) contrast(.95);
+    opacity: 0.95;
+    z-index: 0;
+}*/
+
+/* Foreground content */
+/*.manage-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    gap: 3rem;
+    padding: 3rem;
+    align-items: flex-start;
+}*/
+
+/* Left profile card */
+/*.profile-card {
+    width: 46%;
+    background: rgba(255, 255, 255, 0.85);
+    padding: 2.25rem;
+    border-radius: 6px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+
+.display-name {
+    font-family: "Bradley Hand", "Comic Sans MS", "Segoe UI", sans-serif;
+    font-size: 3rem;
+    margin: 0 0 1.25rem 0;
+}
+
+.info {
+    margin: .5rem 0;
+    color: #222;
+}
+
+.link-like {
+    background: none;
+    border: none;
+    color: #007bff;
+    text-decoration: underline;
+    cursor: pointer;
+}*/
+
+/* Buttons */
+/*.btn-edit, .btn-save, .btn-cancel {
+    margin-top: 1rem;
+    padding: .35rem .9rem;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #fff;
+    cursor: pointer;
+}
+.btn-save { background: #2e8b57; color: white; border-color: #1e6b40; }
+.btn-cancel { background: #f5f5f5; }*/
+
+/* Right column (gauges) */
+/*.right-column {
+    width: 34%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    align-items: flex-end;
+}*/
+
+/* Gauge card */
+/*.gauge-block {
+    width: 260px;
+    background: rgba(255,255,255,0.9);
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+}
+
+.gauge-title { font-size: 0.85rem; color: #333; margin-bottom: .5rem; }*/
+
+/* Simple semicircular dial */
+/*.gauge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.dial {
+    width: 180px;
+    height: 90px;
+    border-top-left-radius: 180px;
+    border-top-right-radius: 180px;
+    border: 6px solid rgba(0,0,0,0.08);
+    border-bottom: none;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.04));
+}
+.needle {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 2px;
+    height: 70%;
+    background: #b03;
+    transform-origin: bottom center;
+    transition: transform 600ms cubic-bezier(.2,.9,.3,1);
+}
+.needle.health { background: #2e8b57; }
+.gauge-label { margin-top: .5rem; font-weight: 600; }*/
+
+/* Connections floating button */
+/*.connections-btn {
+    margin-top: 1rem;
+    padding: .5rem .9rem;
+    background: rgba(255,255,255,0.95);
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 3px;
+    cursor: pointer;
+}*/
+
+/* Responsive */
+/*@media (max-width: 900px) {
+    .manage-content { flex-direction: column; align-items: center; padding: 1.5rem; gap: 1.5rem; }
+    .profile-card, .right-column { width: 100%; align-items: center; }
+    .right-column { align-items: center; }
+}*/

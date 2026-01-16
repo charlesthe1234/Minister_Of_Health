@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Components\Account\Pages\Manage\**" />
+    <Content Remove="Components\Account\Pages\Manage\**" />
+    <EmbeddedResource Remove="Components\Account\Pages\Manage\**" />
+    <None Remove="Components\Account\Pages\Manage\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="wwwroot\images\" />
     <Folder Include="wwwroot\videos\" />
   </ItemGroup>
