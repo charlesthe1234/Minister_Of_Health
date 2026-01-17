@@ -1,0 +1,419 @@
+﻿@page "/calendarevents/manage-invites/{EventId:int}"
+@using Microsoft.EntityFrameworkCore
+@using Minister_Of_Time.Domain
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
+
+<div class="container mt-4">
+    @if (isUnauthorized)
+    {
+        <div class="alert alert-danger">You do not have permission to manage this event.</div>
+    }
+    else if (isLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p>Loading participants...</p>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1">
+                        <li class="breadcrumb-item"><a href="/calendarevents">Calendar</a></li>
+                        <li class="breadcrumb-item active">Manage Invites</li>
+                    </ol>
+                </nav>
+                <h2 class="fw-bold">@eventName</h2>
+            </div>
+            <button class="btn btn-primary shadow-sm" @onclick="() => showAddGuestPopup = true">
+                <i class="bi bi-person-plus-fill me-2"></i>Add New Guest
+            </button>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-warning shadow-sm">@errorMessage</div>
+        }
+
+        @* --- SECTION: REGISTERED USERS --- *@
+        <h5 class="mb-3 text-primary"><i class="bi bi-person-check-fill me-2"></i>Registered Users (@knownParticipants.Count)</h5>
+        <div class="row mb-5">
+            @foreach (var p in knownParticipants)
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="p-3 border rounded bg-white shadow-sm d-flex flex-column h-100">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="fw-bold text-truncate" title="@p.InviteeEmail">@p.InviteeEmail</div>
+                            <span class="badge @GetRoleClass(p.EventRole?.RoleName) x-small">@p.EventRole?.RoleName</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="p-1 px-3 rounded-pill text-center d-inline-block x-small fw-bold @GetStatusClass(p.ParticipationStatus)">
+                                @p.ParticipationStatus
+                            </span>
+                        </div>
+                        <div class="mt-auto d-flex gap-2 pt-2 border-top">
+                            <button class="btn btn-sm btn-link text-decoration-none p-0 flex-grow-1 text-start" @onclick="() => OpenManagePopup(p)">
+                                <i class="bi bi-gear"></i> Permissions
+                            </button>
+                            <button class="btn btn-sm text-danger" @onclick="() => ShowRemoveConfirmation(p)"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @* --- SECTION: PENDING REGISTRATIONS --- *@
+        <h5 class="mb-3 text-secondary"><i class="bi bi-envelope-exclamation-fill me-2"></i>Pending Registrations (@unknownParticipants.Count)</h5>
+        <div class="row mb-5">
+            @foreach (var p in unknownParticipants)
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="p-3 border rounded bg-light d-flex flex-column h-100" style="border-style: dashed !important;">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="text-muted text-truncate" title="@p.InviteeEmail">@p.InviteeEmail</div>
+                            <span class="badge @GetRoleClass(p.EventRole?.RoleName) x-small">@p.EventRole?.RoleName</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="p-1 px-3 rounded-pill text-center d-inline-block x-small fw-bold @GetStatusClass(p.ParticipationStatus)">
+                                @p.ParticipationStatus
+                            </span>
+                        </div>
+                        <div class="mt-auto d-flex gap-2 pt-2 border-top">
+                            <button class="btn btn-sm btn-link text-decoration-none p-0 flex-grow-1 text-start" @onclick="() => OpenManagePopup(p)">
+                                <i class="bi bi-gear"></i> Permissions
+                            </button>
+                            <button class="btn btn-sm text-danger" @onclick="() => ShowRemoveConfirmation(p)"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @* --- SECTION: PREVIOUS PARTICIPANTS (HISTORY) --- *@
+        @if (historyParticipants.Any())
+        {
+            <hr class="my-5" />
+            <h5 class="text-muted mb-3"><i class="bi bi-clock-history me-2"></i>Previous Participants</h5>
+            <div class="table-responsive border rounded bg-white shadow-sm p-3">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Email</th>
+                            <th>Former Role</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in historyParticipants)
+                        {
+                            <tr>
+                                <td class="text-muted">@p.InviteeEmail</td>
+                                <td><span class="badge bg-light text-dark border">@p.EventRole?.RoleName</span></td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => ReInvite(p)">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Re-Invite
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+</div>
+
+@* --- POPUP: ADD GUEST --- *@
+@if (showAddGuestPopup)
+{
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">Invite Someone New</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="() => showAddGuestPopup = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Email Address</label>
+                        <input type="email" class="form-control" @bind="newGuestEmail" placeholder="friend@example.com" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Assign Role</label>
+                        <select class="form-select" @bind="newGuestRoleId">
+                            @foreach (var role in availableRoles)
+                            {
+                                <option value="@role.Value">@role.Key</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border" @onclick="() => showAddGuestPopup = false">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="AddGuest">Send Invite</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* --- POPUP: MANAGE PERMISSIONS --- *@
+@if (showManagePopup)
+{
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered shadow-lg">
+            <div class="modal-content border-0">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Edit Permissions</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="() => showManagePopup = false"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-4">You can change the role of <strong>@selectedParticipant?.InviteeEmail</strong>.</p>
+
+                    <label class="form-label fw-bold">User Role</label>
+                    <select class="form-select" @bind="tempRoleId">
+                        @foreach (var role in availableRoles)
+                        {
+                            <option value="@role.Value">@role.Key</option>
+                        }
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border" @onclick="() => showManagePopup = false">Close</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveRoleChanges">Update Role</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* --- POPUP: CONFIRM REMOVE --- *@
+@if (showRemovePopup)
+{
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <i class="bi bi-exclamation-circle text-danger display-4 mb-3"></i>
+                    <h4>Remove Participant?</h4>
+                    <p>This will revoke <strong>@selectedParticipant?.InviteeEmail</strong>'s access to this event.</p>
+                    <div class="d-flex justify-content-center gap-2 mt-4">
+                        <button class="btn btn-light border px-4" @onclick="() => showRemovePopup = false">Keep</button>
+                        <button class="btn btn-danger px-4" @onclick="ConfirmRemove">Remove</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int EventId { get; set; }
+    private string eventName = "Event";
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isUnauthorized = false;
+    private string? currentUserId;
+    private string? currentUserEmail;
+
+    private List<EventParticipant> knownParticipants = new();
+    private List<EventParticipant> unknownParticipants = new();
+    private List<EventParticipant> historyParticipants = new();
+    private Dictionary<string, int> availableRoles = new();
+
+    // State management
+    private bool showRemovePopup = false;
+    private bool showManagePopup = false;
+    private bool showAddGuestPopup = false;
+    private EventParticipant? selectedParticipant;
+
+    private int tempRoleId;
+    private string newGuestEmail = "";
+    private int newGuestRoleId; // Assigned dynamically in OnInitialized
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        currentUserEmail = authState.User.FindFirst(ClaimTypes.Email)?.Value?.ToLower();
+
+        using var context = DbFactory.CreateDbContext();
+
+        // BARRIER: Verify the user is the Host
+        var ev = await context.CalendarEvent.FindAsync(EventId);
+        if (ev == null || ev.HostUserId != currentUserId)
+        {
+            isUnauthorized = true;
+            return;
+        }
+
+        eventName = ev.EventName;
+
+        // FILTER: Remove "Organizer" and "Admin" from available selection
+        availableRoles = await context.EventRole
+            .Where(r => r.RoleName != "Organizer" && r.RoleName != "Admin")
+            .ToDictionaryAsync(r => r.RoleName, r => r.Id);
+
+        // Set default role for new guests (Viewer)
+        newGuestRoleId = availableRoles.FirstOrDefault(r => r.Key == "Viewer").Value;
+
+        await LoadParticipants();
+    }
+
+    private async Task LoadParticipants()
+    {
+        isLoading = true;
+        errorMessage = null;
+        using var context = DbFactory.CreateDbContext();
+
+        var all = await context.EventParticipant
+            .Include(p => p.EventRole)
+            .Where(p => p.CalendarEventId == EventId)
+            .ToListAsync();
+
+        // Categorize participants by status and registration
+        knownParticipants = all.Where(p => p.UserId != null && p.ParticipationStatus != "Left").ToList();
+        unknownParticipants = all.Where(p => p.UserId == null && p.ParticipationStatus != "Left").ToList();
+        historyParticipants = all.Where(p => p.ParticipationStatus == "Left").ToList();
+
+        isLoading = false;
+    }
+
+    private async Task AddGuest()
+    {
+        if (string.IsNullOrWhiteSpace(newGuestEmail)) return;
+
+        var emailLower = newGuestEmail.Trim().ToLower();
+
+        if (emailLower == currentUserEmail)
+        {
+            errorMessage = "You cannot invite yourself.";
+            showAddGuestPopup = false;
+            return;
+        }
+
+        using var context = DbFactory.CreateDbContext();
+
+        // Check if they are already an active participant
+        var existing = await context.EventParticipant
+            .FirstOrDefaultAsync(p => p.CalendarEventId == EventId && p.InviteeEmail.ToLower() == emailLower);
+
+        if (existing != null)
+        {
+            if (existing.ParticipationStatus == "Left")
+            {
+                // Logic to re-invite someone from history
+                existing.ParticipationStatus = "Pending";
+                existing.EventRoleId = newGuestRoleId;
+                await context.SaveChangesAsync();
+            }
+            else
+            {
+                errorMessage = "This person is already invited.";
+                showAddGuestPopup = false;
+                return;
+            }
+        }
+        else
+        {
+            var regUser = await context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == emailLower);
+
+            context.EventParticipant.Add(new EventParticipant
+            {
+                CalendarEventId = EventId,
+                InviteeEmail = newGuestEmail.Trim(),
+                UserId = regUser?.Id,
+                EventRoleId = newGuestRoleId,
+                ParticipationStatus = "Pending"
+            });
+
+            await context.SaveChangesAsync();
+        }
+
+        newGuestEmail = "";
+        showAddGuestPopup = false;
+        await LoadParticipants();
+    }
+
+    private async Task ReInvite(EventParticipant p)
+    {
+        using var context = DbFactory.CreateDbContext();
+        var record = await context.EventParticipant.FindAsync(p.Id);
+        if (record != null)
+        {
+            record.ParticipationStatus = "Pending";
+            await context.SaveChangesAsync();
+            await LoadParticipants();
+        }
+    }
+
+    private string GetStatusClass(string? status) => status switch
+    {
+        "Accepted" => "bg-success text-white",
+        "Rejected" => "bg-danger text-white",
+        "Left" => "bg-dark text-white",
+        _ => "bg-warning text-dark"
+    };
+
+    private string GetRoleClass(string? roleName) => roleName switch
+    {
+        "Host" => "bg-warning text-dark border border-dark",
+        "Editor" => "bg-primary text-white",
+        "Viewer" => "bg-secondary text-white",
+        _ => "bg-light text-dark"
+    };
+
+    private void ShowRemoveConfirmation(EventParticipant p)
+    {
+        selectedParticipant = p;
+        showRemovePopup = true;
+    }
+
+    private async Task ConfirmRemove()
+    {
+        if (selectedParticipant != null)
+        {
+            using var context = DbFactory.CreateDbContext();
+            // We physically remove from DB here as per "Remove" button intent.
+            // "Leave" status is handled by the user themselves in the dashboard.
+            var record = await context.EventParticipant.FindAsync(selectedParticipant.Id);
+            if (record != null)
+            {
+                context.EventParticipant.Remove(record);
+                await context.SaveChangesAsync();
+            }
+            showRemovePopup = false;
+            await LoadParticipants();
+        }
+    }
+
+    private void OpenManagePopup(EventParticipant p)
+    {
+        selectedParticipant = p;
+        tempRoleId = p.EventRoleId;
+        showManagePopup = true;
+    }
+
+    private async Task SaveRoleChanges()
+    {
+        if (selectedParticipant != null)
+        {
+            using var context = DbFactory.CreateDbContext();
+            var p = await context.EventParticipant.FindAsync(selectedParticipant.Id);
+            if (p != null)
+            {
+                p.EventRoleId = tempRoleId;
+                await context.SaveChangesAsync();
+            }
+            showManagePopup = false;
+            await LoadParticipants();
+        }
+    }
+}
