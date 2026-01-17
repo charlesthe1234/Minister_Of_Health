@@ -54,7 +54,7 @@
         // If the user is already logged in, redirect them to the dashboard immediately
         if (user.Identity is not null && user.Identity.IsAuthenticated)
         {
-            NavigationManager.NavigateTo("/calendarevents");
+            NavigationManager.NavigateTo("/useractivities/create");
         }
     }
 }

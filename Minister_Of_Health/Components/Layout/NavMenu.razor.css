@@ -1,17 +1,28 @@
-﻿.brand-container {
+﻿﻿.brand-container {
     left: 1rem;
     display: flex;
     align-items: center; /* Vertically centers logo and text together */
     gap: 10px; /* Space between logo and "MINISTER OF TIME" */
 }
 
-.logo-name{
+.logo-name {
     color: white;
     align-items: center;
 }
 
 .brand-logo {
-    width:40px;
+    width: 40px;
+    border-radius: 50%; /* Makes it circular */
+    object-fit: cover; /* Prevents stretching */
+    flex-shrink: 0;
+}
+
+/* Ensure the container doesn't force height on the image */
+.profile-container {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    height: 3rem; /* Matches your other nav links */
 }
 
 .nav-scrollable {
@@ -25,7 +36,7 @@
     align-items: center;
     padding: 0 1rem;
     position: relative;
-    width:100%
+    width: 100%
 }
 
 .nav-item {
@@ -33,13 +44,14 @@
     white-space: nowrap;
 }
 
-.nav-item:last-child {
-    margin-left: auto;
-}
+    .nav-item:last-child {
+        margin-left: auto;
+        flex-direction: column;
+    }
 
-.nav-item:first-child {
-    margin-right: auto;
-}
+    .nav-item:first-child {
+        margin-right: auto;
+    }
 
 .navbar-toggler {
     appearance: none;
@@ -54,9 +66,9 @@
     background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.55%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") no-repeat center/1.75rem rgba(255, 255, 255, 0.1);
 }
 
-.navbar-toggler:checked {
-    background-color: rgba(255, 255, 255, 0.5);
-}
+    .navbar-toggler:checked {
+        background-color: rgba(255, 255, 255, 0.5);
+    }
 
 .top-row {
     height: 3.5rem;
@@ -118,8 +130,9 @@
 .nav-item {
     font-size: 0.9rem;
     padding-bottom: 0.5rem;
-}*/
+}
 
+*/
 /*    .nav-item:first-of-type {
         padding-top: 1rem;
     }
@@ -127,18 +140,17 @@
     .nav-item:last-of-type {
         padding-bottom: 1rem;
     }*/
-
-    .nav-item ::deep .nav-link {
-        color: #d7d7d7;
-        background: none;
-        border: none;
-        border-radius: 4px;
-        height: 3rem;
-        display: flex;
-        align-items: center;
-        line-height: 3rem;
-        width: 100%;
-    }
+.nav-item ::deep .nav-link {
+    color: #d7d7d7;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    line-height: 3rem;
+    width: 100%;
+}
 
 .nav-item ::deep a.active {
     background-color: rgba(255,255,255,0.37);
@@ -158,6 +170,26 @@
     display: block;
 }
 
+.account-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 0.5rem;
+    min-width: 250px;
+}
+
+.logout-container form {
+    margin: 0;
+}
+
+.profile-link img.brand-logo {
+    width: 36px; /* adjust as needed */
+    height: 36px;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
 @media (min-width: 641px) {
     .navbar-toggler {
         display: none;
@@ -166,10 +198,9 @@
     .nav-scrollable {
         /* Never collapse the sidebar for wide screens */
         display: block;
-
         /* Allow sidebar to scroll for tall menus */
-/*        height: calc(100vh - 3.5rem);*/
-        height:auto;
+        /*        height: calc(100vh - 3.5rem);*/
+        height: auto;
         overflow-y: auto;
     }
 }

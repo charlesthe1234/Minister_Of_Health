@@ -18,48 +18,91 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-        window.renderLifeCharts = () => {
-            // 1. Render Pie Chart
-            var pieCanvas = document.getElementById('lifePieChart');
-            if (pieCanvas) {
-                new Chart(pieCanvas, {
-                    type: 'pie',
-                    data: {
-                        labels: ['Family', 'Hobby', 'Health', 'Events'],
-                        datasets: [{
-                            data: [40, 15, 25, 20],
-                            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
-                        }]
-                    }
-                });
+        // Catch all 4 arguments: Pie labels, Pie values, Line labels, Line values
+        window.renderLifeCharts = (pieLabels, pieValues, lineLabels, lineValues) => {
+
+            console.log("Pie Data:", pieLabels, pieValues);
+            console.log("Line Data:", lineLabels, lineValues);
+
+            // --- LINE CHART ---
+            const lineCtx = document.getElementById('lifeLineChart');
+            if (lineCtx) {
+                try {
+                    let existingLine = Chart.getChart("lifeLineChart");
+                    if (existingLine) existingLine.destroy();
+
+                    const colors = ['#FFD700', '#00d2ff', '#FF6384', '#4BC0C0', '#9966FF'];
+
+                    new Chart(lineCtx, {
+                        type: 'line',
+                        data: {
+                            labels: lineLabels, // Now correctly linked to the 3rd argument
+                            datasets: lineValues.map((item, index) => ({
+                                label: item.label,
+                                data: item.data,
+                                borderColor: colors[index % colors.length],
+                                backgroundColor: 'transparent',
+                                tension: 0.4,
+                                fill: false
+                            }))
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { labels: { color: 'white' } }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { color: 'white', callback: v => v + 'h' }
+                                },
+                                x: { ticks: { color: 'white' } }
+                            }
+                        }
+                    });
+                } catch (err) {
+                    console.error("Line Chart Error:", err);
+                }
             }
 
-            // 2. Render Line Chart
-            var lineCanvas = document.getElementById('lifeLineChart');
-            if (lineCanvas) {
-                new Chart(lineCanvas, {
-                    type: 'line',
-                    data: {
-                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                        datasets: [{
-                            label: 'Activity Level',
-                            data: [65, 59, 80, 81, 56, 55, 40],
-                            fill: false,
-                            borderColor: '#FFD700', // Gold color for the Minister
-                            tension: 0.1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { labels: { color: 'white' } } // Makes legend text readable on black
+            // --- PIE CHART ---
+            const pieCtx = document.getElementById('lifePieChart');
+            if (pieCtx) {
+                try {
+                    let existingPie = Chart.getChart("lifePieChart");
+                    if (existingPie) existingPie.destroy();
+
+                    new Chart(pieCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: pieLabels, // Linked to 1st argument
+                            datasets: [{
+                                data: pieValues, // Linked to 2nd argument
+                                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40']
+                            }]
                         },
-                        scales: {
-                            y: { ticks: { color: 'white' } }, // Makes axis numbers readable
-                            x: { ticks: { color: 'white' } }
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { position: 'bottom', labels: { color: 'white' } },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let totalMinutes = context.parsed;
+                                            let hours = Math.floor(totalMinutes / 60);
+                                            let mins = Math.round(totalMinutes % 60);
+                                            return context.label + ': ' +
+                                                   hours.toString().padStart(2, '0') + 'h ' +
+                                                   mins.toString().padStart(2, '0') + 'm';
+                                        }
+                                    }
+                                }
+                            }
                         }
-                    }
-                });
+                    });
+                } catch (err) {
+                    console.error("Pie Chart Error:", err);
+                }
             }
         };
     </script>

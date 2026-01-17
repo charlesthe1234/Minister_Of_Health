@@ -11,6 +11,8 @@ namespace Minister_Of_Time.Domain
 
         // Relationship: Activity belongs to a User (the creator)
         public String UserId { get; set; }
+        public String? ActivityType { get; set; }
+        public String? Category { get; set; }
         public virtual User? User { get; set; }
 
         // Optional: Navigation property to see all events using this activity

@@ -1,6 +1,14 @@
 ﻿@page "/life"
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@using Minister_Of_Time.Domain
 @rendermode InteractiveServer
+
 @inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthStateProvider
+@inject UserManager<User> UserManager
+@inject IDbContextFactory<Minister_Of_TimeContext> DbFactory
 <PageTitle>Life Page</PageTitle>
 
 <div class="life-background">
@@ -28,11 +36,91 @@
 </div>
 
 @code {
+    private string DisplayName = "User";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userClaims = authState.User;
+        if (userClaims.Identity?.IsAuthenticated == true)
+        {
+            using var context = DbFactory.CreateDbContext();
+            var userIdString = UserManager.GetUserId(userClaims);
+            var dbUser = await context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userIdString);
+            if (dbUser != null) DisplayName = dbUser.Name ?? "User";
+        }
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await JSRuntime.InvokeVoidAsync("renderLifeCharts"); @*call from app.raozr*@
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                var userIdString = UserManager.GetUserId(user);
+                using var context = DbFactory.CreateDbContext();
+
+                // Fetch events including the activity details
+                var events = await context.CalendarEvent
+                    .Include(e => e.UserActivity)
+                    .Where(e => e.HostUserId.ToString() == userIdString)
+                    .ToListAsync();
+
+                if (events.Any())
+                {
+                    // --- 1. PREPARE PIE CHART DATA (Accumulated Minutes) ---
+                    var pieGrouped = events
+                        .GroupBy(e => e.UserActivity?.ActivityType ?? "Other")
+                        .Select(g => new
+                        {
+                            Category = g.Key,
+                            Minutes = g.Sum(e => (e.EndDateTime - e.StartDateTime).TotalMinutes)
+                        }).ToList();
+
+                    var pieLabels = pieGrouped.Select(x => x.Category).ToList();
+                    var pieValues = pieGrouped.Select(x => x.Minutes).ToList();
+
+                    // --- 2. PREPARE LINE CHART DATA (Multi-series Hours) ---
+
+                    // Create the X-axis labels (Last 7 Days)
+                    var lastSevenDays = Enumerable.Range(0, 7)
+                        .Select(i => DateTime.Today.AddDays(-i).ToString("MM/dd"))
+                        .Reverse()
+                        .ToList();
+
+                    // Identify all unique activity types present in the last 7 days
+                    var activityTypes = events
+                        .Where(e => e.StartDateTime >= DateTime.Today.AddDays(-7))
+                        .Select(e => e.UserActivity?.ActivityType ?? "Other")
+                        .Distinct()
+                        .ToList();
+
+                    // Create a separate data series (line) for each Activity Type
+                    var multiLineData = activityTypes.Select(type => new
+                    {
+                        Label = type,
+                        Data = lastSevenDays.Select(day =>
+                            events.Where(e => (e.UserActivity?.ActivityType ?? "Other") == type
+                                           && e.StartDateTime.ToString("MM/dd") == day)
+                                  .Sum(e => (e.EndDateTime - e.StartDateTime).TotalHours)
+                        ).ToList()
+                    }).ToList();
+
+                    // --- 3. SEND TO JAVASCRIPT ---
+                    // Passing 4 arguments: Pie Labels, Pie Values, Line Labels, Line Dataset Objects
+                    await JSRuntime.InvokeVoidAsync("renderLifeCharts",
+                        pieLabels,
+                        pieValues,
+                        lastSevenDays,
+                        multiLineData
+                    );
+
+                    StateHasChanged();
+                }
+            }
         }
     }
 }

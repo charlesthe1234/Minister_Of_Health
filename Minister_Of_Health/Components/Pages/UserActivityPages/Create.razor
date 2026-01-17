@@ -1,17 +1,19 @@
 ﻿@page "/useractivities/create"
+@rendermode InteractiveServer
 @using Microsoft.EntityFrameworkCore
 @using Minister_Of_Time.Domain
-@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
-@inject NavigationManager NavigationManager
-
 @using Microsoft.AspNetCore.Components.Authorization
 @inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject NavigationManager NavigationManager
 
 <div class="container mt-5">
     <div class="card shadow p-4">
         <h2>Define New Activity</h2>
 
-        <EditForm Model="UserActivity" OnValidSubmit="AddUserActivity" FormName="createActivity">
+        @* --- MARKUP SECTION START --- *@
+        <EditForm Model="UserActivity"
+                  OnValidSubmit="AddUserActivity">
+            @* Call the AddUserActivity when the form is filled and saved *@
             <DataAnnotationsValidator />
 
             <div class="mb-3">
@@ -20,13 +22,43 @@
                 <ValidationMessage For="() => UserActivity.Name" />
             </div>
 
-            @* Note: No UserId input here. It is handled in @code *@
+            <div class="mb-3">
+                <label class="form-label fw-bold">Activity Type</label>
+                <InputSelect @bind-Value="UserActivity.ActivityType" class="form-select">
+                    <option value="">-- Select an activity type --</option>
+                    <option value="Work">Work</option>
+                    <option value="Meeting">Meeting</option>
+                    <option value="Hobby">Hobby</option>
+                    <option value="Exercise">Exercise</option>
+                    <option value="Family Time">Family Time</option>
+                    <option value="General Events">General Events</option>
+                </InputSelect>
+                <ValidationMessage For="() => UserActivity.ActivityType" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Category</label>
+                <InputSelect @bind-Value="UserActivity.Category" class="form-select">
+                    <option value="">-- Select a Category --</option>
+                    <option value="Work">Work</option>
+                    <option value="Life">Life</option>
+                    <option value="Others">Others</option>
+                </InputSelect>
+                <ValidationMessage For="() => UserActivity.Category" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Description (Optional)</label>
+                <InputTextArea @bind-Value="UserActivity.Description" class="form-control" rows="3" />
+            </div>
 
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary">Save Activity</button>
-                <button type="button" class="btn btn-secondary" @onclick='() => NavigationManager.NavigateTo("/useractivities")'>Cancel</button>
+                <button type="button" class="btn btn-secondary" @onclick='() => NavigationManager.NavigateTo("/calendarevents/create")'>Cancel</button>
             </div>
         </EditForm>
+        @* --- MARKUP SECTION END --- *@
+
     </div>
 </div>
 
@@ -35,7 +67,7 @@
     private Task<AuthenticationState>? authStateTask { get; set; }
 
     private UserActivity UserActivity { get; set; } = new();
-    private String? currentDbUserId;
+    private string? currentDbUserId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -49,7 +81,6 @@
                 using var context = DbFactory.CreateDbContext();
                 string loginEmail = user.Identity.Name ?? "";
 
-                // Look up the internal Database ID for this email
                 var dbUser = await context.Set<User>()
                     .FirstOrDefaultAsync(u => u.Email.ToLower().Trim() == loginEmail.ToLower().Trim());
 
@@ -63,16 +94,17 @@
 
     private async Task AddUserActivity()
     {
-        if (currentDbUserId == null) return; // Safety check
+        if (currentDbUserId == null) return;
 
         using var context = DbFactory.CreateDbContext();
 
-        // Assign the ID we retrieved during Initialization
+        // Map the current user to the activity
         UserActivity.UserId = currentDbUserId;
 
         context.UserActivity.Add(UserActivity);
         await context.SaveChangesAsync();
 
-        NavigationManager.NavigateTo("/calendarevents/create"); // Go back to making an event
+        // Redirect back to the calendar create page
+        NavigationManager.NavigateTo("/calendarevents/create");
     }
 }

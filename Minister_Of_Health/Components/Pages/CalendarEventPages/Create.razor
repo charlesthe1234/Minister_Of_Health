@@ -47,42 +47,27 @@
                            value="@Input.EndDateTime.ToString("yyyy-MM-ddTHH:mm")"
                            @onchange="OnEndDateChanged" />
                 </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label fw-bold">Activity Type</label>
-                    <InputText list="activity-suggestions" @bind-Value="Input.ActivityName" class="form-control" />
-                </div>
             </div>
 
+            <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Activity Name</label>
+                <InputSelect @bind-Value="Input.UserActivityId" class="form-select">
+                    <option value="">-- Select an Activity --</option>
+                    @foreach (var activity in Suggestions)
+                    {
+                        <option value="@activity.Id.ToString()">@activity.Name (@activity.ActivityType) {@activity.Category}</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => Input.UserActivityId" class="text-danger" />
+            </div>
+
+            <a href="/useractivities/create" class="btn btn-primary">
+                New Activity
+            </a>
+
             <div class="mb-3">
-                <label class="form-label fw-bold d-block">Invite Users</label>
-
-                <div class="mb-2 p-2 border rounded bg-light" style="min-height: 40px; font-size: 0.9rem;">
-                    <span class="fw-bold me-2">Verification Status:</span>
-                    @if (!inviteStatusList.Any())
-                    {
-                        <span class="text-muted italic">No emails entered yet...</span>
-                    }
-                    @foreach (var status in inviteStatusList)
-                    {
-                        @if (status.IsDuplicate)
-                        {
-                            <span class="badge bg-danger me-1" title="Duplicate or Host Email">
-                                @status.Email <i class="bi bi-exclamation-triangle"></i> !
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="badge @(status.IsRegistered ? "bg-success" : "bg-warning text-dark") me-1">
-                                @status.Email @(status.IsRegistered ? "✓" : "?")
-                            </span>
-                        }
-                    }
-                </div>
-
-                <InputTextArea @bind-Value="Input.InvitedEmails"
-                               @oninput="OnInviteInputChanged"
-                               class="form-control" rows="2"
-                               placeholder="user@example.com, unknown@example.com (Editor)" />
+                <label class="form-label fw-bold">Invite Users (Emails)</label>
+                <InputTextArea @bind-Value="Input.InvitedEmails" class="form-control" rows="2" />
             </div>
 
             <div class="mb-3">
@@ -228,30 +213,36 @@
         var activity = await context.UserActivity.FirstOrDefaultAsync(a => a.Name.ToLower() == actName.ToLower() && a.UserId == currentUserId);
         if (activity == null)
         {
-            activity = new UserActivity { Name = actName, UserId = currentUserId };
-            context.UserActivity.Add(activity);
-            await context.SaveChangesAsync();
-        }
+            using var context = DbFactory.CreateDbContext();
 
-        var newEvent = new CalendarEvent
-        {
-            EventName = Input.EventName,
-            Location = Input.Location,
-            StartDateTime = Input.StartDateTime,
-            EndDateTime = Input.EndDateTime,
-            CalendarType = Input.CalendarType,
-            HostUserId = currentUserId,
-            UserActivityId = activity.Id,
-            CreatedBy = authState.User.Identity?.Name,
-            DateCreated = DateTime.Now,
-            Description = Input.Description
-        };
-        context.CalendarEvent.Add(newEvent);
+            // Corrected: Removed int.Parse and handled as string
+            string currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
 
-        foreach (var item in inviteStatusList)
-        {
-            var regUser = await context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == item.Email.ToLower());
-            context.EventParticipant.Add(new EventParticipant
+            if (Input.UserActivityId == 0)
+            {
+                errorMessage = "Please select a valid activity.";
+                return;
+            }
+
+            var newEvent = new CalendarEvent
+            {
+                EventName = Input.EventName,
+                Location = Input.Location,
+                StartDateTime = Input.StartDateTime,
+                EndDateTime = Input.EndDateTime,
+                CalendarType = Input.CalendarType,
+                HostUserId = currentUserId,
+                UserActivityId = Input.UserActivityId,
+                CreatedBy = user.Identity.Name,
+                DateCreated = DateTime.Now,
+                Description = Input.Description
+            };
+
+            context.CalendarEvent.Add(newEvent);
+
+            var inviteDetails = ParseInvites(Input.InvitedEmails);
+
+            if (inviteDetails.Any())
             {
                 CalendarEvent = newEvent,
                 UserId = regUser?.Id,
