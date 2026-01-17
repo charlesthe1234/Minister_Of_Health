@@ -1,121 +1,70 @@
 ﻿@page "/account/personalInfo"
-@using System.Security.Claims
 @inject AuthenticationStateProvider AuthStateProvider
 
-<div class="manage-page">
-    <div class="bg-image" />
+<div class="book">
+    <div class="bg-image"></div>
 
     <div class="manage-content">
+        @* Profile Section *@
         <div class="profile-card">
-            <h1 class="home-background">@DisplayName
-            </h1>
+            <h1 class="display-name">@DisplayName</h1>
 
             @if (!isEditing)
             {
-                <p class="info"><strong>Phone Number:</strong> @PhoneNumber</p>
-                <p class="info"><strong>Email:</strong> @Email</p>
-                <p class="info"><strong>Birthday:</strong> @Birthday.ToString("dd/MM/yyyy")</p>
-                <p class="info">
-                    <strong>Connections:</strong>
-                    <button class="link-like" @onclick="ToggleConnections">@(showConnections ? "Collapse" : "Expand")</button>
-                </p>
-
-                <button class="btn-edit" @onclick="EnableEdit">EDIT</button>
+                <div class="info-list">
+                    <p><strong>Phone:</strong> @PhoneNumber</p>
+                    <p><strong>Email:</strong> @Email</p>
+                    <p><strong>Birthday:</strong> @Birthday.ToShortDateString()</p>
+                </div>
+                <button class="btn-edit" @onclick="() => isEditing = true">EDIT</button>
             }
             else
             {
                 <div class="edit-form">
-                    <label>Phone</label>
-                    <input class="form-control" @bind="PhoneNumber" />
-
-                    <label>Email</label>
-                    <input class="form-control" @bind="Email" />
-
-                    <label>Birthday</label>
-                    <input type="date" class="form-control"/>
-
+                    <input class="form-control" @bind="PhoneNumber" placeholder="Phone" />
+                    <input class="form-control" @bind="Email" placeholder="Email" />
                     <div class="edit-actions">
                         <button class="btn-save" @onclick="Save">Save</button>
-                        <button class="btn-cancel" @onclick="Cancel">Cancel</button>
+                        <button class="btn-cancel" @onclick="() => isEditing = false">Cancel</button>
                     </div>
                 </div>
             }
         </div>
 
+        @* Gauges Section *@
         <div class="right-column">
-            <div class="gauge-block">
-                <div class="gauge-title">STRESS LEVEL</div>
-                <div class="gauge">
+            @foreach (var gauge in new[] { ("STRESS", StressLevel, ""), ("HEALTH", HealthLevel, "health") })
+            {
+                <div class="gauge-block">
+                    <div class="gauge-title">@gauge.Item1 LEVEL</div>
                     <div class="dial">
-                        <div class="needle" style="@($"transform: rotate({NeedleAngle(StressLevel)}deg)")"></div>
+                        <div class="needle @gauge.Item3" style="transform: rotate(@(NeedleAngle(gauge.Item2))deg)"></div>
                     </div>
-                    <div class="gauge-label">@StressLevel% </div>
+                    <div class="gauge-label">@gauge.Item2%</div>
                 </div>
-            </div>
-
-            <div class="gauge-block">
-                <div class="gauge-title">HEALTH LEVEL</div>
-                <div class="gauge">
-                    <div class="dial">
-                        <div class="needle health" style="@($"transform: rotate({NeedleAngle(HealthLevel)}deg)")"></div>
-                    </div>
-                    <div class="gauge-label">@HealthLevel%</div>
-                </div>
-            </div>
-
-            <button class="connections-btn">Connections</button>
+            }
         </div>
     </div>
 </div>
 
 @code {
     private bool isEditing;
-    private bool showConnections;
-
-    private string DisplayName = "Charles";
-    private string PhoneNumber = "+65 88889999";
-    private string Email = "sjdjf@sfd.com";
-    private DateTime Birthday = new DateTime(1998, 2, 23);
-
-    private int StressLevel = 65;
-    private int HealthLevel = 80;
-
-    private string BirthdayString
-    {
-        get => Birthday.ToString("yyyy-MM-dd");
-        set { if (DateTime.TryParse(value, out var d)) Birthday = d; }
-    }
+    private string DisplayName = "Charles", PhoneNumber = "+65 88889999", Email = "sjdjf@sfd.com";
+    private DateTime Birthday = new(1998, 2, 23);
+    private int StressLevel = 65, HealthLevel = 80;
 
     protected override async Task OnInitializedAsync()
     {
-        try
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = auth.User;
+        if (user.Identity?.IsAuthenticated ?? false)
         {
-            var auth = await AuthStateProvider.GetAuthenticationStateAsync();
-            var user = auth.User;
-            if (user?.Identity?.IsAuthenticated == true)
-            {
-                DisplayName = user.Identity?.Name ?? DisplayName;
-                var emailClaim = user.FindFirst(c => c.Type.Contains("email", StringComparison.OrdinalIgnoreCase));
-                if (emailClaim != null) Email = emailClaim.Value;
-            }
-        }
-        catch
-        {
-            // ignore; fall back to defaults
+            DisplayName = user.Identity.Name ?? DisplayName;
+            Email = user.FindFirst(c => c.Type.Contains("email"))?.Value ?? Email;
         }
     }
 
-    void EnableEdit() => isEditing = true;
-    void Cancel() => isEditing = false;
+    void Save() => isEditing = false;
+    double NeedleAngle(int val) => (val * 1.8) - 90;
+}
 
-    void Save()
-    {
-        isEditing = false;
-        // TODO: persist profile via service (call your EventService/User service)
-    }
-
-    void ToggleConnections() => showConnections = !showConnections;
-
-    // Map 0..100 to -90..90 degrees for a semicircle gauge
-    double NeedleAngle(int value) => (value / 100.0) * 180.0 - 90.0;
-} 
