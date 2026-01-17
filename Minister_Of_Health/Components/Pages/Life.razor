@@ -27,7 +27,7 @@
 
     <div class="logo-title-container">
         <img src="/images/BigLogo.png" class="life-logo-image" alt="Minister of Time Logo" />
-        <h1 class="life-main-title">Dear Charles</h1>
+        <h1 class="life-main-title">Dear @DisplayName</h1>
         <blockquote class="life-quote">"Caring for yourself is not self-indulgence, it is self-preservation, and that is an act of political warfare."</blockquote>
     </div>
 
@@ -63,6 +63,7 @@
                 var userIdString = UserManager.GetUserId(user);
                 using var context = DbFactory.CreateDbContext();
 
+                DisplayName = authState.User.FindFirst("FullName")?.Value;
                 // Fetch events including the activity details
                 var events = await context.CalendarEvent
                     .Include(e => e.UserActivity)

@@ -5,7 +5,7 @@
 
     <div class="work-header-block">
         <img src="/images/BigLogo.png" class="work-logo-image" alt="Minister of Time Logo" />
-        <h1 class="work-main-title">Dear Charles</h1>
+        <h1 class="work-main-title">Dear @DisplayName</h1>
         <blockquote class="work-quote">"Plan for what is difficult while it is easy, do what is great while it is small."</blockquote>
     </div>
 
@@ -14,3 +14,17 @@
     <a href="/matrix" class="work-link matrix-link">Urgent Importance Matrix</a>
 
 </div>
+
+
+@code
+{
+    private string DisplayName = "Guest";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authstate = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authstate.User;
+            DisplayName = authstate.User.FindFirst("FullName")?.Value;
+    }
+
+}
