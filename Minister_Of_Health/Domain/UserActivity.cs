@@ -13,13 +13,11 @@ namespace Minister_Of_Time.Domain
         public string UserId { get; set; }
         [ForeignKey("UserId")] // Links string UserId to string User.Id
         public virtual User? User { get; set; }
-
-        // 2. Fixed Category Relationship
-        public int CategoryId { get; set; }
-        [ForeignKey("CategoryId")] // Links int CategoryId to int ActivityCategory.CategoryId
-        public virtual ActivityCategory? ActivityCategory { get; set; }
-
-        public string? ActivityType { get; set; }
+        public string? Category { get; set; }
+        public DateTime RecentRecord { get; set; }
+        public int ActivityTypeId { get; set; }
+        [ForeignKey("ActivityTypeId")]
+        public virtual ActivityType? ActivityType { get; set; }
         public virtual ICollection<CalendarEvent> CalendarEvents { get; set; } = new List<CalendarEvent>();
     }
 }

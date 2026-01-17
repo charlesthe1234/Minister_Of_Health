@@ -12,7 +12,8 @@ public class UserActivitySeed : IEntityTypeConfiguration<UserActivity>
                 Id = 1,
                 Name = "General Activity",
                 UserId = "3781efa7-66dc-47f0-860f-e506d04102e4",
-                CategoryId = 3, // Change 0 to 3 (General Event) to match your category table
+                ActivityTypeId = 3, // Change 0 to 3 (General Event) to match your category table
+                Category = "Others",
                 DateCreated = DateTime.Now,
                 CreatedBy = "System"
             }

@@ -67,6 +67,7 @@
                 // Fetch events including the activity details
                 var events = await context.CalendarEvent
                     .Include(e => e.UserActivity)
+                    .ThenInclude(ua => ua.ActivityType)
                     .Where(e => e.HostUserId.ToString() == userIdString)
                     .ToListAsync();
 
@@ -74,7 +75,7 @@
                 {
                     // --- 1. PREPARE PIE CHART DATA (Accumulated Minutes) ---
                     var pieGrouped = events
-                        .GroupBy(e => e.UserActivity?.ActivityType ?? "Other")
+                        .GroupBy(e => e.UserActivity?.ActivityType?.TypeName ?? "Other")
                         .Select(g => new
                         {
                             Category = g.Key,
@@ -95,7 +96,7 @@
                     // Identify all unique activity types present in the last 7 days
                     var activityTypes = events
                         .Where(e => e.StartDateTime >= DateTime.Today.AddDays(-7))
-                        .Select(e => e.UserActivity?.ActivityType ?? "Other")
+                        .Select(e => e.UserActivity?.ActivityType?.TypeName ?? "Other")
                         .Distinct()
                         .ToList();
 
@@ -104,7 +105,7 @@
                     {
                         Label = type,
                         Data = lastSevenDays.Select(day =>
-                            events.Where(e => (e.UserActivity?.ActivityType ?? "Other") == type
+                            events.Where(e => (e.UserActivity?.ActivityType?.TypeName ?? "Other") == type
                                            && e.StartDateTime.ToString("MM/dd") == day)
                                   .Sum(e => (e.EndDateTime - e.StartDateTime).TotalHours)
                         ).ToList()

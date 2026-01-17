@@ -2,11 +2,11 @@
 
 namespace Minister_Of_Time.Domain
 {
-    public class ActivityCategory : BaseDomainModel
+    public class ActivityType : BaseDomainModel
     {
         [Key]
-        public int CategoryId { get; set; }
-        public string Name { get; set; } = string.Empty;
+        public int ActivityTypeId { get; set; }
+        public string TypeName { get; set; } = string.Empty;
         public double StressLevel { get; set; } 
 
         public virtual ICollection<CalendarEvent> CalendarEvents { get; set; } = new List<CalendarEvent>();
