@@ -20,7 +20,7 @@ namespace Minister_Of_Time.Data
         public DbSet<EventParticipant> EventParticipant { get; set; } = default!;
         public DbSet<UserActivity> UserActivity { get; set; } = default!;
         public DbSet<CloseConnection> CloseConnection { get; set; } = default!;
-        public DbSet<StressRecord> StressRecord { get; set; } = default!;
+        public DbSet<ActivityCategory> StressRecord { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -41,7 +41,7 @@ namespace Minister_Of_Time.Data
                 entity.HasOne(d => d.User).WithMany().HasForeignKey(d => d.UserId).OnDelete(DeleteBehavior.Restrict);
             });
 
-            modelBuilder.Entity<StressRecord>(entity =>
+            modelBuilder.Entity<ActivityCategory>(entity =>
             {
                 entity.HasOne(d => d.User).WithMany().HasForeignKey(d => d.UserId).OnDelete(DeleteBehavior.Restrict);
             });

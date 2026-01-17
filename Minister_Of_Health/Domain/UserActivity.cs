@@ -1,4 +1,5 @@
 ﻿using Minister_Of_Time.Data;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Minister_Of_Time.Domain
 {
@@ -12,7 +13,9 @@ namespace Minister_Of_Time.Domain
         // Relationship: Activity belongs to a User (the creator)
         public String UserId { get; set; }
         public String? ActivityType { get; set; }
-        public String? Category { get; set; }
+        public int CategoryId { get; set; } // The actual database column
+
+        [ForeignKey("CategoryId")]
         public virtual User? User { get; set; }
 
         // Optional: Navigation property to see all events using this activity
