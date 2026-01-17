@@ -1,0 +1,70 @@
+﻿@page "/account/personalInfo"
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="book">
+    <div class="bg-image"></div>
+
+    <div class="manage-content">
+        @* Profile Section *@
+        <div class="profile-card">
+            <h1 class="display-name">@DisplayName</h1>
+
+            @if (!isEditing)
+            {
+                <div class="info-list">
+                    <p><strong>Phone:</strong> @PhoneNumber</p>
+                    <p><strong>Email:</strong> @Email</p>
+                    <p><strong>Birthday:</strong> @Birthday.ToShortDateString()</p>
+                </div>
+                <button class="btn-edit" @onclick="() => isEditing = true">EDIT</button>
+            }
+            else
+            {
+                <div class="edit-form">
+                    <input class="form-control" @bind="PhoneNumber" placeholder="Phone" />
+                    <input class="form-control" @bind="Email" placeholder="Email" />
+                    <div class="edit-actions">
+                        <button class="btn-save" @onclick="Save">Save</button>
+                        <button class="btn-cancel" @onclick="() => isEditing = false">Cancel</button>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @* Gauges Section *@
+        <div class="right-column">
+            @foreach (var gauge in new[] { ("STRESS", StressLevel, ""), ("HEALTH", HealthLevel, "health") })
+            {
+                <div class="gauge-block">
+                    <div class="gauge-title">@gauge.Item1 LEVEL</div>
+                    <div class="dial">
+                        <div class="needle @gauge.Item3" style="transform: rotate(@(NeedleAngle(gauge.Item2))deg)"></div>
+                    </div>
+                    <div class="gauge-label">@gauge.Item2%</div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool isEditing;
+    private string DisplayName = "Charles", PhoneNumber = "+65 88889999", Email = "sjdjf@sfd.com";
+    private DateTime Birthday = new(1998, 2, 23);
+    private int StressLevel = 65, HealthLevel = 80;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = auth.User;
+        if (user.Identity?.IsAuthenticated ?? false)
+        {
+            DisplayName = user.Identity.Name ?? DisplayName;
+            Email = user.FindFirst(c => c.Type.Contains("email"))?.Value ?? Email;
+        }
+    }
+
+    void Save() => isEditing = false;
+    double NeedleAngle(int val) => (val * 1.8) - 90;
+}
+
