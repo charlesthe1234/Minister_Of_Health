@@ -8,17 +8,18 @@ namespace Minister_Of_Time.Domain
         public string Name { get; set; } = string.Empty;
         public DateTime StartDate { get; set; }
         public string? Description { get; set; }
-        public int DefaultStressValue { get; set; }
 
-        // Relationship: Activity belongs to a User (the creator)
-        public String UserId { get; set; }
-        public String? ActivityType { get; set; }
-        public int CategoryId { get; set; } // The actual database column
-
-        [ForeignKey("CategoryId")]
+        // 1. Fixed User Relationship
+        public string UserId { get; set; }
+        [ForeignKey("UserId")] // Links string UserId to string User.Id
         public virtual User? User { get; set; }
 
-        // Optional: Navigation property to see all events using this activity
+        // 2. Fixed Category Relationship
+        public int CategoryId { get; set; }
+        [ForeignKey("CategoryId")] // Links int CategoryId to int ActivityCategory.CategoryId
+        public virtual ActivityCategory? ActivityCategory { get; set; }
+
+        public string? ActivityType { get; set; }
         public virtual ICollection<CalendarEvent> CalendarEvents { get; set; } = new List<CalendarEvent>();
     }
 }

@@ -57,7 +57,7 @@
                     <option value="">-- Select an Activity --</option>
                     @foreach (var activity in Suggestions)
                     {
-                        <option value="@activity.Id.ToString()">@activity.Name (@activity.ActivityType) {@activity.Category}</option>
+                        <option value="@activity.Id.ToString()">@activity.Name (@activity.ActivityType) {@activity.CategoryId}</option>
                     }
                 </InputSelect>
                 <ValidationMessage For="() => Input.UserActivityId" class="text-danger" />

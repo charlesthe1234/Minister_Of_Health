@@ -20,7 +20,7 @@ namespace Minister_Of_Time.Data
         public DbSet<EventParticipant> EventParticipant { get; set; } = default!;
         public DbSet<UserActivity> UserActivity { get; set; } = default!;
         public DbSet<CloseConnection> CloseConnection { get; set; } = default!;
-        public DbSet<ActivityCategory> StressRecord { get; set; } = default!;
+        public DbSet<ActivityCategory> ActivityCategories { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -41,11 +41,6 @@ namespace Minister_Of_Time.Data
                 entity.HasOne(d => d.User).WithMany().HasForeignKey(d => d.UserId).OnDelete(DeleteBehavior.Restrict);
             });
 
-            modelBuilder.Entity<ActivityCategory>(entity =>
-            {
-                entity.HasOne(d => d.User).WithMany().HasForeignKey(d => d.UserId).OnDelete(DeleteBehavior.Restrict);
-            });
-
             // --- 2. APPLY DATA SEEDS ---
 
             modelBuilder.ApplyConfiguration(new EventRoleSeed()); // For Event Roles (Organizer, etc)
@@ -54,6 +49,7 @@ namespace Minister_Of_Time.Data
             modelBuilder.ApplyConfiguration(new UserRoleAssignmentSeed()); // Linking Users to Roles
 
             // Feature seeds
+            modelBuilder.ApplyConfiguration(new ActivityCategorySeed());
             modelBuilder.ApplyConfiguration(new UserActivitySeed());
             modelBuilder.ApplyConfiguration(new CalendarEventSeed());
         }
