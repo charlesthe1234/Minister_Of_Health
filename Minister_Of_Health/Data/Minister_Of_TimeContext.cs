@@ -20,7 +20,7 @@ namespace Minister_Of_Time.Data
         public DbSet<EventParticipant> EventParticipant { get; set; } = default!;
         public DbSet<UserActivity> UserActivity { get; set; } = default!;
         public DbSet<CloseConnection> CloseConnection { get; set; } = default!;
-        public DbSet<ActivityType> ActivityCategories { get; set; } = default!;
+        public DbSet<ActivityType> ActivityType { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

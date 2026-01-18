@@ -14,12 +14,12 @@ namespace Minister_Of_Time.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "ActivityCategories",
+                name: "ActivityType",
                 columns: table => new
                 {
-                    CategoryId = table.Column<int>(type: "int", nullable: false)
+                    ActivityTypeId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TypeName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     StressLevel = table.Column<double>(type: "float", nullable: false),
                     Id = table.Column<int>(type: "int", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -29,7 +29,7 @@ namespace Minister_Of_Time.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ActivityCategories", x => x.CategoryId);
+                    table.PrimaryKey("PK_ActivityType", x => x.ActivityTypeId);
                 });
 
             migrationBuilder.CreateTable(
@@ -246,8 +246,9 @@ namespace Minister_Of_Time.Migrations
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    CategoryId = table.Column<int>(type: "int", nullable: false),
-                    ActivityType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Category = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RecentRecord = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ActivityTypeId = table.Column<int>(type: "int", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -257,10 +258,10 @@ namespace Minister_Of_Time.Migrations
                 {
                     table.PrimaryKey("PK_UserActivity", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_UserActivity_ActivityCategories_CategoryId",
-                        column: x => x.CategoryId,
-                        principalTable: "ActivityCategories",
-                        principalColumn: "CategoryId",
+                        name: "FK_UserActivity_ActivityType_ActivityTypeId",
+                        column: x => x.ActivityTypeId,
+                        principalTable: "ActivityType",
+                        principalColumn: "ActivityTypeId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_UserActivity_AspNetUsers_UserId",
@@ -285,7 +286,7 @@ namespace Minister_Of_Time.Migrations
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     HostUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     UserActivityId = table.Column<int>(type: "int", nullable: false),
-                    ActivityCategoryCategoryId = table.Column<int>(type: "int", nullable: true),
+                    ActivityTypeId = table.Column<int>(type: "int", nullable: true),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -295,10 +296,10 @@ namespace Minister_Of_Time.Migrations
                 {
                     table.PrimaryKey("PK_CalendarEvent", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CalendarEvent_ActivityCategories_ActivityCategoryCategoryId",
-                        column: x => x.ActivityCategoryCategoryId,
-                        principalTable: "ActivityCategories",
-                        principalColumn: "CategoryId");
+                        name: "FK_CalendarEvent_ActivityType_ActivityTypeId",
+                        column: x => x.ActivityTypeId,
+                        principalTable: "ActivityType",
+                        principalColumn: "ActivityTypeId");
                     table.ForeignKey(
                         name: "FK_CalendarEvent_AspNetUsers_HostUserId",
                         column: x => x.HostUserId,
@@ -354,16 +355,16 @@ namespace Minister_Of_Time.Migrations
                 });
 
             migrationBuilder.InsertData(
-                table: "ActivityCategories",
-                columns: new[] { "CategoryId", "CreatedBy", "DateCreated", "DateUpdated", "Id", "Name", "StressLevel", "UpdatedBy" },
+                table: "ActivityType",
+                columns: new[] { "ActivityTypeId", "CreatedBy", "DateCreated", "DateUpdated", "Id", "StressLevel", "TypeName", "UpdatedBy" },
                 values: new object[,]
                 {
-                    { 1, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, "Meeting", 0.84999999999999998, null },
-                    { 2, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, "Default Work", 0.65000000000000002, null },
-                    { 3, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, "General Event", 0.25, null },
-                    { 4, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, "Exercise", -0.40000000000000002, null },
-                    { 5, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, "Family Time", -0.55000000000000004, null },
-                    { 6, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, "Hobby", -0.75, null }
+                    { 1, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, 0.65000000000000002, "Working Hours", null },
+                    { 2, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, 0.84999999999999998, "Meeting", null },
+                    { 3, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, -0.75, "Hobby", null },
+                    { 4, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, -0.40000000000000002, "Exercise", null },
+                    { 5, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, -0.55000000000000004, "Family Time", null },
+                    { 6, null, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, 0.25, "General Event", null }
                 });
 
             migrationBuilder.InsertData(
@@ -380,8 +381,8 @@ namespace Minister_Of_Time.Migrations
                 columns: new[] { "Id", "AccessFailedCount", "Address", "Birthday", "ConcurrencyStamp", "ContactNumber", "Email", "EmailConfirmed", "Gender", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "3781efa7-66dc-47f0-860f-e506d04102e4", 0, null, null, "493cc756-757e-4b70-89a3-e53fd99b7a4a", null, "admin@localhost.com", true, "Male", false, null, "Admin", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAEInMM0KDlfLGN6KYgby0DD8VXfxospGsJjTe5fS+hsU/ZWFV6OLHBTnIY9XoWfpqYQ==", null, false, "4205377a-2431-404a-99ef-c8d64a268344", false, "admin@localhost.com" },
-                    { "4781efa7-66dc-47f0-860f-e506d04102e5", 0, null, null, "ebb6ff80-ce8f-42b8-8a84-150f9b4eba92", null, "user@localhost.com", true, "Male", false, null, "BumXing", "USER@LOCALHOST.COM", "USER@LOCALHOST.COM", "AQAAAAIAAYagAAAAEH/YUms1lgYd+4pIUHMqL7URtBpIq03XkyAt6w3iCc9QDo/uiPfnrYUmFzj9wTTfyw==", null, false, "58cc06f3-a637-4336-8443-4edd7d7dc31e", false, "user@localhost.com" }
+                    { "3781efa7-66dc-47f0-860f-e506d04102e4", 0, null, null, "b8a3ca45-7ef3-4c67-b099-e3e0d1a5cff0", null, "admin@localhost.com", true, "Male", false, null, "Admin", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAEABLXMnzTxLMXCqAWKmmNf0zQqTrEQGzrdtzoPdNchG4K8ORu8E3H6nJym0+0FqkAQ==", null, false, "9b826178-4be7-4e3e-8e46-30ef934dd537", false, "admin@localhost.com" },
+                    { "4781efa7-66dc-47f0-860f-e506d04102e5", 0, null, null, "5bc5a94c-4adf-415e-906e-d4c9d2563714", null, "user@localhost.com", true, "Male", false, null, "BumXing", "USER@LOCALHOST.COM", "USER@LOCALHOST.COM", "AQAAAAIAAYagAAAAEDPyOS4DOTMuyhwzNVEq5jaYN333ZeXpoHhNUOmVt4zzAai2UzbIFRtsBivXpAoT6A==", null, false, "b1a17cf9-1edf-4f19-b5e1-89e15fc31441", false, "user@localhost.com" }
                 });
 
             migrationBuilder.InsertData(
@@ -389,9 +390,9 @@ namespace Minister_Of_Time.Migrations
                 columns: new[] { "Id", "CanChangeDateTime", "CanChangeLocation", "CanEditCalendarEventDetails", "CanInviteOthers", "CreatedBy", "DateCreated", "DateUpdated", "RoleName", "UpdatedBy" },
                 values: new object[,]
                 {
-                    { 1, false, false, false, false, "System", new DateTime(2026, 1, 18, 6, 35, 52, 718, DateTimeKind.Local).AddTicks(3017), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Organizer", null },
-                    { 2, false, false, false, false, "System", new DateTime(2026, 1, 18, 6, 35, 52, 718, DateTimeKind.Local).AddTicks(3049), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Viewer", null },
-                    { 3, false, false, false, false, "System", new DateTime(2026, 1, 18, 6, 35, 52, 718, DateTimeKind.Local).AddTicks(3054), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Editor", null }
+                    { 1, false, false, false, false, "System", new DateTime(2026, 1, 18, 9, 53, 33, 171, DateTimeKind.Local).AddTicks(4230), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Organizer", null },
+                    { 2, false, false, false, false, "System", new DateTime(2026, 1, 18, 9, 53, 33, 171, DateTimeKind.Local).AddTicks(4263), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Viewer", null },
+                    { 3, false, false, false, false, "System", new DateTime(2026, 1, 18, 9, 53, 33, 171, DateTimeKind.Local).AddTicks(4268), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Editor", null }
                 });
 
             migrationBuilder.InsertData(
@@ -401,17 +402,17 @@ namespace Minister_Of_Time.Migrations
 
             migrationBuilder.InsertData(
                 table: "UserActivity",
-                columns: new[] { "Id", "ActivityType", "CategoryId", "CreatedBy", "DateCreated", "DateUpdated", "Description", "Name", "StartDate", "UpdatedBy", "UserId" },
-                values: new object[] { 1, null, 3, "System", new DateTime(2026, 1, 18, 6, 35, 52, 976, DateTimeKind.Local).AddTicks(6351), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "General Activity", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "3781efa7-66dc-47f0-860f-e506d04102e4" });
+                columns: new[] { "Id", "ActivityTypeId", "Category", "CreatedBy", "DateCreated", "DateUpdated", "Description", "Name", "RecentRecord", "StartDate", "UpdatedBy", "UserId" },
+                values: new object[] { 1, 3, "Others", "System", new DateTime(2026, 1, 18, 9, 53, 33, 568, DateTimeKind.Local).AddTicks(9072), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "General Activity", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "3781efa7-66dc-47f0-860f-e506d04102e4" });
 
             migrationBuilder.InsertData(
                 table: "CalendarEvent",
-                columns: new[] { "Id", "ActivityCategoryCategoryId", "CalendarType", "CreatedBy", "DateCreated", "DateUpdated", "Description", "EndDateTime", "EventName", "HostUserId", "Location", "StartDateTime", "Status", "UpdatedBy", "UserActivityId" },
+                columns: new[] { "Id", "ActivityTypeId", "CalendarType", "CreatedBy", "DateCreated", "DateUpdated", "Description", "EndDateTime", "EventName", "HostUserId", "Location", "StartDateTime", "Status", "UpdatedBy", "UserActivityId" },
                 values: new object[,]
                 {
-                    { 1, null, "Work", "System", new DateTime(2026, 1, 18, 6, 35, 52, 976, DateTimeKind.Local).AddTicks(6609), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, new DateTime(2026, 1, 10, 11, 0, 0, 0, DateTimeKind.Unspecified), "Project Launch Meeting", "3781efa7-66dc-47f0-860f-e506d04102e4", "Conference Room A", new DateTime(2026, 1, 10, 9, 0, 0, 0, DateTimeKind.Unspecified), null, null, 1 },
-                    { 2, null, "Life", "System", new DateTime(2026, 1, 18, 6, 35, 52, 976, DateTimeKind.Local).AddTicks(6616), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, new DateTime(2026, 1, 11, 19, 0, 0, 0, DateTimeKind.Unspecified), "Gym Session", "3781efa7-66dc-47f0-860f-e506d04102e4", "Local Fitness Center", new DateTime(2026, 1, 11, 17, 30, 0, 0, DateTimeKind.Unspecified), null, null, 1 },
-                    { 3, null, "Work", "System", new DateTime(2026, 1, 18, 6, 35, 52, 976, DateTimeKind.Local).AddTicks(6622), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, new DateTime(2026, 1, 12, 15, 30, 0, 0, DateTimeKind.Unspecified), "User's Private Workshop", "4781efa7-66dc-47f0-860f-e506d04102e5", "Online", new DateTime(2026, 1, 12, 14, 0, 0, 0, DateTimeKind.Unspecified), null, null, 1 }
+                    { 1, null, "Work", "System", new DateTime(2026, 1, 18, 9, 53, 33, 568, DateTimeKind.Local).AddTicks(9349), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, new DateTime(2026, 1, 10, 11, 0, 0, 0, DateTimeKind.Unspecified), "Project Launch Meeting", "3781efa7-66dc-47f0-860f-e506d04102e4", "Conference Room A", new DateTime(2026, 1, 10, 9, 0, 0, 0, DateTimeKind.Unspecified), null, null, 1 },
+                    { 2, null, "Life", "System", new DateTime(2026, 1, 18, 9, 53, 33, 568, DateTimeKind.Local).AddTicks(9357), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, new DateTime(2026, 1, 11, 19, 0, 0, 0, DateTimeKind.Unspecified), "Gym Session", "3781efa7-66dc-47f0-860f-e506d04102e4", "Local Fitness Center", new DateTime(2026, 1, 11, 17, 30, 0, 0, DateTimeKind.Unspecified), null, null, 1 },
+                    { 3, null, "Work", "System", new DateTime(2026, 1, 18, 9, 53, 33, 568, DateTimeKind.Local).AddTicks(9363), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, new DateTime(2026, 1, 12, 15, 30, 0, 0, DateTimeKind.Unspecified), "User's Private Workshop", "4781efa7-66dc-47f0-860f-e506d04102e5", "Online", new DateTime(2026, 1, 12, 14, 0, 0, 0, DateTimeKind.Unspecified), null, null, 1 }
                 });
 
             migrationBuilder.CreateIndex(
@@ -454,9 +455,9 @@ namespace Minister_Of_Time.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CalendarEvent_ActivityCategoryCategoryId",
+                name: "IX_CalendarEvent_ActivityTypeId",
                 table: "CalendarEvent",
-                column: "ActivityCategoryCategoryId");
+                column: "ActivityTypeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CalendarEvent_HostUserId",
@@ -494,9 +495,9 @@ namespace Minister_Of_Time.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserActivity_CategoryId",
+                name: "IX_UserActivity_ActivityTypeId",
                 table: "UserActivity",
-                column: "CategoryId");
+                column: "ActivityTypeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserActivity_UserId",
@@ -541,7 +542,7 @@ namespace Minister_Of_Time.Migrations
                 name: "UserActivity");
 
             migrationBuilder.DropTable(
-                name: "ActivityCategories");
+                name: "ActivityType");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

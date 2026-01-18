@@ -24,14 +24,14 @@
 
             <div class="mb-3">
                 <label class="form-label fw-bold">Activity Type</label>
-                <InputSelect @bind-Value="UserActivity.ActivityType" class="form-select">
-                    <option value="">-- Select an activity type --</option>
-                    <option value="Work">Work</option>
-                    <option value="Meeting">Meeting</option>
-                    <option value="Hobby">Hobby</option>
-                    <option value="Exercise">Exercise</option>
-                    <option value="Family Time">Family Time</option>
-                    <option value="General Events">General Events</option>
+                <InputSelect @bind-Value="UserActivity.ActivityTypeId" class="form-select">
+                    <option value= "" >-- Select an activity type --</option>
+                    <option value= "1" >Work</option>
+                    <option value= "2" >Meeting</option>
+                    <option value= "3" >Hobby</option>
+                    <option value= "4" >Exercise</option>
+                    <option value= "5" >Family Time</option>
+                    <option value= "6" >General Events</option>
                 </InputSelect>
                 <ValidationMessage For="() => UserActivity.ActivityType" />
             </div>

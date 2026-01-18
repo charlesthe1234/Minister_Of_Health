@@ -57,7 +57,7 @@
                     <option value="">-- Select an Activity --</option>
                     @foreach (var activity in Suggestions)
                     {
-                        <option value="@activity.Id.ToString()">@activity.Name (@activity.ActivityType) {@activity.Category}</option>
+                        <option value="@activity.Id.ToString()">@activity.Name (@activity.ActivityType.TypeName) {@activity.Category}</option>
                     }
                 </InputSelect>
                 <ValidationMessage For="() => Input.UserActivityId" class="text-danger" />
@@ -126,11 +126,12 @@
         var user = authState.User;
         var userIdStr = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        // Corrected to use string comparison
+        // use string comparison
         if (!string.IsNullOrEmpty(userIdStr))
         {
             using var context = DbFactory.CreateDbContext();
             Suggestions = await context.UserActivity
+                .Include(a => a.ActivityType)
                 .Where(a => a.UserId == userIdStr)
                 .ToListAsync();
         }
