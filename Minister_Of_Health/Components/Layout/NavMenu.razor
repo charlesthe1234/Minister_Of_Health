@@ -12,7 +12,7 @@
                 <p class="logo-name"> MINISTER OF TIME</p>
             </div>
         </div>
-        
+
         <AuthorizeView>
             <NotAuthorized>
                 <div class="nav-item px-3">
@@ -38,19 +38,25 @@
                         <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> About Us
                     </NavLink>
                 </div>
-
-
             </NotAuthorized>
             <Authorized>
+                @* UPDATED: Changed "Change Account" to something more descriptive if needed, but kept original functionality *@
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Change Account
+                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Activities  
                     </NavLink>
                 </div>
 
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="home">
                         <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                    </NavLink>
+                </div>
+
+                @* ADDED: Dedicated Calendar Link *@
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="calendarevents">
+                        <span class="bi bi-calendar3-nav-menu" aria-hidden="true"></span> Calendar
                     </NavLink>
                 </div>
 
@@ -68,6 +74,16 @@
 
                 <div class="nav-item px-3">
                     <div class="account-row d-flex justify-content-between align-items-center w-100">
+                        <div class="notification-container me-3">
+                            <NavLink class="nav-link position-relative p-0" href="calendarevents/inbox">
+                                <i class="bi bi-bell-fill text-white fs-5"></i>
+                                @* This dot represents a "New Invite" alert. In the future, we can bind this to a count *@
+                                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                                    <span class="visually-hidden">New alerts</span>
+                                </span>
+                            </NavLink>
+                        </div>
+
                         <div class="logout-container">
                             <form class="d-inline" action="Account/Logout" method="post">
                                 <AntiforgeryToken />
@@ -80,7 +96,7 @@
 
                         <NavLink class="profile-link d-flex align-items-center" href="Account/personalInfo">
                             <span class="text-white me-2">@context.User.Identity?.Name</span>
-                            <img src="images/default-profile.png" alt="Minister of Time Logo" class="brand-logo" />
+                            <img src="images/default-profile.png" alt="Profile" class="brand-logo" />
                         </NavLink>
                     </div>
                 </div>
@@ -103,9 +119,8 @@
         StateHasChanged();
     }
 
-    public void Dispose()//Prevent the code in other pages to run in the background
+    public void Dispose()
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
     }
-
 }
