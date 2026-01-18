@@ -147,21 +147,22 @@
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Activity Type</label>
-                    <div class="d-flex gap-2">
-                        <InputSelect @bind-Value="Input.UserActivityId" @bind-Value:after="OnActivityChanged" class="form-select shadow-sm">
-                            <option value="0">-- Select Activity --</option>
-                            @foreach (var activity in Suggestions)
-                            {
-                                <option value="@activity.Id">@activity.Name (@(activity.ActivityType ?? "Others"))</option>
-                            }
-                        </InputSelect>
-                        <a href="/useractivities/create" class="btn btn-primary" title="Create New Activity">
-                            <i class="bi bi-plus-lg"></i>
-                        </a>
-                    </div>
-                </div>
+                <div class="row">
+                  <div class="col-md-4 mb-3">
+                      <label class="form-label fw-bold">Activity Name</label>
+                      <InputSelect @bind-Value="Input.UserActivityId" class="form-select">
+                          <option value="0">-- Select an Activity --</option>
+                          @foreach (var activity in Suggestions)
+                          {
+                              @* Use the joined TypeName you seeded (Meeting, Hobby, etc) *@
+                              <option value="@activity.Id">
+                                  @activity.Name (@(activity.ActivityType?.TypeName ?? "Others"))
+                              </option>
+                          }
+                      </InputSelect>
+                      <ValidationMessage For="() => Input.UserActivityId" class="text-danger" />
+                  </div>
+              </div>
             }
 
             @* RECURRING EVENT FIELDS *@
@@ -339,10 +340,12 @@
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var userIdStr = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
+        // use string comparison
         if (!string.IsNullOrEmpty(userIdStr))
         {
             using var context = DbFactory.CreateDbContext();
             Suggestions = await context.UserActivity
+                .Include(a => a.ActivityType)
                 .Where(a => a.UserId == userIdStr)
                 .OrderBy(a => a.ActivityType)
                 .ThenBy(a => a.Name)

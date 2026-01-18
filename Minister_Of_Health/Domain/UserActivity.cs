@@ -1,4 +1,5 @@
 ﻿using Minister_Of_Time.Data;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Minister_Of_Time.Domain
 {
@@ -7,15 +8,16 @@ namespace Minister_Of_Time.Domain
         public string Name { get; set; } = string.Empty;
         public DateTime StartDate { get; set; }
         public string? Description { get; set; }
-        public int DefaultStressValue { get; set; }
 
-        // Relationship: Activity belongs to a User (the creator)
-        public String UserId { get; set; }
-        public String? ActivityType { get; set; }
-        public String? Category { get; set; }
+        // 1. Fixed User Relationship
+        public string UserId { get; set; }
+        [ForeignKey("UserId")] // Links string UserId to string User.Id
         public virtual User? User { get; set; }
-
-        // Optional: Navigation property to see all events using this activity
+        public string? Category { get; set; }
+        public DateTime RecentRecord { get; set; }
+        public int ActivityTypeId { get; set; }
+        [ForeignKey("ActivityTypeId")]
+        public virtual ActivityType? ActivityType { get; set; }
         public virtual ICollection<CalendarEvent> CalendarEvents { get; set; } = new List<CalendarEvent>();
     }
 }

@@ -1,5 +1,4 @@
 ﻿@page "/account/personalInfo"
-@inject AuthenticationStateProvider AuthStateProvider
 
 <div class="book">
     <div class="bg-image"></div>
@@ -49,7 +48,7 @@
 
 @code {
     private bool isEditing;
-    private string DisplayName = "Charles", PhoneNumber = "+65 88889999", Email = "sjdjf@sfd.com";
+    private string DisplayName = "Unknown", PhoneNumber = "", Email = "user@local.com";
     private DateTime Birthday = new(1998, 2, 23);
     private int StressLevel = 65, HealthLevel = 80;
 
@@ -59,12 +58,14 @@
         var user = auth.User;
         if (user.Identity?.IsAuthenticated ?? false)
         {
-            DisplayName = user.Identity.Name ?? DisplayName;
+            DisplayName = auth.User.FindFirst("FullName")?.Value;
             Email = user.FindFirst(c => c.Type.Contains("email"))?.Value ?? Email;
         }
     }
 
     void Save() => isEditing = false;
     double NeedleAngle(int val) => (val * 1.8) - 90;
+
+}
 }
 

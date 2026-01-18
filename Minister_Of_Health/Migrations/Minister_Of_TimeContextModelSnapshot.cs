@@ -260,7 +260,7 @@ namespace Minister_Of_Time.Migrations
                         {
                             Id = "3781efa7-66dc-47f0-860f-e506d04102e4",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "5f2f02ec-9695-4d51-8fbf-74276a260f5d",
+                            ConcurrencyStamp = "b8a3ca45-7ef3-4c67-b099-e3e0d1a5cff0",
                             Email = "admin@localhost.com",
                             EmailConfirmed = true,
                             Gender = "Male",
@@ -268,9 +268,9 @@ namespace Minister_Of_Time.Migrations
                             Name = "Admin",
                             NormalizedEmail = "ADMIN@LOCALHOST.COM",
                             NormalizedUserName = "ADMIN@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJY5qBalBhXEjtfkxyVkNUUg1sk+scrAJ1B4BAsMBnToyvE1BFAZ4IhLwzHQ4cd1Aw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEABLXMnzTxLMXCqAWKmmNf0zQqTrEQGzrdtzoPdNchG4K8ORu8E3H6nJym0+0FqkAQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "1cbd3716-17cb-401c-b171-ead2e2743032",
+                            SecurityStamp = "9b826178-4be7-4e3e-8e46-30ef934dd537",
                             TwoFactorEnabled = false,
                             UserName = "admin@localhost.com"
                         },
@@ -278,7 +278,7 @@ namespace Minister_Of_Time.Migrations
                         {
                             Id = "4781efa7-66dc-47f0-860f-e506d04102e5",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "62a3527e-5bd3-491c-b11d-763b653533e9",
+                            ConcurrencyStamp = "5bc5a94c-4adf-415e-906e-d4c9d2563714",
                             Email = "user@localhost.com",
                             EmailConfirmed = true,
                             Gender = "Male",
@@ -286,11 +286,102 @@ namespace Minister_Of_Time.Migrations
                             Name = "BumXing",
                             NormalizedEmail = "USER@LOCALHOST.COM",
                             NormalizedUserName = "USER@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHlrt60s0mvFfGG5Np6zqWRGlgAwzVJhDQHCcSyfnHoHCSBBK2jW8Hsr1NwfVij+tw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDPyOS4DOTMuyhwzNVEq5jaYN333ZeXpoHhNUOmVt4zzAai2UzbIFRtsBivXpAoT6A==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "8ac296a8-37ea-4ea5-8646-a3c27bc96f40",
+                            SecurityStamp = "b1a17cf9-1edf-4f19-b5e1-89e15fc31441",
                             TwoFactorEnabled = false,
                             UserName = "user@localhost.com"
+                        });
+                });
+
+            modelBuilder.Entity("Minister_Of_Time.Domain.ActivityType", b =>
+                {
+                    b.Property<int>("ActivityTypeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ActivityTypeId"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<double>("StressLevel")
+                        .HasColumnType("float");
+
+                    b.Property<string>("TypeName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ActivityTypeId");
+
+                    b.ToTable("ActivityType");
+
+                    b.HasData(
+                        new
+                        {
+                            ActivityTypeId = 1,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Id = 0,
+                            StressLevel = 0.65000000000000002,
+                            TypeName = "Working Hours"
+                        },
+                        new
+                        {
+                            ActivityTypeId = 2,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Id = 0,
+                            StressLevel = 0.84999999999999998,
+                            TypeName = "Meeting"
+                        },
+                        new
+                        {
+                            ActivityTypeId = 3,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Id = 0,
+                            StressLevel = -0.75,
+                            TypeName = "Hobby"
+                        },
+                        new
+                        {
+                            ActivityTypeId = 4,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Id = 0,
+                            StressLevel = -0.40000000000000002,
+                            TypeName = "Exercise"
+                        },
+                        new
+                        {
+                            ActivityTypeId = 5,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Id = 0,
+                            StressLevel = -0.55000000000000004,
+                            TypeName = "Family Time"
+                        },
+                        new
+                        {
+                            ActivityTypeId = 6,
+                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Id = 0,
+                            StressLevel = 0.25,
+                            TypeName = "General Event"
                         });
                 });
 
@@ -301,6 +392,9 @@ namespace Minister_Of_Time.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ActivityTypeId")
+                        .HasColumnType("int");
 
                     b.Property<string>("CalendarType")
                         .HasColumnType("nvarchar(max)");
@@ -345,6 +439,8 @@ namespace Minister_Of_Time.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ActivityTypeId");
+
                     b.HasIndex("HostUserId");
 
                     b.HasIndex("UserActivityId");
@@ -357,7 +453,7 @@ namespace Minister_Of_Time.Migrations
                             Id = 1,
                             CalendarType = "Work",
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 10, 19, 16, 55, 398, DateTimeKind.Local).AddTicks(3773),
+                            DateCreated = new DateTime(2026, 1, 18, 9, 53, 33, 568, DateTimeKind.Local).AddTicks(9349),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             EndDateTime = new DateTime(2026, 1, 10, 11, 0, 0, 0, DateTimeKind.Unspecified),
                             EventName = "Project Launch Meeting",
@@ -371,7 +467,7 @@ namespace Minister_Of_Time.Migrations
                             Id = 2,
                             CalendarType = "Life",
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 10, 19, 16, 55, 398, DateTimeKind.Local).AddTicks(3784),
+                            DateCreated = new DateTime(2026, 1, 18, 9, 53, 33, 568, DateTimeKind.Local).AddTicks(9357),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             EndDateTime = new DateTime(2026, 1, 11, 19, 0, 0, 0, DateTimeKind.Unspecified),
                             EventName = "Gym Session",
@@ -385,7 +481,7 @@ namespace Minister_Of_Time.Migrations
                             Id = 3,
                             CalendarType = "Work",
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 10, 19, 16, 55, 398, DateTimeKind.Local).AddTicks(3792),
+                            DateCreated = new DateTime(2026, 1, 18, 9, 53, 33, 568, DateTimeKind.Local).AddTicks(9363),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             EndDateTime = new DateTime(2026, 1, 12, 15, 30, 0, 0, DateTimeKind.Unspecified),
                             EventName = "User's Private Workshop",
@@ -543,7 +639,7 @@ namespace Minister_Of_Time.Migrations
                             CanEditCalendarEventDetails = false,
                             CanInviteOthers = false,
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 10, 19, 16, 55, 115, DateTimeKind.Local).AddTicks(7328),
+                            DateCreated = new DateTime(2026, 1, 18, 9, 53, 33, 171, DateTimeKind.Local).AddTicks(4230),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleName = "Organizer"
                         },
@@ -555,7 +651,7 @@ namespace Minister_Of_Time.Migrations
                             CanEditCalendarEventDetails = false,
                             CanInviteOthers = false,
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 10, 19, 16, 55, 115, DateTimeKind.Local).AddTicks(7355),
+                            DateCreated = new DateTime(2026, 1, 18, 9, 53, 33, 171, DateTimeKind.Local).AddTicks(4263),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleName = "Viewer"
                         },
@@ -567,52 +663,10 @@ namespace Minister_Of_Time.Migrations
                             CanEditCalendarEventDetails = false,
                             CanInviteOthers = false,
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 10, 19, 16, 55, 115, DateTimeKind.Local).AddTicks(7359),
+                            DateCreated = new DateTime(2026, 1, 18, 9, 53, 33, 171, DateTimeKind.Local).AddTicks(4268),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleName = "Editor"
                         });
-                });
-
-            modelBuilder.Entity("Minister_Of_Time.Domain.StressRecord", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CalendarEventId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DateUpdated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("FatigueLevel")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StressLevel")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CalendarEventId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("StressRecord");
                 });
 
             modelBuilder.Entity("Minister_Of_Time.Domain.UserActivity", b =>
@@ -623,8 +677,8 @@ namespace Minister_Of_Time.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ActivityType")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("ActivityTypeId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Category")
                         .HasColumnType("nvarchar(max)");
@@ -638,15 +692,15 @@ namespace Minister_Of_Time.Migrations
                     b.Property<DateTime>("DateUpdated")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("DefaultStressValue")
-                        .HasColumnType("int");
-
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("RecentRecord")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
@@ -660,6 +714,8 @@ namespace Minister_Of_Time.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ActivityTypeId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("UserActivity");
@@ -668,11 +724,13 @@ namespace Minister_Of_Time.Migrations
                         new
                         {
                             Id = 1,
+                            ActivityTypeId = 3,
+                            Category = "Others",
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 10, 19, 16, 55, 398, DateTimeKind.Local).AddTicks(3384),
+                            DateCreated = new DateTime(2026, 1, 18, 9, 53, 33, 568, DateTimeKind.Local).AddTicks(9072),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DefaultStressValue = 5,
                             Name = "General Activity",
+                            RecentRecord = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             StartDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             UserId = "3781efa7-66dc-47f0-860f-e506d04102e4"
                         });
@@ -731,6 +789,10 @@ namespace Minister_Of_Time.Migrations
 
             modelBuilder.Entity("Minister_Of_Time.Domain.CalendarEvent", b =>
                 {
+                    b.HasOne("Minister_Of_Time.Domain.ActivityType", null)
+                        .WithMany("CalendarEvents")
+                        .HasForeignKey("ActivityTypeId");
+
                     b.HasOne("Minister_Of_Time.Data.User", "HostUser")
                         .WithMany()
                         .HasForeignKey("HostUserId")
@@ -791,34 +853,28 @@ namespace Minister_Of_Time.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Minister_Of_Time.Domain.StressRecord", b =>
+            modelBuilder.Entity("Minister_Of_Time.Domain.UserActivity", b =>
                 {
-                    b.HasOne("Minister_Of_Time.Domain.CalendarEvent", "CalendarEvent")
+                    b.HasOne("Minister_Of_Time.Domain.ActivityType", "ActivityType")
                         .WithMany()
-                        .HasForeignKey("CalendarEventId")
+                        .HasForeignKey("ActivityTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Minister_Of_Time.Data.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("CalendarEvent");
+                    b.Navigation("ActivityType");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Minister_Of_Time.Domain.UserActivity", b =>
+            modelBuilder.Entity("Minister_Of_Time.Domain.ActivityType", b =>
                 {
-                    b.HasOne("Minister_Of_Time.Data.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
+                    b.Navigation("CalendarEvents");
                 });
 
             modelBuilder.Entity("Minister_Of_Time.Domain.EventRole", b =>
