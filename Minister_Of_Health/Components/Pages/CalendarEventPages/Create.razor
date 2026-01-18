@@ -700,17 +700,23 @@
 
     private async Task AddParticipants(Minister_Of_Time.Data.Minister_Of_TimeContext context, CalendarEvent calendarEvent)
     {
+        // Important: We iterate over the inviteStatusList because it contains the parsed RoleName
         foreach (var invite in inviteStatusList)
         {
+            // Skip invalid or duplicate invites to prevent DB errors
+            if (invite.IsDuplicate || !invite.IsValidRole) continue;
+
             var regUser = await context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == invite.Email.ToLower());
-            var roleId = invite.RoleName.Equals("Editor", StringComparison.OrdinalIgnoreCase) ? 2 : 1;
+
+            // Ensure comparison is case-insensitive
+            int roleId = invite.RoleName.Equals("Editor", StringComparison.OrdinalIgnoreCase) ? 2 : 1;
 
             context.EventParticipant.Add(new EventParticipant
             {
                 CalendarEvent = calendarEvent,
                 InviteeEmail = invite.Email,
                 UserId = regUser?.Id,
-                EventRoleId = roleId,
+                EventRoleId = roleId, // Now correctly identifies 2 for Editor
                 ParticipationStatus = "Pending"
             });
         }

@@ -12,8 +12,8 @@ using Minister_Of_Time.Data;
 namespace Minister_Of_Time.Migrations
 {
     [DbContext(typeof(Minister_Of_TimeContext))]
-    [Migration("20260110071941_RenameActivityType")]
-    partial class RenameActivityType
+    [Migration("20260118043532_closeconnectioncalendar")]
+    partial class closeconnectioncalendar
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -263,7 +263,7 @@ namespace Minister_Of_Time.Migrations
                         {
                             Id = "3781efa7-66dc-47f0-860f-e506d04102e4",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "69ff4c39-4452-4b8c-86e4-77b7329504c5",
+                            ConcurrencyStamp = "1aa1202f-2bd9-4788-812a-c9311ebee91a",
                             Email = "admin@localhost.com",
                             EmailConfirmed = true,
                             Gender = "Male",
@@ -271,9 +271,9 @@ namespace Minister_Of_Time.Migrations
                             Name = "Admin",
                             NormalizedEmail = "ADMIN@LOCALHOST.COM",
                             NormalizedUserName = "ADMIN@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPQEGAGJihIZAWqSrcxKcxKu3BoCg4CfjQAGItbRKSEWNFy7/CDGPoG6nsuhMuXYIg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEyy8OsHoo+nY6DCVfNFwXQa3lGUc5BQOuQT4nHlEZED2Rev4XlvvNrFlgqQCuysWQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "0c654046-1249-4138-9243-b55504ea90e4",
+                            SecurityStamp = "a8836de5-b615-4166-8f2c-9c14859ed924",
                             TwoFactorEnabled = false,
                             UserName = "admin@localhost.com"
                         },
@@ -281,7 +281,7 @@ namespace Minister_Of_Time.Migrations
                         {
                             Id = "4781efa7-66dc-47f0-860f-e506d04102e5",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "fa4f55b8-5c37-4f90-870d-431290c19351",
+                            ConcurrencyStamp = "758feb70-5323-4862-b59f-61f0ffd30c5a",
                             Email = "user@localhost.com",
                             EmailConfirmed = true,
                             Gender = "Male",
@@ -289,9 +289,9 @@ namespace Minister_Of_Time.Migrations
                             Name = "BumXing",
                             NormalizedEmail = "USER@LOCALHOST.COM",
                             NormalizedUserName = "USER@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAECRqlRhbk8U8F1uPksQYstz9eXZwgmF6NA+BzcDO1FOpAkqDnDCfjBiWoRjl+7iNYA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGh8uIXW1HLPUp9kgh2vfPOhQdl0eG2bu1PF1F8bLfXMoQetvJAZ3YKmlX/VbAr+Lg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "6fc0f52c-ead8-4b81-8834-39ad58deb859",
+                            SecurityStamp = "7c635175-8ed6-4280-988d-062a69b89fec",
                             TwoFactorEnabled = false,
                             UserName = "user@localhost.com"
                         });
@@ -338,6 +338,7 @@ namespace Minister_Of_Time.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UpdatedBy")
@@ -360,13 +361,14 @@ namespace Minister_Of_Time.Migrations
                             Id = 1,
                             CalendarType = "Work",
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 10, 15, 19, 40, 252, DateTimeKind.Local).AddTicks(9684),
+                            DateCreated = new DateTime(2026, 1, 18, 12, 35, 31, 119, DateTimeKind.Local).AddTicks(9073),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             EndDateTime = new DateTime(2026, 1, 10, 11, 0, 0, 0, DateTimeKind.Unspecified),
                             EventName = "Project Launch Meeting",
                             HostUserId = "3781efa7-66dc-47f0-860f-e506d04102e4",
                             Location = "Conference Room A",
                             StartDateTime = new DateTime(2026, 1, 10, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            Status = "Upcoming",
                             UserActivityId = 1
                         },
                         new
@@ -374,13 +376,14 @@ namespace Minister_Of_Time.Migrations
                             Id = 2,
                             CalendarType = "Life",
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 10, 15, 19, 40, 252, DateTimeKind.Local).AddTicks(9691),
+                            DateCreated = new DateTime(2026, 1, 18, 12, 35, 31, 119, DateTimeKind.Local).AddTicks(9075),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             EndDateTime = new DateTime(2026, 1, 11, 19, 0, 0, 0, DateTimeKind.Unspecified),
                             EventName = "Gym Session",
                             HostUserId = "3781efa7-66dc-47f0-860f-e506d04102e4",
                             Location = "Local Fitness Center",
                             StartDateTime = new DateTime(2026, 1, 11, 17, 30, 0, 0, DateTimeKind.Unspecified),
+                            Status = "Upcoming",
                             UserActivityId = 1
                         },
                         new
@@ -388,13 +391,14 @@ namespace Minister_Of_Time.Migrations
                             Id = 3,
                             CalendarType = "Work",
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 10, 15, 19, 40, 252, DateTimeKind.Local).AddTicks(9697),
+                            DateCreated = new DateTime(2026, 1, 18, 12, 35, 31, 119, DateTimeKind.Local).AddTicks(9078),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             EndDateTime = new DateTime(2026, 1, 12, 15, 30, 0, 0, DateTimeKind.Unspecified),
                             EventName = "User's Private Workshop",
                             HostUserId = "4781efa7-66dc-47f0-860f-e506d04102e5",
                             Location = "Online",
                             StartDateTime = new DateTime(2026, 1, 12, 14, 0, 0, 0, DateTimeKind.Unspecified),
+                            Status = "Upcoming",
                             UserActivityId = 1
                         });
                 });
@@ -407,13 +411,6 @@ namespace Minister_Of_Time.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ConnectedUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ConnectionType")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -423,24 +420,29 @@ namespace Minister_Of_Time.Migrations
                     b.Property<DateTime>("DateUpdated")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
+                    b.Property<string>("RequesterUserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<bool>("ViewLifeCalendar")
-                        .HasColumnType("bit");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("ViewWorkCalendar")
-                        .HasColumnType("bit");
+                    b.Property<string>("TargetUserEmail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TargetUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ConnectedUserId");
+                    b.HasIndex("RequesterUserId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("TargetUserId");
 
                     b.ToTable("CloseConnection");
                 });
@@ -471,7 +473,7 @@ namespace Minister_Of_Time.Migrations
                     b.Property<DateTime>("DateUpdated")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("EventRoleId")
+                    b.Property<int>("EventRoleId")
                         .HasColumnType("int");
 
                     b.Property<string>("InviteeEmail")
@@ -546,7 +548,7 @@ namespace Minister_Of_Time.Migrations
                             CanEditCalendarEventDetails = false,
                             CanInviteOthers = false,
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 10, 15, 19, 39, 990, DateTimeKind.Local).AddTicks(1355),
+                            DateCreated = new DateTime(2026, 1, 18, 12, 35, 31, 24, DateTimeKind.Local).AddTicks(7627),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleName = "Organizer"
                         },
@@ -558,7 +560,7 @@ namespace Minister_Of_Time.Migrations
                             CanEditCalendarEventDetails = false,
                             CanInviteOthers = false,
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 10, 15, 19, 39, 990, DateTimeKind.Local).AddTicks(1380),
+                            DateCreated = new DateTime(2026, 1, 18, 12, 35, 31, 24, DateTimeKind.Local).AddTicks(7644),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleName = "Viewer"
                         },
@@ -570,7 +572,7 @@ namespace Minister_Of_Time.Migrations
                             CanEditCalendarEventDetails = false,
                             CanInviteOthers = false,
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 10, 15, 19, 39, 990, DateTimeKind.Local).AddTicks(1384),
+                            DateCreated = new DateTime(2026, 1, 18, 12, 35, 31, 24, DateTimeKind.Local).AddTicks(7646),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleName = "Editor"
                         });
@@ -629,6 +631,9 @@ namespace Minister_Of_Time.Migrations
                     b.Property<string>("ActivityType")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Category")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -669,7 +674,7 @@ namespace Minister_Of_Time.Migrations
                         {
                             Id = 1,
                             CreatedBy = "System",
-                            DateCreated = new DateTime(2026, 1, 10, 15, 19, 40, 252, DateTimeKind.Local).AddTicks(9221),
+                            DateCreated = new DateTime(2026, 1, 18, 12, 35, 31, 119, DateTimeKind.Local).AddTicks(8896),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DefaultStressValue = 5,
                             Name = "General Activity",
@@ -750,34 +755,36 @@ namespace Minister_Of_Time.Migrations
 
             modelBuilder.Entity("Minister_Of_Time.Domain.CloseConnection", b =>
                 {
-                    b.HasOne("Minister_Of_Time.Data.User", "ConnectedUser")
+                    b.HasOne("Minister_Of_Time.Data.User", "RequesterUser")
                         .WithMany()
-                        .HasForeignKey("ConnectedUserId")
+                        .HasForeignKey("RequesterUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Minister_Of_Time.Data.User", "User")
+                    b.HasOne("Minister_Of_Time.Data.User", "TargetUser")
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("TargetUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("ConnectedUser");
+                    b.Navigation("RequesterUser");
 
-                    b.Navigation("User");
+                    b.Navigation("TargetUser");
                 });
 
             modelBuilder.Entity("Minister_Of_Time.Domain.EventParticipant", b =>
                 {
                     b.HasOne("Minister_Of_Time.Domain.CalendarEvent", "CalendarEvent")
-                        .WithMany()
+                        .WithMany("EventParticipant")
                         .HasForeignKey("CalendarEventId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Minister_Of_Time.Domain.EventRole", "EventRole")
                         .WithMany("EventParticipants")
-                        .HasForeignKey("EventRoleId");
+                        .HasForeignKey("EventRoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Minister_Of_Time.Data.User", "User")
                         .WithMany()
@@ -819,6 +826,11 @@ namespace Minister_Of_Time.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Minister_Of_Time.Domain.CalendarEvent", b =>
+                {
+                    b.Navigation("EventParticipant");
                 });
 
             modelBuilder.Entity("Minister_Of_Time.Domain.EventRole", b =>

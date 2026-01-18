@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Minister_Of_Time.Migrations
 {
     /// <inheritdoc />
-    public partial class RenameActivityType : Migration
+    public partial class closeconnectioncalendar : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -190,11 +190,10 @@ namespace Minister_Of_Time.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ConnectedUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ConnectionType = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ViewLifeCalendar = table.Column<bool>(type: "bit", nullable: false),
-                    ViewWorkCalendar = table.Column<bool>(type: "bit", nullable: false),
+                    RequesterUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TargetUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TargetUserEmail = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -204,14 +203,14 @@ namespace Minister_Of_Time.Migrations
                 {
                     table.PrimaryKey("PK_CloseConnection", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CloseConnection_AspNetUsers_ConnectedUserId",
-                        column: x => x.ConnectedUserId,
+                        name: "FK_CloseConnection_AspNetUsers_RequesterUserId",
+                        column: x => x.RequesterUserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_CloseConnection_AspNetUsers_UserId",
-                        column: x => x.UserId,
+                        name: "FK_CloseConnection_AspNetUsers_TargetUserId",
+                        column: x => x.TargetUserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -229,6 +228,7 @@ namespace Minister_Of_Time.Migrations
                     DefaultStressValue = table.Column<int>(type: "int", nullable: false),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ActivityType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Category = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -256,7 +256,7 @@ namespace Minister_Of_Time.Migrations
                     StartDateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EndDateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CalendarType = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     HostUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     UserActivityId = table.Column<int>(type: "int", nullable: false),
@@ -290,7 +290,7 @@ namespace Minister_Of_Time.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     CalendarEventId = table.Column<int>(type: "int", nullable: false),
-                    EventRoleId = table.Column<int>(type: "int", nullable: true),
+                    EventRoleId = table.Column<int>(type: "int", nullable: false),
                     InviteeEmail = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ParticipationStatus = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CustomActivity = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -319,7 +319,8 @@ namespace Minister_Of_Time.Migrations
                         name: "FK_EventParticipant_EventRole_EventRoleId",
                         column: x => x.EventRoleId,
                         principalTable: "EventRole",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -368,8 +369,8 @@ namespace Minister_Of_Time.Migrations
                 columns: new[] { "Id", "AccessFailedCount", "Address", "Birthday", "ConcurrencyStamp", "ContactNumber", "Email", "EmailConfirmed", "Gender", "LockoutEnabled", "LockoutEnd", "Name", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "3781efa7-66dc-47f0-860f-e506d04102e4", 0, null, null, "69ff4c39-4452-4b8c-86e4-77b7329504c5", null, "admin@localhost.com", true, "Male", false, null, "Admin", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAEPQEGAGJihIZAWqSrcxKcxKu3BoCg4CfjQAGItbRKSEWNFy7/CDGPoG6nsuhMuXYIg==", null, false, "0c654046-1249-4138-9243-b55504ea90e4", false, "admin@localhost.com" },
-                    { "4781efa7-66dc-47f0-860f-e506d04102e5", 0, null, null, "fa4f55b8-5c37-4f90-870d-431290c19351", null, "user@localhost.com", true, "Male", false, null, "BumXing", "USER@LOCALHOST.COM", "USER@LOCALHOST.COM", "AQAAAAIAAYagAAAAECRqlRhbk8U8F1uPksQYstz9eXZwgmF6NA+BzcDO1FOpAkqDnDCfjBiWoRjl+7iNYA==", null, false, "6fc0f52c-ead8-4b81-8834-39ad58deb859", false, "user@localhost.com" }
+                    { "3781efa7-66dc-47f0-860f-e506d04102e4", 0, null, null, "1aa1202f-2bd9-4788-812a-c9311ebee91a", null, "admin@localhost.com", true, "Male", false, null, "Admin", "ADMIN@LOCALHOST.COM", "ADMIN@LOCALHOST.COM", "AQAAAAIAAYagAAAAEEyy8OsHoo+nY6DCVfNFwXQa3lGUc5BQOuQT4nHlEZED2Rev4XlvvNrFlgqQCuysWQ==", null, false, "a8836de5-b615-4166-8f2c-9c14859ed924", false, "admin@localhost.com" },
+                    { "4781efa7-66dc-47f0-860f-e506d04102e5", 0, null, null, "758feb70-5323-4862-b59f-61f0ffd30c5a", null, "user@localhost.com", true, "Male", false, null, "BumXing", "USER@LOCALHOST.COM", "USER@LOCALHOST.COM", "AQAAAAIAAYagAAAAEGh8uIXW1HLPUp9kgh2vfPOhQdl0eG2bu1PF1F8bLfXMoQetvJAZ3YKmlX/VbAr+Lg==", null, false, "7c635175-8ed6-4280-988d-062a69b89fec", false, "user@localhost.com" }
                 });
 
             migrationBuilder.InsertData(
@@ -377,9 +378,9 @@ namespace Minister_Of_Time.Migrations
                 columns: new[] { "Id", "CanChangeDateTime", "CanChangeLocation", "CanEditCalendarEventDetails", "CanInviteOthers", "CreatedBy", "DateCreated", "DateUpdated", "RoleName", "UpdatedBy" },
                 values: new object[,]
                 {
-                    { 1, false, false, false, false, "System", new DateTime(2026, 1, 10, 15, 19, 39, 990, DateTimeKind.Local).AddTicks(1355), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Organizer", null },
-                    { 2, false, false, false, false, "System", new DateTime(2026, 1, 10, 15, 19, 39, 990, DateTimeKind.Local).AddTicks(1380), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Viewer", null },
-                    { 3, false, false, false, false, "System", new DateTime(2026, 1, 10, 15, 19, 39, 990, DateTimeKind.Local).AddTicks(1384), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Editor", null }
+                    { 1, false, false, false, false, "System", new DateTime(2026, 1, 18, 12, 35, 31, 24, DateTimeKind.Local).AddTicks(7627), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Organizer", null },
+                    { 2, false, false, false, false, "System", new DateTime(2026, 1, 18, 12, 35, 31, 24, DateTimeKind.Local).AddTicks(7644), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Viewer", null },
+                    { 3, false, false, false, false, "System", new DateTime(2026, 1, 18, 12, 35, 31, 24, DateTimeKind.Local).AddTicks(7646), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Editor", null }
                 });
 
             migrationBuilder.InsertData(
@@ -389,17 +390,17 @@ namespace Minister_Of_Time.Migrations
 
             migrationBuilder.InsertData(
                 table: "UserActivity",
-                columns: new[] { "Id", "ActivityType", "CreatedBy", "DateCreated", "DateUpdated", "DefaultStressValue", "Description", "Name", "StartDate", "UpdatedBy", "UserId" },
-                values: new object[] { 1, null, "System", new DateTime(2026, 1, 10, 15, 19, 40, 252, DateTimeKind.Local).AddTicks(9221), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 5, null, "General Activity", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "3781efa7-66dc-47f0-860f-e506d04102e4" });
+                columns: new[] { "Id", "ActivityType", "Category", "CreatedBy", "DateCreated", "DateUpdated", "DefaultStressValue", "Description", "Name", "StartDate", "UpdatedBy", "UserId" },
+                values: new object[] { 1, null, null, "System", new DateTime(2026, 1, 18, 12, 35, 31, 119, DateTimeKind.Local).AddTicks(8896), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 5, null, "General Activity", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "3781efa7-66dc-47f0-860f-e506d04102e4" });
 
             migrationBuilder.InsertData(
                 table: "CalendarEvent",
                 columns: new[] { "Id", "CalendarType", "CreatedBy", "DateCreated", "DateUpdated", "Description", "EndDateTime", "EventName", "HostUserId", "Location", "StartDateTime", "Status", "UpdatedBy", "UserActivityId" },
                 values: new object[,]
                 {
-                    { 1, "Work", "System", new DateTime(2026, 1, 10, 15, 19, 40, 252, DateTimeKind.Local).AddTicks(9684), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, new DateTime(2026, 1, 10, 11, 0, 0, 0, DateTimeKind.Unspecified), "Project Launch Meeting", "3781efa7-66dc-47f0-860f-e506d04102e4", "Conference Room A", new DateTime(2026, 1, 10, 9, 0, 0, 0, DateTimeKind.Unspecified), null, null, 1 },
-                    { 2, "Life", "System", new DateTime(2026, 1, 10, 15, 19, 40, 252, DateTimeKind.Local).AddTicks(9691), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, new DateTime(2026, 1, 11, 19, 0, 0, 0, DateTimeKind.Unspecified), "Gym Session", "3781efa7-66dc-47f0-860f-e506d04102e4", "Local Fitness Center", new DateTime(2026, 1, 11, 17, 30, 0, 0, DateTimeKind.Unspecified), null, null, 1 },
-                    { 3, "Work", "System", new DateTime(2026, 1, 10, 15, 19, 40, 252, DateTimeKind.Local).AddTicks(9697), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, new DateTime(2026, 1, 12, 15, 30, 0, 0, DateTimeKind.Unspecified), "User's Private Workshop", "4781efa7-66dc-47f0-860f-e506d04102e5", "Online", new DateTime(2026, 1, 12, 14, 0, 0, 0, DateTimeKind.Unspecified), null, null, 1 }
+                    { 1, "Work", "System", new DateTime(2026, 1, 18, 12, 35, 31, 119, DateTimeKind.Local).AddTicks(9073), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, new DateTime(2026, 1, 10, 11, 0, 0, 0, DateTimeKind.Unspecified), "Project Launch Meeting", "3781efa7-66dc-47f0-860f-e506d04102e4", "Conference Room A", new DateTime(2026, 1, 10, 9, 0, 0, 0, DateTimeKind.Unspecified), "Upcoming", null, 1 },
+                    { 2, "Life", "System", new DateTime(2026, 1, 18, 12, 35, 31, 119, DateTimeKind.Local).AddTicks(9075), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, new DateTime(2026, 1, 11, 19, 0, 0, 0, DateTimeKind.Unspecified), "Gym Session", "3781efa7-66dc-47f0-860f-e506d04102e4", "Local Fitness Center", new DateTime(2026, 1, 11, 17, 30, 0, 0, DateTimeKind.Unspecified), "Upcoming", null, 1 },
+                    { 3, "Work", "System", new DateTime(2026, 1, 18, 12, 35, 31, 119, DateTimeKind.Local).AddTicks(9078), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, new DateTime(2026, 1, 12, 15, 30, 0, 0, DateTimeKind.Unspecified), "User's Private Workshop", "4781efa7-66dc-47f0-860f-e506d04102e5", "Online", new DateTime(2026, 1, 12, 14, 0, 0, 0, DateTimeKind.Unspecified), "Upcoming", null, 1 }
                 });
 
             migrationBuilder.CreateIndex(
@@ -452,14 +453,14 @@ namespace Minister_Of_Time.Migrations
                 column: "UserActivityId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CloseConnection_ConnectedUserId",
+                name: "IX_CloseConnection_RequesterUserId",
                 table: "CloseConnection",
-                column: "ConnectedUserId");
+                column: "RequesterUserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CloseConnection_UserId",
+                name: "IX_CloseConnection_TargetUserId",
                 table: "CloseConnection",
-                column: "UserId");
+                column: "TargetUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_EventParticipant_CalendarEventId",

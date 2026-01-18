@@ -12,20 +12,13 @@
                     new EventRole
                     {
                         Id = 1,
-                        RoleName = "Organizer",
-                        DateCreated = DateTime.Now,
-                        CreatedBy = "System"
-                    },
-                    new EventRole
-                    {
-                        Id = 2,
                         RoleName = "Viewer",
                         DateCreated = DateTime.Now,
                         CreatedBy = "System"
                     },
                     new EventRole
                     {
-                        Id = 3,
+                        Id = 2,
                         RoleName = "Editor",
                         DateCreated = DateTime.Now,
                         CreatedBy = "System"
