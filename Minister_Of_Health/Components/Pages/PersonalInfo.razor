@@ -1,13 +1,16 @@
 ﻿@page "/account/personalInfo"
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@using Minister_Of_Time.Domain
 @inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
 
 <div class="book">
     <div class="bg-image"></div>
 
     <div class="manage-content">
-        @* Profile Section *@
+        @* Left Page: Profile Section *@
         <div class="profile-card">
             <h1 class="display-name">@DisplayName</h1>
 
@@ -16,23 +19,40 @@
                 <div class="info-list">
                     <p><strong>Phone:</strong> @PhoneNumber</p>
                     <p><strong>Email:</strong> @Email</p>
+                    <p><strong>Gender:</strong> @Gender</p>
+                    <p><strong>Birthday:</strong> @(Birthday?.ToString("MM/dd/yyyy") ?? "Not Set")</p>
                 </div>
                 <button class="btn-edit" @onclick="() => isEditing = true">EDIT</button>
             }
             else
             {
                 <div class="edit-form">
-                    <input class="form-control" @bind="PhoneNumber" placeholder="Phone" />
-                    <input class="form-control" @bind="Email" placeholder="Email" />
-                    <div class="edit-actions">
-                        <button class="btn-save" @onclick="Save">Save</button>
-                        <button class="btn-cancel" @onclick="() => isEditing = false">Cancel</button>
+                    <div class="mb-2">
+                        <label class="small fw-bold">Phone</label>
+                        <input class="form-control form-control-sm" @bind="PhoneNumber" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="small fw-bold">Gender</label>
+                        <select class="form-select form-select-sm" @bind="Gender">
+                            <option value="">Select...</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="small fw-bold">Birthday</label>
+                        <input type="date" class="form-control form-control-sm" @bind="Birthday" />
+                    </div>
+                    <div class="edit-actions mt-3">
+                        <button class="btn btn-sm btn-success me-2" @onclick="Save">Save</button>
+                        <button class="btn btn-sm btn-secondary" @onclick="() => isEditing = false">Cancel</button>
                     </div>
                 </div>
             }
         </div>
 
-        @* Gauges Section *@
+        @* Right Page: Gauges Section *@
         <div class="right-column">
             @foreach (var gauge in new[] { ("STRESS", StressLevel, ""), ("HEALTH", HealthLevel, "health") })
             {
@@ -41,9 +61,8 @@
                     <div class="dial">
                         <div class="needle @gauge.Item3" style="transform: rotate(@(NeedleAngle(gauge.Item2))deg)"></div>
                     </div>
-                    @* Bracketed status text with dynamic color *@
                     <div class="gauge-label">
-                        @gauge.Item2% 
+                        @gauge.Item2%
                         (<span style="color: @GetStatusColor(gauge.Item2, gauge.Item1 == "STRESS")">
                             @(gauge.Item1 == "STRESS" ? GetStressStatus(gauge.Item2) : GetHealthStatus(gauge.Item2))
                         </span>)
@@ -55,7 +74,8 @@
 </div>
 
 @code {
-    private string DisplayName = "Unknown", PhoneNumber = "", Email = "";
+    private string DisplayName = "User", PhoneNumber = "", Email = "", Gender = "";
+    private DateTime? Birthday;
     private int StressLevel = 0;
     private int HealthLevel = 0;
     private bool isEditing;
@@ -70,11 +90,20 @@
 
         if (userClaims.Identity?.IsAuthenticated == true)
         {
+            // 1. Fetch User Data for the Profile Card
+            var user = await UserManager.GetUserAsync(userClaims);
+            if (user != null)
+            {
+                DisplayName = user.Name ?? "User";
+                Email = user.Email ?? "";
+                PhoneNumber = user.PhoneNumber ?? "";
+                Gender = user.Gender ?? "";
+                Birthday = user.Birthday;
+            }
+
+            // 2. Fetch Event Data for Gauges
             using var context = DbFactory.CreateDbContext();
             var userIdString = UserManager.GetUserId(userClaims);
-            DisplayName = userClaims.FindFirst("FullName")?.Value ?? "User";
-            Email = userClaims.Identity.Name ?? "";
-
             var threeDaysAgo = DateTime.Today.AddDays(-2);
 
             var recentEvents = await context.CalendarEvent
@@ -90,48 +119,61 @@
                 foreach (var ev in recentEvents)
                 {
                     double hours = (ev.EndDateTime - ev.StartDateTime).TotalHours;
-
-                    // Stress calculation logic
                     double weight = ev.UserActivity?.ActivityType?.StressLevel ?? 0;
                     totalThreeDayScore += (hours * weight);
 
-                    // Health logic: Sum hours where type is 'Exercise'
                     if (ev.UserActivity?.ActivityType?.TypeName == "Exercise")
                     {
                         totalExerciseHours += hours;
                     }
                 }
 
-                // Stress Threshold: 16hrs work avg/day = 100% capacity limit
-                double maxThreeDayScore = 31.2; // 16 * 0.65 * 3
+                double maxThreeDayScore = 31.2;
                 StressLevel = (int)Math.Clamp((totalThreeDayScore / maxThreeDayScore) * 100, 0, 100);
 
-                // Health Threshold: 7hrs avg/day over 3 days (21 total) = 100% recovery
                 double targetHealthHours = 21;
                 HealthLevel = (int)Math.Clamp((totalExerciseHours / targetHealthHours) * 100, 0, 100);
             }
         }
     }
 
-    // Simplest way to get dynamic color
+    private async Task Save()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = await UserManager.GetUserAsync(authState.User);
+
+        if (user != null)
+        {
+            // Update Identity User properties
+            user.PhoneNumber = PhoneNumber;
+            user.Gender = Gender;
+            user.Birthday = Birthday;
+
+            var result = await UserManager.UpdateAsync(user);
+            if (result.Succeeded)
+            {
+                isEditing = false;
+                StateHasChanged();
+            }
+        }
+    }
+
     private string GetStatusColor(int level, bool isStress)
     {
         if (isStress)
         {
-            if (level <= 30) return "#2e8b57"; // Green
-            if (level <= 50) return "#daa520"; // Gold
-            if (level <= 80) return "#ff8c00"; // Orange
-            return "#b03060"; // Red
+            if (level <= 30) return "#2e8b57";
+            if (level <= 50) return "#daa520";
+            if (level <= 80) return "#ff8c00";
+            return "#b03060";
         }
         else
         {
-            {
-                if (level <= 10) return "#FF0000"; // Red
-                if (level <= 30) return "#FFA500"; // Orange
-                if (level <= 50) return "#FFFF00"; // Yellow
-                if (level <= 70) return "#90EE90"; // LightGreen
-                return "#006400"; // DarkGreen
-            }
+            if (level <= 10) return "#FF0000";
+            if (level <= 30) return "#FFA500";
+            if (level <= 50) return "#FFFF00";
+            if (level <= 70) return "#90EE90";
+            return "#006400";
         }
     }
 
@@ -152,6 +194,5 @@
         _ => "Excellent"
     };
 
-    void Save() => isEditing = false;
     double NeedleAngle(int val) => (val * 1.8) - 90;
 }

@@ -54,7 +54,7 @@
 
 .display-name {
     font-family: cursive;
-    font-size: 3.5cqi; /* Container Query Units: scales font based on book size */
+    font-size: 3cqi; /* Container Query Units: scales font based on book size */
 }
 
 .gauge-block {
