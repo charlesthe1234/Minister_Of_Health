@@ -29,8 +29,8 @@ namespace Minister_Of_Time.Data
             // --- 1. CASCADE DELETE FIXES (Crucial for SQL Server) ---
 
             modelBuilder.Entity<CloseConnection>(entity => {
-                entity.HasOne(d => d.User).WithMany().HasForeignKey(d => d.UserId).OnDelete(DeleteBehavior.Restrict);
-                entity.HasOne(d => d.ConnectedUser).WithMany().HasForeignKey(d => d.ConnectedUserId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(d => d.RequesterUser).WithMany().HasForeignKey(d => d.RequesterUserId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(d => d.TargetUser).WithMany().HasForeignKey(d => d.TargetUserId).OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<CalendarEvent>(entity => {
