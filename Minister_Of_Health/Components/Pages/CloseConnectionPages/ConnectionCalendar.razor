@@ -1,0 +1,179 @@
+﻿@page "/connections/view/{TargetUserId}"
+@using Microsoft.EntityFrameworkCore
+@using Minister_Of_Time.Domain
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<div class="dashboard-container">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar-dark">
+        <div class="sidebar-header mb-4">
+            <h2 class="text-white mb-0">@currentMonth.ToString("MMMM")</h2>
+            <p class="text-muted">@currentMonth.Year</p>
+        </div>
+
+        <div class="filter-section">
+            <p class="text-muted small fw-bold text-uppercase mb-3">Activity Filters</p>
+            @foreach (var filter in ActivityFilters)
+            {
+                <div class="filter-item d-flex align-items-center mb-2">
+                    <input type="checkbox"
+                           class="form-check-input me-2"
+                           checked="@filter.Value"
+                           @onchange="(e) => ToggleFilter(filter.Key, e.Value)" />
+                    <span class="dot @Sanitize(filter.Key)"></span>
+                    <span class="text-white-50 small">@filter.Key</span>
+                </div>
+            }
+        </div>
+
+        <div class="mt-auto">
+            <a href="/connections" class="btn btn-outline-light w-100">
+                <i class="bi bi-arrow-left me-2"></i>Back to Connections
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CALENDAR -->
+    <main class="calendar-main">
+        <div class="calendar-header d-flex justify-content-between align-items-center p-3 bg-white border-bottom">
+            <h4 class="fw-bold mb-0 text-dark">@targetUserName's Calendar - @currentMonth.ToString("MMMM yyyy")</h4>
+
+            <div class="btn-group shadow-sm">
+                <button class="btn btn-sm btn-outline-secondary" @onclick="PrevMonth">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary px-3 fw-bold" @onclick="GoToToday">
+                    Today
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" @onclick="NextMonth">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="calendar-grid">
+            @foreach (var day in DaysOfWeek)
+            {
+                <div class="grid-header-day">@day</div>
+            }
+
+            @foreach (var date in calendarDays)
+            {
+                var events = GetEventsForDate(date);
+                bool isToday = date.Date == DateTime.Today;
+                bool isCurrentMonth = date.Month == currentMonth.Month;
+
+                <div class="calendar-cell @(isCurrentMonth ? "" : "out-month") @(isToday ? "is-today" : "")">
+                    <div class="day-num">@date.Day</div>
+
+                    <div class="event-pills-container">
+                        @foreach (var ev in events.Take(3))
+                        {
+                            <div class="event-pill @GetCssClass(ev)">
+                                @ev.EventName
+                            </div>
+                        }
+
+                        @if (events.Count > 3)
+                        {
+                            <div class="more-indicator">
+                                +@(events.Count - 3) more
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </main>
+</div>
+
+@code {
+    [Parameter] public string TargetUserId { get; set; } = "";
+
+    private DateTime currentMonth = DateTime.Today;
+    private List<DateTime> calendarDays = new();
+    private string[] DaysOfWeek = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+    private string targetUserName = "User";
+
+    private Dictionary<string, bool> ActivityFilters = new()
+    {
+        { "Work", true },
+        { "Meetings", true },
+        { "Hobby", true },
+        { "Life", true },
+        { "Family Time", true },
+        { "Others", true }
+    };
+
+    private List<CalendarEvent> allEvents = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        GenerateCalendar();
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        using var ctx = DbFactory.CreateDbContext();
+
+        // Get target user's name
+        var targetUser = await ctx.Users.FindAsync(TargetUserId);
+        if (targetUser != null)
+        {
+            targetUserName = targetUser.UserName ?? targetUser.Email ?? "User";
+        }
+
+        // Load target user's events
+        allEvents = await ctx.CalendarEvent
+            .Include(e => e.UserActivity)
+            .Where(e => e.HostUserId == TargetUserId)
+            .ToListAsync();
+    }
+
+    private void GenerateCalendar()
+    {
+        calendarDays.Clear();
+        var start = new DateTime(currentMonth.Year, currentMonth.Month, 1);
+        var offset = (int)start.DayOfWeek;
+        var draw = start.AddDays(-offset);
+
+        for (int i = 0; i < 42; i++)
+            calendarDays.Add(draw.AddDays(i));
+    }
+
+    private List<CalendarEvent> GetEventsForDate(DateTime date)
+    {
+        return allEvents
+            .Where(e => e.StartDateTime.Date <= date.Date &&
+                        e.EndDateTime.Date >= date.Date)
+            .Where(e =>
+            {
+                var type = e.UserActivity?.ActivityType.TypeName ?? "Others";
+                return ActivityFilters.ContainsKey(type) && ActivityFilters[type];
+            })
+            .ToList();
+    }
+
+    private void ToggleFilter(string key, object? val)
+    {
+        ActivityFilters[key] = (bool)(val ?? true);
+        StateHasChanged();
+    }
+
+    private void PrevMonth() { currentMonth = currentMonth.AddMonths(-1); GenerateCalendar(); }
+    private void NextMonth() { currentMonth = currentMonth.AddMonths(1); GenerateCalendar(); }
+    private void GoToToday() { currentMonth = DateTime.Today; GenerateCalendar(); }
+
+    private string GetCssClass(CalendarEvent e)
+        => Sanitize(e.UserActivity?.ActivityType.TypeName ?? "Others");
+
+    private static string Sanitize(string s)
+        => s.ToLower().Replace(" ", "");
+}

@@ -1,0 +1,224 @@
+﻿@page "/connections"
+@using Microsoft.EntityFrameworkCore
+@using Minister_Of_Time.Domain
+@using System.Security.Claims
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary">Close Connections</h2>
+            <p class="text-muted">Connect with friends and family to view their schedules.</p>
+        </div>
+        <button class="btn btn-primary shadow-sm" @onclick="() => showAddPopup = true">
+            <i class="bi bi-person-plus-fill me-2"></i>Add Connection
+        </button>
+    </div>
+
+    @* --- INCOMING REQUESTS --- *@
+    @if (incomingRequests.Any())
+    {
+        <div class="card mb-4 border-warning shadow-sm">
+            <div class="card-header bg-warning-subtle text-dark fw-bold">
+                <i class="bi bi-exclamation-circle-fill me-2"></i>Pending Requests
+            </div>
+            <div class="list-group list-group-flush">
+                @foreach (var req in incomingRequests)
+                {
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>@req.RequesterUser?.Email</strong> wants to connect.
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-success" @onclick="() => Respond(req, true)">Accept</button>
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => Respond(req, false)">Reject</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    @* --- ACTIVE CONNECTIONS --- *@
+    <div class="row g-3">
+        @if (activeConnections.Any())
+        {
+            @foreach (var conn in activeConnections)
+            {
+                // Determine who the "Other" person is
+                var isMeRequester = conn.RequesterUserId == currentUserId;
+                var friendId = isMeRequester ? conn.TargetUserId : conn.RequesterUserId;
+                var friendEmail = isMeRequester ? conn.TargetUserEmail : conn.RequesterUser?.Email;
+
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0 bg-light">
+                        <div class="card-body text-center">
+                            <div class="rounded-circle bg-white shadow-sm d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                <i class="bi bi-person-heart text-primary" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <h5 class="card-title text-truncate">@friendEmail</h5>
+                            <span class="badge bg-success mb-3">Connected</span>
+
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" @onclick='() => NavigationManager.NavigateTo($"/connections/view/{friendId}")'>
+                                    <i class="bi bi-calendar3 me-2"></i>View Calendar
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger border-0" @onclick="() => RemoveConnection(conn.Id)">
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5 text-muted">
+                <i class="bi bi-people display-1 text-black-50"></i>
+                <p class="mt-3">No connections yet. Click "Add Connection" to start.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@* --- ADD CONNECTION POPUP --- *@
+@if (showAddPopup)
+{
+    <div class="modal-backdrop show" style="background-color: rgba(0,0,0,0.5);"></div>
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Add Close Connection</h5>
+                    <button type="button" class="btn-close" @onclick="() => showAddPopup = false"></button>
+                </div>
+                <div class="modal-body">
+                    @if (!string.IsNullOrEmpty(popupError))
+                    {
+                        <div class="alert alert-danger py-2">@popupError</div>
+                    }
+
+                    <label class="form-label">Enter user email address:</label>
+                    <input type="email" class="form-control mb-3" @bind="newConnectionEmail" placeholder="friend@example.com" />
+                    <small class="text-muted"><i class="bi bi-info-circle me-1"></i>They will receive a notification to accept your request.</small>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => showAddPopup = false">Cancel</button>
+                    <button class="btn btn-primary" @onclick="SendRequest">Send Request</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string currentUserId;
+    private List<CloseConnection> activeConnections = new();
+    private List<CloseConnection> incomingRequests = new();
+
+    private bool showAddPopup = false;
+    private string newConnectionEmail = "";
+    private string popupError = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        await LoadConnections();
+    }
+
+    private async Task LoadConnections()
+    {
+        using var context = DbFactory.CreateDbContext();
+
+        // Load Confirmed Connections
+        activeConnections = await context.CloseConnection
+            .Include(c => c.RequesterUser)
+            .Include(c => c.TargetUser)
+            .Where(c => (c.RequesterUserId == currentUserId || c.TargetUserId == currentUserId) && c.Status == "Accepted")
+            .ToListAsync();
+
+        // Load Pending Requests sent TO me
+        incomingRequests = await context.CloseConnection
+            .Include(c => c.RequesterUser)
+            .Where(c => c.TargetUserId == currentUserId && c.Status == "Pending")
+            .ToListAsync();
+    }
+
+    private async Task SendRequest()
+    {
+        popupError = "";
+        if (string.IsNullOrWhiteSpace(newConnectionEmail)) return;
+
+        using var context = DbFactory.CreateDbContext();
+
+        // 1. Find User by Email
+        var targetUser = await context.Users.FirstOrDefaultAsync(u => u.Email == newConnectionEmail);
+
+        if (targetUser == null)
+        {
+            popupError = "User not found.";
+            return;
+        }
+
+        if (targetUser.Id == currentUserId)
+        {
+            popupError = "You cannot connect with yourself.";
+            return;
+        }
+
+        // 2. Check duplicates
+        var exists = await context.CloseConnection.AnyAsync(c =>
+            (c.RequesterUserId == currentUserId && c.TargetUserId == targetUser.Id) ||
+            (c.TargetUserId == currentUserId && c.RequesterUserId == targetUser.Id));
+
+        if (exists)
+        {
+            popupError = "Connection request already exists.";
+            return;
+        }
+
+        // 3. Create Connection
+        var conn = new CloseConnection
+        {
+            RequesterUserId = currentUserId,
+            TargetUserId = targetUser.Id,
+            TargetUserEmail = newConnectionEmail, // Store for display
+            Status = "Pending"
+        };
+
+        context.CloseConnection.Add(conn);
+        await context.SaveChangesAsync();
+        showAddPopup = false;
+        newConnectionEmail = "";
+    }
+
+    private async Task Respond(CloseConnection req, bool accept)
+    {
+        using var context = DbFactory.CreateDbContext();
+        // Re-fetch to ensure tracking
+        var record = await context.CloseConnection.FindAsync(req.Id);
+        if (record != null)
+        {
+            record.Status = accept ? "Accepted" : "Rejected";
+            await context.SaveChangesAsync();
+            await LoadConnections();
+        }
+    }
+
+    private async Task RemoveConnection(int id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        var record = await context.CloseConnection.FindAsync(id);
+        if (record != null)
+        {
+            context.CloseConnection.Remove(record);
+            await context.SaveChangesAsync();
+            await LoadConnections();
+        }
+    }
+}

@@ -1,142 +1,540 @@
-﻿@page "/calendarevents/edit"
+﻿@page "/calendarevents/edit/{Id:int}"
 @using Microsoft.EntityFrameworkCore
 @using Minister_Of_Time.Domain
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using System.ComponentModel.DataAnnotations
 @inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
 
-<PageTitle>Edit</PageTitle>
+<div class="container mt-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/calendarevents">Calendar</a></li>
+            <li class="breadcrumb-item active">Edit Event</li>
+        </ol>
+    </nav>
 
-<h1>Edit</h1>
+    <div class="card shadow-lg p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Edit Event</h2>
+            @if (isHost)
+            {
+                <button class="btn btn-outline-danger" @onclick="() => showDeletePopup = true">
+                    <i class="bi bi-trash me-2"></i>Delete Event
+                </button>
+            }
+        </div>
 
-<h2>CalendarEvent</h2>
-<hr />
-@if (CalendarEvent is null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <div class="row">
-        <div class="col-md-4">
-            <EditForm method="post" Model="CalendarEvent" OnValidSubmit="UpdateCalendarEvent" FormName="edit" Enhance>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger shadow-sm">
+                <i class="bi bi-exclamation-octagon-fill me-2"></i> @errorMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="alert alert-success shadow-sm">
+                <i class="bi bi-check-circle-fill me-2"></i> @successMessage
+            </div>
+        }
+
+        @if (CalendarEvent is null)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2">Loading event...</p>
+            </div>
+        }
+        else
+        {
+            <EditForm Model="Input" OnValidSubmit="UpdateCalendarEvent" FormName="editEventForm">
                 <DataAnnotationsValidator />
-                <ValidationSummary role="alert"/>
-                <input type="hidden" name="CalendarEvent.Id" value="@CalendarEvent.Id" />
-                <div class="mb-3">
-                    <label for="eventname" class="form-label">EventName:</label>
-                    <InputText id="eventname" @bind-Value="CalendarEvent.EventName" class="form-control" />
-                    <ValidationMessage For="() => CalendarEvent.EventName" class="text-danger" />
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Event Name</label>
+                        <InputText @bind-Value="Input.EventName" class="form-control" placeholder="What's happening?" />
+                        <ValidationMessage For="() => Input.EventName" class="text-danger" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Location</label>
+                        <InputText @bind-Value="Input.Location" @bind-Value:after="OnFieldChanged" class="form-control" placeholder="Physical or Digital address" />
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label for="location" class="form-label">Location:</label>
-                    <InputText id="location" @bind-Value="CalendarEvent.Location" class="form-control" />
-                    <ValidationMessage For="() => CalendarEvent.Location" class="text-danger" />
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Start Date & Time</label>
+                        <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="Input.StartDateTime" @bind-Value:after="OnDateChanged" class="form-control" />
+                        <ValidationMessage For="() => Input.StartDateTime" class="text-danger" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">End Date & Time</label>
+                        <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="Input.EndDateTime" @bind-Value:after="OnFieldChanged" class="form-control" />
+                        <ValidationMessage For="() => Input.EndDateTime" class="text-danger" />
+                    </div>
                 </div>
+
+                @* Change Summary Card *@
+                @if (changesSummary.Any())
+                {
+                    <div class="alert alert-warning mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>Changes Detected - Participants will be notified</strong>
+                        </div>
+                        <ul class="mb-2 small">
+                            @foreach (var change in changesSummary)
+                            {
+                                <li>@change</li>
+                            }
+                        </ul>
+                        <label class="form-label small fw-bold">Reason for changes (optional)</label>
+                        <InputTextArea @bind-Value="Input.ChangeReason" class="form-control form-control-sm" rows="2"
+                                       placeholder="e.g., Venue change, schedule conflict..." />
+                    </div>
+                }
+
                 <div class="mb-3">
-                    <label for="startdatetime" class="form-label">StartDateTime:</label>
-                    <InputDate id="startdatetime" @bind-Value="CalendarEvent.StartDateTime" class="form-control" />
-                    <ValidationMessage For="() => CalendarEvent.StartDateTime" class="text-danger" />
+                    <label class="form-label fw-bold">Description</label>
+                    <InputTextArea @bind-Value="Input.Description" class="form-control" rows="3" placeholder="Add event details..." />
                 </div>
+
                 <div class="mb-3">
-                    <label for="enddatetime" class="form-label">EndDateTime:</label>
-                    <InputDate id="enddatetime" @bind-Value="CalendarEvent.EndDateTime" class="form-control" />
-                    <ValidationMessage For="() => CalendarEvent.EndDateTime" class="text-danger" />
+                    <label class="form-label fw-bold">Status (Auto-calculated)</label>
+                    <div class="form-control bg-light" style="height: auto; padding: 10px;">
+                        <span class="badge @GetStatusBadgeClass(calculatedStatus) fs-6">@calculatedStatus</span>
+                        <small class="text-muted d-block mt-2">
+                            @GetStatusExplanation(calculatedStatus)
+                        </small>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label for="calendartype" class="form-label">CalendarType:</label>
-                    <InputText id="calendartype" @bind-Value="CalendarEvent.CalendarType" class="form-control" />
-                    <ValidationMessage For="() => CalendarEvent.CalendarType" class="text-danger" />
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="/calendarevents" class="btn btn-light border">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4" disabled="@isSubmitting">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check-circle me-2"></i>
+                        }
+                        Save Changes
+                    </button>
                 </div>
-                <div class="mb-3">
-                    <label for="status" class="form-label">Status:</label>
-                    <InputText id="status" @bind-Value="CalendarEvent.Status" class="form-control" />
-                    <ValidationMessage For="() => CalendarEvent.Status" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="hostuserid" class="form-label">HostUserId:</label>
-                    <InputNumber id="hostuserid" @bind-Value="CalendarEvent.HostUserId" class="form-control" />
-                    <ValidationMessage For="() => CalendarEvent.HostUserId" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="useractivityid" class="form-label">UserActivityId:</label>
-                    <InputNumber id="useractivityid" @bind-Value="CalendarEvent.UserActivityId" class="form-control" />
-                    <ValidationMessage For="() => CalendarEvent.UserActivityId" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="datecreated" class="form-label">DateCreated:</label>
-                    <InputDate id="datecreated" @bind-Value="CalendarEvent.DateCreated" class="form-control" />
-                    <ValidationMessage For="() => CalendarEvent.DateCreated" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="dateupdated" class="form-label">DateUpdated:</label>
-                    <InputDate id="dateupdated" @bind-Value="CalendarEvent.DateUpdated" class="form-control" />
-                    <ValidationMessage For="() => CalendarEvent.DateUpdated" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="createdby" class="form-label">CreatedBy:</label>
-                    <InputText id="createdby" @bind-Value="CalendarEvent.CreatedBy" class="form-control" />
-                    <ValidationMessage For="() => CalendarEvent.CreatedBy" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="updatedby" class="form-label">UpdatedBy:</label>
-                    <InputText id="updatedby" @bind-Value="CalendarEvent.UpdatedBy" class="form-control" />
-                    <ValidationMessage For="() => CalendarEvent.UpdatedBy" class="text-danger" />
-                </div>
-                <button type="submit" class="btn btn-primary">Save</button>
             </EditForm>
+        }
+    </div>
+</div>
+
+@* --- DELETE CONFIRMATION POPUP --- *@
+@if (showDeletePopup)
+{
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">Cancel This Event?</h5>
+                    <p class="text-muted">All participants will be notified of the cancellation.</p>
+                    <div class="d-flex gap-2 justify-content-center mt-4">
+                        <button class="btn btn-light border px-4" @onclick="() => showDeletePopup = false">Keep Event</button>
+                        <button class="btn btn-danger px-4" @onclick="CancelEvent" disabled="@isDeleting">
+                            @if (isDeleting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-x-circle me-2"></i>
+                            }
+                            Cancel Event
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 }
 
-<div>
-    <a href="/calendarevents">Back to List</a>
-</div>
-
 @code {
-    [SupplyParameterFromQuery]
-    private int Id { get; set; }
+    [Parameter] public int Id { get; set; }
+    [SupplyParameterFromForm] private EventInputModel Input { get; set; } = new();
 
-    [SupplyParameterFromForm]
-    private CalendarEvent? CalendarEvent { get; set; }
+    private CalendarEvent? CalendarEvent;
+    private string? errorMessage;
+    private string? successMessage;
+    private bool isSubmitting = false;
+    private bool isDeleting = false;
+    private bool showDeletePopup = false;
+    private bool isHost = false;
+    private bool isEditor = false;
+    private string? currentUserId;
+
+    // Original values for change detection
+    private DateTime originalStartDateTime;
+    private DateTime originalEndDateTime;
+    private string originalLocation = "";
+    private List<string> changesSummary = new();
+    private string calculatedStatus = "Upcoming";
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
         using var context = DbFactory.CreateDbContext();
-        CalendarEvent ??= await context.CalendarEvent.FirstOrDefaultAsync(m => m.Id == Id);
+        CalendarEvent = await context.CalendarEvent
+            .Include(e => e.UserActivity)
+            .FirstOrDefaultAsync(m => m.Id == Id);
 
         if (CalendarEvent is null)
         {
-            NavigationManager.NavigateTo("notfound");
+            NavigationManager.NavigateTo("/calendarevents");
+            return;
         }
+
+        isHost = CalendarEvent.HostUserId == currentUserId;
+
+        var userRole = await context.EventParticipant
+            .Include(p => p.EventRole)
+            .FirstOrDefaultAsync(p => p.CalendarEventId == Id && p.UserId == currentUserId && p.ParticipationStatus == "Accepted");
+
+        isEditor = userRole?.EventRole?.RoleName == "Editor";
+
+        if (!isHost && !isEditor)
+        {
+            NavigationManager.NavigateTo("/calendarevents");
+            return;
+        }
+
+        // Store original values
+        originalStartDateTime = CalendarEvent.StartDateTime;
+        originalEndDateTime = CalendarEvent.EndDateTime;
+        originalLocation = CalendarEvent.Location ?? "";
+
+        // Populate form
+        Input.EventName = CalendarEvent.EventName;
+        Input.Location = CalendarEvent.Location ?? "";
+        Input.StartDateTime = CalendarEvent.StartDateTime;
+        Input.EndDateTime = CalendarEvent.EndDateTime;
+        Input.Description = CalendarEvent.Description ?? "";
+
+        CalculateStatus();
+    }
+
+    private void OnDateChanged()
+    {
+        // Sync end date if needed
+        if (Input.StartDateTime >= Input.EndDateTime)
+        {
+            Input.EndDateTime = Input.StartDateTime.AddHours(1);
+        }
+        OnFieldChanged();
+    }
+
+    private void OnFieldChanged()
+    {
+        DetectChanges();
+        CalculateStatus();
+    }
+
+    private void DetectChanges()
+    {
+        changesSummary.Clear();
+
+        // Check schedule change
+        if (Input.StartDateTime != originalStartDateTime)
+        {
+            if (Input.StartDateTime > originalStartDateTime)
+            {
+                var delay = Input.StartDateTime - originalStartDateTime;
+                changesSummary.Add($"Event postponed by {FormatDuration(delay)}");
+            }
+            else
+            {
+                var advance = originalStartDateTime - Input.StartDateTime;
+                changesSummary.Add($"Event brought forward by {FormatDuration(advance)}");
+            }
+        }
+
+        // Check duration change
+        var originalDuration = originalEndDateTime - originalStartDateTime;
+        var newDuration = Input.EndDateTime - Input.StartDateTime;
+        if (originalDuration != newDuration)
+        {
+            if (newDuration > originalDuration)
+            {
+                var increase = newDuration - originalDuration;
+                changesSummary.Add($"Duration extended by {FormatDuration(increase)}");
+            }
+            else
+            {
+                var decrease = originalDuration - newDuration;
+                changesSummary.Add($"Duration shortened by {FormatDuration(decrease)}");
+            }
+        }
+
+        // Check location change
+        if (Input.Location?.Trim() != originalLocation.Trim())
+        {
+            changesSummary.Add($"Location changed from '{originalLocation}' to '{Input.Location}'");
+        }
+    }
+
+    private void CalculateStatus()
+    {
+        var now = DateTime.Now;
+
+        // Check if event is ongoing
+        if (now >= Input.StartDateTime && now <= Input.EndDateTime)
+        {
+            calculatedStatus = "Ongoing";
+        }
+        // Check if postponed
+        else if (Input.StartDateTime > originalStartDateTime && Input.StartDateTime > now)
+        {
+            calculatedStatus = "Postponed";
+        }
+        // Check if brought forward
+        else if (Input.StartDateTime < originalStartDateTime && Input.StartDateTime > now)
+        {
+            calculatedStatus = "Brought Forward";
+        }
+        // Check if upcoming
+        else if (Input.StartDateTime > now)
+        {
+            calculatedStatus = "Upcoming";
+        }
+        // Otherwise it's in the past (shouldn't happen in edit, but handle it)
+        else
+        {
+            calculatedStatus = "Concluded";
+        }
+    }
+
+    private string FormatDuration(TimeSpan duration)
+    {
+        if (duration.TotalDays >= 1)
+            return $"{(int)duration.TotalDays} day(s)";
+        if (duration.TotalHours >= 1)
+            return $"{(int)duration.TotalHours} hour(s) {duration.Minutes} min";
+        return $"{duration.Minutes} minute(s)";
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Ongoing" => "bg-success text-white",
+            "Postponed" => "bg-warning text-dark",
+            "Brought Forward" => "bg-info text-dark",
+            "Upcoming" => "bg-primary text-white",
+            "On Hold" => "bg-secondary text-white",
+            "Cancelled" => "bg-danger text-white",
+            _ => "bg-secondary text-white"
+        };
+    }
+
+    private string GetStatusExplanation(string status)
+    {
+        return status switch
+        {
+            "Ongoing" => "Current time is within event timeframe",
+            "Postponed" => "Event scheduled for later than original time",
+            "Brought Forward" => "Event scheduled earlier than original time",
+            "Upcoming" => "Event is scheduled for the future",
+            "On Hold" => "Event is paused",
+            "Cancelled" => "Event has been cancelled",
+            _ => "Unknown status"
+        };
     }
 
     private async Task UpdateCalendarEvent()
     {
-        using var context = DbFactory.CreateDbContext();
-        context.Attach(CalendarEvent!).State = EntityState.Modified;
+        errorMessage = null;
+        successMessage = null;
+
+        if (Input.EndDateTime <= Input.StartDateTime)
+        {
+            errorMessage = "End time must be after start time.";
+            return;
+        }
+
+        isSubmitting = true;
 
         try
         {
-            await context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!CalendarEventExists(CalendarEvent!.Id))
-            {
-                NavigationManager.NavigateTo("notfound");
-            }
-            else
-            {
-                throw;
-            }
-        }
+            using var context = DbFactory.CreateDbContext();
+            var eventToUpdate = await context.CalendarEvent.FindAsync(Id);
 
-        NavigationManager.NavigateTo("/calendarevents");
+            if (eventToUpdate == null)
+            {
+                errorMessage = "Event not found.";
+                isSubmitting = false;
+                return;
+            }
+
+            bool hasChanges = changesSummary.Any();
+
+            // Update event fields
+            eventToUpdate.EventName = Input.EventName;
+            eventToUpdate.Location = Input.Location;
+            eventToUpdate.StartDateTime = Input.StartDateTime;
+            eventToUpdate.EndDateTime = Input.EndDateTime;
+            eventToUpdate.Description = Input.Description;
+            eventToUpdate.Status = calculatedStatus;
+            eventToUpdate.DateUpdated = DateTime.Now;
+
+            await context.SaveChangesAsync();
+
+            // Notify participants if changes detected
+            if (hasChanges)
+            {
+                await NotifyParticipants(context, eventToUpdate);
+            }
+
+            successMessage = "Event updated successfully!";
+            await Task.Delay(1500);
+            NavigationManager.NavigateTo("/calendarevents");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+            isSubmitting = false;
+        }
     }
 
-    private bool CalendarEventExists(int id)
+    private async Task NotifyParticipants(Minister_Of_Time.Data.Minister_Of_TimeContext context, CalendarEvent evt)
     {
-        using var context = DbFactory.CreateDbContext();
-        return context.CalendarEvent.Any(e => e.Id == id);
+        var participants = await context.EventParticipant
+            .Where(p => p.CalendarEventId == Id &&
+                       p.UserId != null &&
+                       p.UserId != currentUserId &&
+                       p.ParticipationStatus == "Accepted")
+            .Select(p => p.UserId)
+            .Distinct()
+            .ToListAsync();
+
+        foreach (var participantId in participants)
+        {
+            var message = $"Event '{evt.EventName}' has been updated:\n" + string.Join("\n", changesSummary);
+
+            if (!string.IsNullOrWhiteSpace(Input.ChangeReason))
+            {
+                message += $"\nReason: {Input.ChangeReason}";
+            }
+
+            message += $"\n\nNew Schedule: {Input.StartDateTime:MMM dd, yyyy h:mm tt} - {Input.EndDateTime:h:mm tt}";
+            if (!string.IsNullOrWhiteSpace(Input.Location))
+            {
+                message += $"\nLocation: {Input.Location}";
+            }
+
+            // Create notification in EventParticipant table
+            var notification = new EventParticipant
+            {
+                CalendarEventId = Id,
+                UserId = participantId,
+                ParticipationStatus = "Notification",
+                CustomActivity = message,
+                EventRoleId = 1,
+                InviteeEmail = ""
+            };
+
+            context.EventParticipant.Add(notification);
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    private async Task CancelEvent()
+    {
+        isDeleting = true;
+        errorMessage = null;
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            var eventToCancel = await context.CalendarEvent.FindAsync(Id);
+
+            if (eventToCancel == null)
+            {
+                errorMessage = "Event not found.";
+                isDeleting = false;
+                return;
+            }
+
+            // Notify participants
+            var participants = await context.EventParticipant
+                .Where(p => p.CalendarEventId == Id &&
+                           p.UserId != null &&
+                           p.UserId != currentUserId &&
+                           (p.ParticipationStatus == "Accepted" || p.ParticipationStatus == "Pending"))
+                .Select(p => p.UserId)
+                .Distinct()
+                .ToListAsync();
+
+            foreach (var participantId in participants)
+            {
+                var notification = new EventParticipant
+                {
+                    CalendarEventId = 0,
+                    UserId = participantId,
+                    ParticipationStatus = "Notification",
+                    CustomActivity = $"Event CANCELLED: '{eventToCancel.EventName}' scheduled for {eventToCancel.StartDateTime:MMM dd, yyyy h:mm tt} has been cancelled by the host.",
+                    EventRoleId = 1,
+                    InviteeEmail = ""
+                };
+                context.EventParticipant.Add(notification);
+            }
+
+            // Remove participant records
+            var existingParticipants = await context.EventParticipant
+                .Where(p => p.CalendarEventId == Id)
+                .ToListAsync();
+            context.EventParticipant.RemoveRange(existingParticipants);
+
+            // Mark as cancelled instead of deleting
+            eventToCancel.Status = "Cancelled";
+            await context.SaveChangesAsync();
+
+            // Now delete the event
+            context.CalendarEvent.Remove(eventToCancel);
+            await context.SaveChangesAsync();
+
+            NavigationManager.NavigateTo("/calendarevents");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+            isDeleting = false;
+            showDeletePopup = false;
+        }
+    }
+
+    private sealed class EventInputModel
+    {
+        [Required(ErrorMessage = "Event name is required")]
+        public string EventName { get; set; } = "";
+
+        [Required(ErrorMessage = "Location is required")]
+        public string Location { get; set; } = "";
+
+        [Required]
+        public DateTime StartDateTime { get; set; }
+
+        [Required]
+        public DateTime EndDateTime { get; set; }
+
+        public string Description { get; set; } = "";
+
+        public string ChangeReason { get; set; } = "";
     }
 }

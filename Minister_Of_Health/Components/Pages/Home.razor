@@ -2,39 +2,83 @@
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.Authorization
 @using Minister_Of_Time.Domain
+@using System.Security.Claims
 @inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Home - Minister of Time</PageTitle>
 
 <div class="home-background">
     <div class="content-container">
         <AuthorizeView>
             <Authorized>
-                <h1 class="user-name">Dear Mr. @(displayName ?? "...")</h1>
+                <h1 class="user-name">Dear @(displayName ?? "...")</h1>
+
+                <div class="branding-box">
+                    <img src="/images/BigLogo.png" class="logo-image" alt="Logo" />
+                    <p class="epicurus-quote">"Be moderate in order to taste the joys of life in abundance." - Epicurus</p>
+                </div>
+
+                <div class="link-bar">
+                    <a href="/work" class="nav-card work-link">
+                        <i class="bi bi-briefcase"></i> Work
+                    </a>
+                    <button class="nav-card manage-link" @onclick='() => NavigationManager.NavigateTo("/calendarevents/manage")'>
+                        <i class="bi bi-calendar-check"></i> Manage Events
+                    </button>
+                    <a href="/life" class="nav-card life-link">
+                        Life <i class="bi bi-heart"></i>
+                    </a>
+                </div>
+
+                <div class="agenda-container mt-4">
+                    <h3 class="agenda-title"><i class="bi bi-clock-history me-2"></i>Today's Agenda</h3>
+                    <div class="agenda-list">
+                        @if (todaysEvents.Any())
+                        {
+                            @foreach (var ev in todaysEvents)
+                            {
+                                <div class="agenda-item @ev.Event.UserActivity?.ActivityType?.TypeName.ToLower().Replace(" ", "")">
+                                    <div class="time-slot">@ev.Event.StartDateTime.ToString("h:mm tt")</div>
+                                    <div class="event-info">
+                                        <div class="event-name">@ev.Event.EventName</div>
+                                        <div class="event-meta">@ev.Role • @(ev.Event.UserActivity?.ActivityType?.TypeName ?? "Other")</div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-white-50 py-3">Your schedule is clear for today.</p>
+                        }
+                    </div>
+                </div>
             </Authorized>
             <NotAuthorized>
-                @* if user didn't login, no name will be displayey(However if the app work normally the user can only be in this page when login in, thus this fuction is only for testing) *@
-                <h1 class="user-name">Welcome, Guest</h1>
+                <div class="welcome-guest">
+                    <h1 class="user-name">Welcome, Guest</h1>
+                    <img src="/images/BigLogo.png" class="logo-image mb-4" />
+                    <a href="/login" class="btn btn-outline-light px-5">Login to Begin</a>
+                </div>
             </NotAuthorized>
         </AuthorizeView>
-
-        <img src="/images/BigLogo.png" class="logo-image" alt="Minister of Time Logo" />
-
-        <p class="epicurus-quote">"Be moderate in order to taste the joys of life in abundance." - Epicurus</p>
-
-        <div class="link-bar">
-            <a href="/work" class="work-link">&lt;&lt;&lt;Work</a>
-            <a href="/life" class="life-link">Life&gt;&gt;&gt;</a>
-        </div>
     </div>
 </div>
 
 @code {
     private string? displayName;
+    private List<EventWrapper> todaysEvents = new();
+    private string? currentUserId;
 
     [CascadingParameter]
     private Task<AuthenticationState>? authStateTask { get; set; }
+
+    public class EventWrapper
+    {
+        public CalendarEvent Event { get; set; } = null!;
+        public string Role { get; set; } = "Viewer";
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -43,25 +87,49 @@
             var authState = await authStateTask;
             var user = authState.User;
 
-            if (user.Identity is not null && user.Identity.IsAuthenticated)
+            if (user.Identity?.IsAuthenticated == true)
             {
+                currentUserId = user.FindFirstValue(ClaimTypes.NameIdentifier);
                 using var context = DbFactory.CreateDbContext();
 
+                // Fetch User Name
                 string loginEmail = user.Identity.Name ?? "";
-
                 var dbUser = await context.Set<User>()
-                    .FirstOrDefaultAsync(u => u.Email.ToLower().Trim() == loginEmail.ToLower().Trim());
+                    .FirstOrDefaultAsync(u => u.Email.ToLower() == loginEmail.ToLower());
+                displayName = dbUser?.Name ?? loginEmail;
 
-                if (dbUser != null && !string.IsNullOrEmpty(dbUser.Name))
-                {
-                    displayName = dbUser.Name;
-                }
-                else
-                {
-                    displayName = loginEmail;
-                }
+                await LoadTodaysAgenda(context);
                 StateHasChanged();
             }
         }
+    }
+
+    private async Task LoadTodaysAgenda(Minister_Of_Time.Data.Minister_Of_TimeContext context)
+    {
+        var today = DateTime.Today;
+        var tomorrow = today.AddDays(1);
+
+        // Get Hosted
+        var hosted = await context.CalendarEvent
+            .Include(e => e.UserActivity)
+            .Where(e => e.HostUserId == currentUserId && e.StartDateTime >= today && e.StartDateTime < tomorrow)
+            .Select(e => new EventWrapper { Event = e, Role = "Host" })
+            .ToListAsync();
+
+        // Get Participated
+        var participated = await context.EventParticipant
+            .Include(p => p.CalendarEvent).ThenInclude(e => e.UserActivity)
+            .Where(p => p.UserId == currentUserId && p.CalendarEvent!.StartDateTime >= today && p.CalendarEvent.StartDateTime < tomorrow)
+            .ToListAsync();
+
+        var collaborated = participated.Select(p => new EventWrapper
+        {
+            Event = p.CalendarEvent!,
+            Role = p.EventRole?.ToString() ?? "Viewer"
+        });
+
+        todaysEvents = hosted.Concat(collaborated)
+            .OrderBy(e => e.Event.StartDateTime)
+            .ToList();
     }
 }

@@ -1,7 +1,7 @@
-﻿/* Ensure the dashboard fills the available space */
+﻿/* Container and Layout */
 .dashboard-container {
     display: flex;
-    height: calc(100vh - 56px); /* Adjusts for the top navbar height */
+    height: calc(100vh - 56px);
     width: 100%;
     overflow: hidden;
     position: absolute;
@@ -9,119 +9,155 @@
     left: 0;
 }
 
-/* SIDEBAR STYLES */
 .sidebar-dark {
     width: 300px;
     background: #1a1a1a;
     color: white;
-    padding: 2rem;
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
     border-right: 1px solid #333;
+    overflow-y: auto;
+    z-index: 10;
 }
 
-.agenda-card {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: #2a2a2a;
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 10px;
+/* Filter Section */
+.filter-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #333;
 }
 
+.form-check-label {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+    .form-check-label:hover {
+        color: #fff !important;
+    }
+
+/* Activity Dots (Matching the 7 logic types) */
 .dot {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    flex-shrink: 0;
+    display: inline-block;
+    margin-right: 8px;
 }
 
     .dot.work {
         background: #007aff;
     }
 
-    .dot.life {
+    .dot.meetings {
+        background: #6f42c1;
+    }
+
+    .dot.hobby {
         background: #34c759;
     }
 
-.event-name {
-    font-weight: bold;
-    font-size: 0.9rem;
-}
+    .dot.life {
+        background: #fd7e14;
+    }
 
-.event-time {
-    font-size: 0.8rem;
-    color: #aaa;
-}
+    .dot.familytime {
+        background: #d63384;
+    }
 
-/* MAIN CALENDAR GRID */
+    .dot.others {
+        background: #6c757d;
+    }
+
+    .dot.invites {
+        background: #ffc107;
+        border: 1px solid #000;
+    }
+
+/* Calendar Grid & Scrolling Logic */
 .calendar-main {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     background: white;
+    overflow-y: auto; /* Enables vertical scrolling for the whole calendar area */
+    overflow-x: auto; /* Also enable horizontal scroll if needed */
+    height: 100%;
+    position: relative;
 }
+
+    .calendar-main .sticky-top {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: white;
+    }
 
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    grid-template-rows: auto repeat(6, 1fr); /* Header + 6 rows of dates */
-    flex-grow: 1;
+    grid-auto-rows: minmax(140px, auto); /* FIXED: Allow rows to grow as needed */
     border-top: 1px solid #dee2e6;
-    border-left: 1px solid #dee2e6;
+    min-width: 800px; /* Prevents cells from becoming too narrow */
 }
 
 .grid-header-day {
     background: #f8f9fa;
-    text-align: center;
     padding: 10px;
+    text-align: center;
     font-weight: bold;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: #6c757d;
-    border-right: 1px solid #dee2e6;
     border-bottom: 1px solid #dee2e6;
+    border-right: 1px solid #dee2e6;
+    position: sticky;
+    top: 0; /* FIXED: Stick to top of scrollable container */
+    z-index: 4;
 }
 
 .calendar-cell {
-    min-height: 100px;
-    background: white;
+    min-height: 140px; /* Minimum height */
     padding: 8px;
-    border-right: 1px solid #dee2e6;
-    border-bottom: 1px solid #dee2e6;
+    border-right: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background 0.2s;
+    background: white;
     display: flex;
     flex-direction: column;
-    transition: background 0.2s;
 }
 
-    .calendar-cell:hover:not(.empty) {
-        background: #f1f3f5;
-        cursor: pointer;
+    .calendar-cell:hover {
+        background: #f8fbff;
     }
 
     .calendar-cell.is-today {
-        background: #fff9db;
+        background: #fffdf2;
     }
 
 .day-num {
     font-weight: 600;
-    margin-bottom: 5px;
+    font-size: 0.9rem;
+    flex-shrink: 0; /* Prevent day number from shrinking */
 }
 
-/* EVENT PILLS */
+/* Event Pills (Color coded) */
 .event-pills-container {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
+    margin-top: 5px;
+    flex-grow: 1; /* Allow container to grow */
+    overflow: visible; /* Allow content to be visible */
 }
 
 .event-pill {
     font-size: 0.7rem;
     padding: 2px 6px;
     border-radius: 4px;
+    margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    border: 1px solid transparent;
 }
 
     .event-pill.work {
@@ -129,49 +165,154 @@
         color: #007aff;
     }
 
-    .event-pill.life {
+    .event-pill.meetings {
+        background: #f3eaff;
+        color: #6f42c1;
+    }
+
+    .event-pill.hobby {
         background: #eafaf1;
         color: #34c759;
     }
 
-/* BLUR & MODAL */
-.blur-content {
-    filter: blur(5px);
-    pointer-events: none;
-}
+    .event-pill.life {
+        background: #fff4e5;
+        color: #fd7e14;
+    }
 
-.event-pill.is-multi-day {
-    border-radius: 0; /* Makes them look connected across cells */
-    margin-bottom: 2px;
-}
-/* Ensure the popup stays sharp and on top */
+    .event-pill.familytime {
+        background: #ffebf5;
+        color: #d63384;
+    }
+
+    .event-pill.others {
+        background: #f8f9fa;
+        color: #6c757d;
+    }
+
+    .event-pill.pending-invite {
+        background: #fff9db;
+        color: #856404;
+        border: 1px dashed #ffc107;
+        font-weight: bold;
+    }
+
+/* Modal and Blur */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.6); /* Dim the background */
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1050; /* Above everything */
+    z-index: 2000;
 }
 
 .modal-window {
-    background: white !important; /* Forces solid background */
-    color: #212529; /* Dark text */
+    background: white !important;
     border-radius: 12px;
-    width: 90%;
-    max-width: 550px;
+    width: 95%;
+    max-width: 500px;
     max-height: 85vh;
     overflow-y: auto;
     padding: 20px;
-    box-shadow: 0 15px 50px rgba(0,0,0,0.5);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
 }
 
 .blur-content {
     filter: blur(8px);
-    pointer-events: none; /* Disable clicking behind the modal */
-    transition: filter 0.3s ease;
+    pointer-events: none;
+}
+
+/* Agenda Section */
+.agenda-card {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    background: #2a2a2a;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.agenda-info .event-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.agenda-info .event-time {
+    font-size: 0.75rem;
+    color: #aaa;
+}
+
+.event-detail-card {
+    transition: transform 0.2s;
+    border-left-width: 5px !important;
+}
+
+    /* Color Synchronization for Modal Cards */
+    .event-detail-card.work {
+        border-left-color: #007aff !important;
+    }
+
+    .event-detail-card.meetings {
+        border-left-color: #6f42c1 !important;
+    }
+
+    .event-detail-card.hobby {
+        border-left-color: #34c759 !important;
+    }
+
+    .event-detail-card.life {
+        border-left-color: #fd7e14 !important;
+    }
+
+    .event-detail-card.familytime {
+        border-left-color: #d63384 !important;
+    }
+
+    .event-detail-card.others {
+        border-left-color: #6c757d !important;
+    }
+
+    .event-detail-card.pending-invite {
+        border-left-color: #ffc107 !important;
+        border-style: dashed !important;
+    }
+
+/* Action Buttons */
+.btn-leave-large {
+    color: #dc3545;
+    border: 1px solid #dc3545;
+    background: transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+    .btn-leave-large:hover {
+        background: #dc3545;
+        color: white;
+    }
+
+.description-box {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 0.9rem;
+    color: #495057;
+    margin-top: 10px;
+}
+
+.duration-tag {
+    font-size: 0.75rem;
+    background: #e9ecef;
+    padding: 2px 8px;
+    border-radius: 10px;
+    color: #6c757d;
 }

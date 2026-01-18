@@ -1,0 +1,300 @@
+﻿@page "/calendarevents/manage"
+@using Microsoft.EntityFrameworkCore
+@using Minister_Of_Time.Domain
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
+
+<div class="manage-container @(showPopup ? "blur-content" : "")">
+    <div class="header-section mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold">Manage My Events</h2>
+            <p class="text-muted">Centralized access to all your scheduled activities and collaborations.</p>
+        </div>
+        <button class="btn btn-primary" @onclick='() => NavigationManager.NavigateTo("/calendarevents/create")'>
+            + New Event
+        </button>
+    </div>
+
+    <div class="filter-bar p-3 mb-4 rounded shadow-sm bg-white border">
+        <div class="row align-items-center">
+            <div class="col-md-auto me-4">
+                <span class="fw-bold text-secondary small text-uppercase">Role Filters:</span>
+            </div>
+            <div class="col-md-auto">
+                @foreach (var role in RoleFilters.Keys.ToList())
+                {
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="@(role)Check"
+                               checked="@RoleFilters[role]"
+                               @onchange="@((e) => { RoleFilters[role] = (bool)(e.Value ?? true); StateHasChanged(); })">
+                        <label class="form-check-label" for="@(role)Check">@role</label>
+                    </div>
+                }
+            </div>
+            <div class="col text-end">
+                <input type="text" class="form-control form-control-sm d-inline-block w-auto"
+                       placeholder="Search events..." @bind="searchTerm" @bind:event="oninput" />
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive bg-white rounded shadow-sm border">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th>Event</th>
+                    <th>Host</th>
+                    <th>Date & Time</th>
+                    <th>Role</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (FilteredEvents.Any())
+                {
+                    @foreach (var item in FilteredEvents)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-bold">@item.Event.EventName</div>
+                                <span class="badge rounded-pill @GetActivityTypeBadge(item.Event.UserActivity?.ActivityType.TypeName)">
+                                    @(item.Event.UserActivity?.ActivityType.TypeName ?? "Others")
+                                </span>
+                            </td>
+                            <td>@(item.Event.HostUser?.Email ?? "System")</td>
+                            <td>
+                                <div class="small">@item.Event.StartDateTime.ToString("MMM dd, yyyy")</div>
+                                <div class="small text-muted">@item.Event.StartDateTime.ToString("h:mm tt")</div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary text-white">@item.Role</span>
+                            </td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => OpenPopup(item)">View</button>
+
+                                @if (item.Role == "Host" || item.Role == "Editor")
+                                {
+                                    <button class="btn btn-sm btn-outline-dark me-1"
+                                            @onclick='() => NavigationManager.NavigateTo($"/calendarevents/edit/{item.Event.Id}")'>
+                                        Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-info"
+                                            @onclick='() => NavigationManager.NavigateTo($"/calendarevents/manage-invites/{item.Event.Id}")'>
+                                        Invites
+                                    </button>
+                                }
+
+                                @if (item.Role != "Host")
+                                {
+                                    <button class="btn btn-sm btn-outline-danger ms-1" @onclick="() => LeaveEvent(item.Event.Id)">
+                                        Leave
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">No events found.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (showPopup && selectedWrapper != null)
+{
+    var item = selectedWrapper;
+    var duration = item.Event.EndDateTime - item.Event.StartDateTime;
+
+    <div class="modal-overlay" @onclick="ClosePopup">
+        <div class="modal-window shadow-lg" style="overflow-y: auto;" @onclick:stopPropagation="true">
+            <div class="modal-header d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h4 class="fw-bold mb-0 text-dark">@item.Event.StartDateTime.ToString("MMMM dd")</h4>
+                    <span class="badge bg-light text-muted border">@item.Event.StartDateTime.ToString("dddd")</span>
+                </div>
+                <button type="button" class="btn-close" @onclick="ClosePopup"></button>
+            </div>
+
+            <div class="event-detail-card p-3 border rounded mb-3 bg-white shadow-sm border-start border-4 @GetCssClass(item)">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="flex-grow-1">
+                        <h5 class="fw-bold text-dark mb-1">@item.Event.EventName</h5>
+                        <div class="d-flex gap-2 align-items-center flex-wrap">
+                            <span class="duration-tag small text-muted bg-light px-2 py-1 rounded border">
+                                <i class="bi bi-clock-history me-1"></i>@(duration.TotalHours >= 1 ? $"{(int)duration.TotalHours}h {duration.Minutes}m" : $"{duration.Minutes}m")
+                            </span>
+                            <span class="badge @GetStatusBadge(item.Event.Status)">@item.Event.Status</span>
+                            <span class="badge bg-secondary text-white">
+                                <i class="bi bi-person-badge me-1"></i>@item.Role
+                            </span>
+                        </div>
+                    </div>
+                    <span class="badge rounded-pill @GetActivityTypeBadge(item.Event.UserActivity?.ActivityType.TypeName)">
+                        @(item.Event.UserActivity?.ActivityType.TypeName ?? "Others")
+                    </span>
+                </div>
+
+                <div class="small text-muted mb-3">
+                    <div class="mb-1"><i class="bi bi-clock me-2"></i>@item.Event.StartDateTime.ToString("h:mm tt") - @item.Event.EndDateTime.ToString("h:mm tt")</div>
+                    @if (!string.IsNullOrEmpty(item.Event.Location))
+                    {
+                        <div class="text-primary fw-bold"><i class="bi bi-geo-alt-fill me-2"></i>@item.Event.Location</div>
+                    }
+                </div>
+
+                @if (!string.IsNullOrEmpty(item.Event.Description))
+                {
+                    <div class="description-box p-2 mb-3 bg-light rounded small text-dark">
+                        <strong>Description:</strong> @item.Event.Description
+                    </div>
+                }
+
+                <div class="d-grid gap-2 pt-2 border-top">
+                    @if (item.Role == "Host" || (item.Role == "Editor" && item.Status == "Accepted"))
+                    {
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-primary flex-grow-1" @onclick='() => NavigationManager.NavigateTo($"/calendarevents/edit/{item.Event.Id}")'>
+                                <i class="bi bi-pencil me-1"></i>Edit
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary flex-grow-1" @onclick='() => NavigationManager.NavigateTo($"/calendarevents/manage-invites/{item.Event.Id}")'>
+                                <i class="bi bi-people me-1"></i>Invites
+                            </button>
+                        </div>
+                    }
+
+                    @if (item.Role != "Host")
+                    {
+                        <button class="btn btn-outline-danger btn-sm w-100 py-1 mt-1 d-flex align-items-center justify-content-center gap-2" @onclick="() => LeaveEvent(item.Event.Id)">
+                            <i class="bi bi-box-arrow-right"></i> Leave Event
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string currentUserId = string.Empty;
+    private string searchTerm = "";
+    private bool showPopup = false;
+    private EventWrapper? selectedWrapper;
+
+    private Dictionary<string, bool> RoleFilters = new() {
+        { "Host", true }, { "Editor", true }, { "Viewer", true }
+    };
+
+    private List<EventWrapper> allEvents = new();
+
+    public class EventWrapper
+    {
+        public CalendarEvent Event { get; set; } = null!;
+        public string Role { get; set; } = "Viewer";
+        public string Status { get; set; } = "Accepted";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        currentUserId = auth.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+        await LoadEvents();
+    }
+
+    private async Task LoadEvents()
+    {
+        using var ctx = DbFactory.CreateDbContext();
+
+        // 1. Get hosted events
+        var hosted = await ctx.CalendarEvent
+            .Include(e => e.UserActivity)
+            .Include(e => e.HostUser)
+            .Where(e => e.HostUserId == currentUserId)
+            .Select(e => new EventWrapper
+            {
+                Event = e,
+                Role = "Host",
+                Status = "Accepted"
+            })
+            .ToListAsync();
+
+        // 2. Get participated events
+        var participated = await ctx.EventParticipant
+            .Include(c => c.CalendarEvent).ThenInclude(e => e.UserActivity)
+            .Include(c => c.CalendarEvent).ThenInclude(e => e.HostUser)
+            .Where(c => c.UserId == currentUserId)
+            .ToListAsync();
+
+        // 3. Project with Null Checks
+        var collaborated = participated.Select(c => new EventWrapper
+        {
+            // Ensure the Event itself isn't null
+            Event = c.CalendarEvent ?? new CalendarEvent { EventName = "Unknown Event" },
+
+            // Fix: Use ?. to check for null before calling ToString()
+            // Use ?? to provide a default string if the database value was null
+            Role = c.EventRole?.ToString() ?? "Viewer",
+            Status = c.ParticipationStatus?.ToString() ?? "Pending"
+        }).ToList();
+
+        allEvents = hosted.Concat(collaborated)
+            .OrderByDescending(x => x.Event.StartDateTime)
+            .ToList();
+    }
+
+    private IEnumerable<EventWrapper> FilteredEvents => allEvents.Where(x =>
+    {
+        bool roleMatch = RoleFilters.ContainsKey(x.Role) && RoleFilters[x.Role];
+        bool searchMatch = string.IsNullOrWhiteSpace(searchTerm) || x.Event.EventName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);
+        return roleMatch && searchMatch;
+    });
+
+    private void OpenPopup(EventWrapper item) { selectedWrapper = item; showPopup = true; }
+    private void ClosePopup() => showPopup = false;
+
+    private async Task LeaveEvent(int eventId)
+    {
+        using var ctx = DbFactory.CreateDbContext();
+        var participant = await ctx.EventParticipant
+            .FirstOrDefaultAsync(p => p.CalendarEventId == eventId && p.UserId == currentUserId);
+
+        if (participant != null)
+        {
+            ctx.EventParticipant.Remove(participant);
+            await ctx.SaveChangesAsync();
+        }
+
+        ClosePopup();
+        await LoadEvents();
+    }
+
+    private string GetCssClass(EventWrapper item) =>
+        (item.Event.UserActivity?.ActivityType.TypeName ?? "Others").ToLower().Replace(" ", "");
+
+    private string GetActivityTypeBadge(string? type) => type?.ToLower().Replace(" ", "") switch
+    {
+        "work" => "bg-primary-subtle text-primary",
+        "meetings" => "bg-info-subtle text-info",
+        "hobby" => "bg-success-subtle text-success",
+        "life" => "bg-warning-subtle text-warning",
+        "familytime" => "bg-danger-subtle text-danger",
+        _ => "bg-secondary-subtle text-secondary"
+    };
+
+    private string GetStatusBadge(string status) => status switch
+    {
+        "Confirmed" => "bg-success",
+        "Accepted" => "bg-success",
+        "Pending" => "bg-warning text-dark",
+        "Cancelled" => "bg-danger",
+        _ => "bg-secondary"
+    };
+}

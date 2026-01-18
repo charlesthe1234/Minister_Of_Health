@@ -1,0 +1,75 @@
+﻿.manage-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+}
+
+.blur-content {
+    filter: blur(5px);
+    pointer-events: none;
+    transition: 0.3s;
+}
+
+/* Same colors as Index */
+.work {
+    border-left-color: #007aff !important;
+}
+
+.meetings {
+    border-left-color: #6f42c1 !important;
+}
+
+.hobby {
+    border-left-color: #34c759 !important;
+}
+
+.life {
+    border-left-color: #fd7e14 !important;
+}
+
+.familytime {
+    border-left-color: #d63384 !important;
+}
+
+.others {
+    border-left-color: #6c757d !important;
+}
+
+/* Custom Purple for Meetings if not in Bootstrap */
+.text-purple {
+    color: #6f42c1;
+}
+
+.bg-purple-subtle {
+    background-color: #f3eaff;
+}
+
+.duration-tag {
+    font-size: 0.75rem;
+}
+
+.description-box {
+    border-left: 3px solid #dee2e6;
+}
+
+/* Modal specific alignment */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal-window {
+    background: white;
+    border-radius: 12px;
+    width: 95%;
+    max-width: 500px;
+    padding: 20px;
+    max-height: 90vh;
+}

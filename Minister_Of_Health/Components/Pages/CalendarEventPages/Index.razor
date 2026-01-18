@@ -1,134 +1,190 @@
 ﻿@page "/calendarevents"
-@rendermode InteractiveServer
-@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using Minister_Of_Time.Domain
-@using Minister_Of_Time.Data
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
-
-@attribute [Authorize]
-@implements IAsyncDisposable
 @inject IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthStateProvider
-
-<PageTitle>Calendar Dashboard</PageTitle>
+@rendermode InteractiveServer
 
 <div class="dashboard-container @(showPopup ? "blur-content" : "")">
+
+    @* --- SIDEBAR --- *@
     <aside class="sidebar-dark">
-        <div class="sidebar-header">
-            <h2 class="text-white">@displayDate.ToString("MMMM")</h2>
-            <p class="text-muted">@displayDate.Year</p>
+        <div class="sidebar-header mb-4">
+            <h2 class="text-white mb-0">@currentMonth.ToString("MMMM")</h2>
+            <p class="text-muted">@currentMonth.Year</p>
         </div>
 
-        <button class="btn btn-primary w-100 my-4"
-                @onclick='() => NavigationManager.NavigateTo($"/calendarevents/create?initialDate={DateTime.Today:yyyy-MM-dd}")'>
-            + Create Event
-        </button>
-
-        <div class="mini-agenda">
-            <h6 class="text-uppercase text-info small fw-bold">Upcoming Today</h6>
-            @foreach (var ev in userEvents.Where(e => e.StartDateTime.Date == DateTime.Today).Take(3))
+        <div class="filter-section">
+            <p class="text-muted small fw-bold text-uppercase mb-3">Activity Filters</p>
+            @foreach (var filter in ActivityFilters)
             {
-                <div class="agenda-card">
-                    <span class="dot @ev.CalendarType?.ToLower()"></span>
-                    <div class="agenda-info">
-                        <div class="event-name">@ev.EventName</div>
-                        <div class="event-time">@ev.StartDateTime.ToString("h:mm tt")</div>
+                <div class="filter-item d-flex align-items-center mb-2">
+                    <input type="checkbox" class="form-check-input me-2" checked="@filter.Value" @onchange="(e) => ToggleFilter(filter.Key, e.Value)" />
+                    <span class="dot @Sanitize(filter.Key)"></span>
+                    <span class="text-white-50 small">@filter.Key</span>
+                </div>
+            }
+        </div>
+
+        <div class="mt-auto">
+            <button class="btn btn-primary w-100 shadow-sm py-2" @onclick='() => NavigationManager.NavigateTo($"/calendarevents/create?date={DateTime.Today:yyyy-MM-dd}")'>
+                <i class="bi bi-plus-lg me-2"></i>Create Event
+            </button>
+        </div>
+    </aside>
+
+    @* --- MAIN CALENDAR (Scrollable) --- *@
+    <main class="calendar-main">
+        <div class="d-flex justify-content-between align-items-center p-3 bg-white border-bottom sticky-top">
+            <h4 class="fw-bold mb-0">@currentMonth.ToString("MMMM yyyy")</h4>
+
+            <div class="d-flex align-items-center gap-2">
+                <div class="btn-group shadow-sm">
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="PrevMonth">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary px-3 fw-bold" @onclick="GoToToday">
+                        Today
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="NextMonth">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="calendar-grid">
+            @foreach (var day in DaysOfWeek)
+            {
+                <div class="grid-header-day sticky-top bg-light">@day</div>
+            }
+
+            @foreach (var date in calendarDays)
+            {
+                var events = GetEventsForDate(date);
+                bool isToday = date.Date == DateTime.Today;
+                bool isCurrentMonth = date.Month == currentMonth.Month;
+
+                <div class="calendar-cell @(isCurrentMonth ? "" : "text-muted bg-light-subtle opacity-50") @(isToday ? "is-today" : "")"
+                     @onclick="() => OpenPopup(date)">
+                    <div class="day-num">@date.Day</div>
+
+                    <div class="event-pills-container">
+                        @foreach (var ev in events.Take(3))
+                        {
+                            var pillClass = $"event-pill {GetCssClass(ev)}";
+                            <div class="@pillClass">
+                                @if (ev.Status == "Pending")
+                                {
+                                    <i class="bi bi-envelope-fill me-1" style="font-size: 0.7rem;"></i>
+                                }
+                                @ev.Event.EventName
+                            </div>
+                        }
+                        @if (events.Count > 3)
+                        {
+                            <div class="more-indicator text-muted" style="font-size: 0.65rem; margin-top: 2px;">
+                                + @(events.Count - 3) more
+                            </div>
+                        }
                     </div>
                 </div>
             }
         </div>
-    </aside>
-
-    <main class="calendar-main">
-        <header class="grid-nav d-flex justify-content-between align-items-center p-3">
-            <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-secondary" @onclick="() => ChangeMonth(-1)">Previous</button>
-                <button class="btn btn-sm btn-outline-secondary" @onclick="() => ChangeMonth(1)">Next</button>
-            </div>
-            <h4 class="mb-0">@displayDate.ToString("MMMM yyyy")</h4>
-            <div class="view-toggle">
-                <span class="badge bg-primary">Month</span>
-            </div>
-        </header>
-
-        <div class="calendar-grid">
-            @foreach (var dayName in Enum.GetNames(typeof(DayOfWeek)))
-            {
-                <div class="grid-header-day">@dayName.Substring(0, 3).ToUpper()</div>
-            }
-
-            @foreach (var day in daysInMonth)
-            {
-                <div class="calendar-cell @(day == DateTime.MinValue ? "empty" : "") @(day.Date == DateTime.Today ? "is-today" : "")"
-                     @onclick="() => OpenDayDetails(day)">
-                    @if (day != DateTime.MinValue)
-                    {
-                        <span class="day-num">@day.Day</span>
-                        <div class="event-pills-container">
-                            @foreach (var ev in userEvents.Where(e => day.Date >= e.StartDateTime.Date && day.Date <= e.EndDateTime.Date))
-                            {
-                                <div class="event-pill @ev.CalendarType?.ToLower() @(ev.StartDateTime.Date != ev.EndDateTime.Date ? "is-multi-day" : "")">
-                                    @ev.EventName
-                                </div>
-                            }
-                        </div>
-                    }
-                </div>
-            }
-        </div>
-
     </main>
 </div>
 
+@* --- POPUP MODAL --- *@
 @if (showPopup)
 {
     <div class="modal-overlay" @onclick="ClosePopup">
-        <div class="modal-window shadow-lg" @onclick:stopPropagation="true">
-            <div class="modal-header d-flex justify-content-between align-items-center">
-                <h4 class="mb-0 text-dark">Events for @selectedDate?.ToString("MMMM dd, yyyy")</h4>
+        <div class="modal-window shadow-lg" style="overflow-y: auto;" @onclick:stopPropagation="true">
+            <div class="modal-header d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h4 class="fw-bold mb-0 text-dark">@selectedDate?.ToString("MMMM dd")</h4>
+                    <span class="badge bg-light text-muted border">@selectedDate?.ToString("dddd")</span>
+                </div>
                 <button type="button" class="btn-close" @onclick="ClosePopup"></button>
             </div>
-            <div class="modal-body mt-3">
+
+            <button class="btn btn-outline-primary w-100 mb-4 border-dashed py-2"
+                    @onclick='() => NavigationManager.NavigateTo($"/calendarevents/create?date={selectedDate?.ToString("yyyy-MM-dd")}")'>
+                <i class="bi bi-calendar-plus me-2"></i>Create an event for this day
+            </button>
+
+            <div class="event-list">
                 @if (selectedDayEvents.Any())
                 {
-                    @foreach (var ev in selectedDayEvents)
+                    @foreach (var item in selectedDayEvents)
                     {
-                        <div class="event-detail-card border rounded p-3 mb-3 bg-white">
-                            <div class="d-flex justify-content-between">
-                                <h5 class="text-primary fw-bold">@ev.EventName</h5>
-                                <span class="badge @(ev.CalendarType == "Work" ? "bg-primary" : "bg-success")">@ev.CalendarType</span>
+                        var duration = item.Event.EndDateTime - item.Event.StartDateTime;
+
+                        <div class="event-detail-card p-3 border rounded mb-3 bg-white shadow-sm border-start border-4 @GetCssClass(item)">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="flex-grow-1">
+                                    <h5 class="fw-bold text-dark mb-1">@item.Event.EventName</h5>
+                                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                                        <span class="duration-tag small text-muted bg-light px-2 py-1 rounded border">
+                                            <i class="bi bi-clock-history me-1"></i>@(duration.TotalHours >= 1 ? $"{(int)duration.TotalHours}h {duration.Minutes}m" : $"{duration.Minutes}m")
+                                        </span>
+                                        <span class="badge @GetStatusBadge(item.Event.Status)">@item.Event.Status</span>
+                                        <span class="badge bg-secondary text-white">
+                                            <i class="bi bi-person-badge me-1"></i>@item.Role
+                                        </span>
+                                    </div>
+                                </div>
+                                <span class="badge rounded-pill @GetActivityTypeBadge(item.Event.UserActivity?.ActivityType?.TypeName)">
+                                    @(item.Event.UserActivity?.ActivityType?.TypeName ?? "Others")
+                                </span>
                             </div>
 
-                            <hr class="my-2" />
-
-                            <div class="row g-2">
-                                <div class="col-12">
-                                    <i class="bi bi-clock"></i> <strong>Time & Duration:</strong> <br />
-                                    <span class="text-muted">
-                                        @ev.StartDateTime.ToString("h:mm tt") &rarr; @ev.EndDateTime.ToString("h:mm tt")
-                                        @{
-                                            var duration = ev.EndDateTime - ev.StartDateTime;
-                                            <span class="badge bg-light text-dark border ms-2">
-                                                @(duration.TotalHours >= 1 ? $"{(int)duration.TotalHours}h " : "")@(duration.Minutes)m
-                                            </span>
-                                        }
-                                    </span>
-                                </div>
-                                <div class="col-12 mt-2">
-                                    <i class="bi bi-geo-alt"></i> <strong>Location:</strong> @ev.Location
-                                </div>
-                                <div class="col-12 mt-2">
-                                    <i class="bi bi-person"></i> <strong>Host:</strong> @ev.CreatedBy
-                                </div>
-                                @if (!string.IsNullOrEmpty(ev.Description))
+                            <div class="small text-muted mb-3">
+                                <div class="mb-1"><i class="bi bi-clock me-2"></i>@item.Event.StartDateTime.ToString("h:mm tt") - @item.Event.EndDateTime.ToString("h:mm tt")</div>
+                                @if (!string.IsNullOrEmpty(item.Event.Location))
                                 {
-                                    <div class="col-12 mt-2 bg-light p-2 rounded">
-                                        <strong>Description:</strong><br />
-                                        @ev.Description
+                                    <div class="text-primary fw-bold"><i class="bi bi-geo-alt-fill me-2"></i>@item.Event.Location</div>
+                                }
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(item.Event.Description))
+                            {
+                                <div class="description-box p-2 mb-3 bg-light rounded small text-dark">
+                                    <strong>Description:</strong> @item.Event.Description
+                                </div>
+                            }
+
+                            @if (item.Status == "Pending")
+                            {
+                                <div class="alert alert-warning py-2 px-3 d-flex justify-content-between align-items-center">
+                                    <span class="small fw-bold">Accept Invite?</span>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-success" @onclick="() => Respond(item.ParticipantId, true)">Yes</button>
+                                        <button class="btn btn-sm btn-danger" @onclick="() => Respond(item.ParticipantId, false)">No</button>
                                     </div>
+                                </div>
+                            }
+
+                            <div class="d-grid gap-2 pt-2 border-top">
+                                @if (item.Role == "Host" || (item.Role == "Editor" && item.Status == "Accepted"))
+                                {
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm btn-primary flex-grow-1" @onclick='() => NavigationManager.NavigateTo($"/calendarevents/edit/{item.Event.Id}")'>
+                                            <i class="bi bi-pencil me-1"></i>Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary flex-grow-1" @onclick='() => NavigationManager.NavigateTo($"/calendarevents/manage-invites/{item.Event.Id}")'>
+                                            <i class="bi bi-people me-1"></i>Invites
+                                        </button>
+                                    </div>
+                                }
+
+                                @if (item.Role != "Host")
+                                {
+                                    <button class="btn btn-outline-danger btn-sm w-100 py-1 mt-1 d-flex align-items-center justify-content-center gap-2" @onclick="() => LeaveEvent(item.Event.Id)">
+                                        <i class="bi bi-box-arrow-right"></i> Leave Event
+                                    </button>
                                 }
                             </div>
                         </div>
@@ -136,109 +192,216 @@
                 }
                 else
                 {
-                    <div class="text-center py-4 text-muted">
-                        <p>No events found for this day.</p>
-                        <button class="btn btn-sm btn-outline-primary"
-                                @onclick='() => NavigationManager.NavigateTo($"/calendarevents/create?initialDate={selectedDate?.ToString("yyyy-MM-dd")}")'>
-                            Add one now
-                        </button>
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-calendar-x display-6"></i>
+                        <p class="mt-2">No events scheduled.</p>
                     </div>
                 }
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" @onclick="ClosePopup">Close</button>
             </div>
         </div>
     </div>
 }
 
 @code {
-    private Minister_Of_TimeContext context = default!;
+    [SupplyParameterFromQuery] public int? EventId { get; set; }
 
-    // CALENDAR DATA VARIABLES
-    private DateTime displayDate = DateTime.Today;
-    private List<DateTime> daysInMonth = new();
-    private List<CalendarEvent> userEvents = new();
+    private DateTime currentMonth = DateTime.Today;
+    private List<DateTime> calendarDays = new();
+    private string[] DaysOfWeek = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 
-    // CHANGED: CurrentUserId is now a string to match Identity GUID
-    private string currentUserId = "";
+    private Dictionary<string, bool> ActivityFilters = new() {
+        { "Work", true },
+        { "Meetings", true },
+        { "Hobby", true },
+        { "Life", true },
+        { "Family Time", true },
+        { "Others", true },
+        { "Invites", true }
+    };
 
-    // POPUP VARIABLES
-    private bool showPopup = false;
+    private string? currentUserId;
+    private List<DisplayItem> allEvents = new();
+    private List<DisplayItem> selectedDayEvents = new();
     private DateTime? selectedDate;
-    private List<CalendarEvent> selectedDayEvents = new();
+    private bool showPopup = false;
 
     protected override async Task OnInitializedAsync()
     {
-        context = DbFactory.CreateDbContext();
-
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        if (user.Identity?.IsAuthenticated == true)
+        currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        GenerateCalendar();
+        await LoadData();
+
+        if (EventId.HasValue)
         {
-            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
-
-            // CHANGED: Removed int.Parse. We assign the claim value directly to the string.
-            if (userIdClaim != null) currentUserId = userIdClaim.Value;
+            var eventItem = allEvents.FirstOrDefault(e => e.Event.Id == EventId.Value);
+            if (eventItem != null)
+            {
+                OpenPopup(eventItem.Event.StartDateTime.Date);
+            }
         }
-
-        await RefreshCalendarData();
     }
 
-    private async Task RefreshCalendarData()
+    private async Task LoadData()
     {
-        daysInMonth.Clear();
-        var firstDayOfMonth = new DateTime(displayDate.Year, displayDate.Month, 1);
-        var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+        using var context = DbFactory.CreateDbContext();
 
-        // 1. Build the calendar grid
-        int padding = (int)firstDayOfMonth.DayOfWeek;
-        for (int i = 0; i < padding; i++) daysInMonth.Add(DateTime.MinValue);
-        int daysCount = DateTime.DaysInMonth(displayDate.Year, displayDate.Month);
-        for (int i = 1; i <= daysCount; i++) daysInMonth.Add(new DateTime(displayDate.Year, displayDate.Month, i));
-
-        // 2. Fetch Events I am HOSTING
-        // CHANGED: Comparison now correctly handles string currentUserId
-        var hostedEvents = await context.CalendarEvent
-            .Where(e => e.HostUserId == currentUserId &&
-                        e.StartDateTime <= lastDayOfMonth &&
-                        e.EndDateTime >= firstDayOfMonth)
+        // 1. Get all participation records for the current user first
+        // Including EventRole is critical here so we can see "Editor"
+        var participation = await context.EventParticipant
+            .Where(p => p.UserId == currentUserId)
+            .Include(p => p.EventRole)
             .ToListAsync();
 
-        // 3. Fetch Events I was INVITED TO and ACCEPTED
-        // CHANGED: Comparison now correctly handles string currentUserId
-        var joinedEvents = await context.EventParticipant
-            .Include(p => p.CalendarEvent)
-            .Where(p => p.UserId == currentUserId &&
-                        p.ParticipationStatus == "Accepted" &&
-                        p.CalendarEvent.StartDateTime <= lastDayOfMonth &&
-                        p.CalendarEvent.EndDateTime >= firstDayOfMonth)
-            .Select(p => p.CalendarEvent)
+        var participantEventIds = participation.Select(p => p.CalendarEventId).ToList();
+
+        // 2. Fetch the events
+        var events = await context.CalendarEvent
+            .Include(e => e.UserActivity)
+            .Where(e => e.HostUserId == currentUserId || participantEventIds.Contains(e.Id))
             .ToListAsync();
 
-        // 4. Combine them into the main list
-        userEvents = hostedEvents.Concat(joinedEvents).Distinct().ToList();
+        // 3. Map to DisplayItem
+        allEvents = events.Select(e =>
+        {
+            var pRecord = participation.FirstOrDefault(p => p.CalendarEventId == e.Id);
+
+            // Determine Role: Host always wins, otherwise use the database RoleName
+            string assignedRole = "Viewer";
+            if (e.HostUserId == currentUserId)
+            {
+                assignedRole = "Host";
+            }
+            else if (pRecord?.EventRole != null)
+            {
+                assignedRole = pRecord.EventRole.RoleName; // Ensure this matches "Editor" exactly
+            }
+
+            return new DisplayItem
+            {
+                Event = e,
+                Status = pRecord?.ParticipationStatus ?? "Accepted",
+                Role = assignedRole,
+                ParticipantId = pRecord?.Id ?? 0
+            };
+        })
+        .Where(x => x.Status != "Left" && x.Status != "Rejected")
+        .ToList();
+
+        allEvents = events.Select(e =>
+        {
+            var pRecord = participation.FirstOrDefault(p => p.CalendarEventId == e.Id);
+            return new DisplayItem
+            {
+                Event = e,
+                Status = pRecord?.ParticipationStatus ?? "Accepted",
+                Role = e.HostUserId == currentUserId ? "Host" : pRecord?.EventRole?.RoleName ?? "Viewer",
+                ParticipantId = pRecord?.Id ?? 0
+            };
+        })
+        .Where(x => x.Status != "Left" && x.Status != "Rejected")
+        .ToList();
     }
 
-    private async Task ChangeMonth(int increment)
+    private void GenerateCalendar()
     {
-        displayDate = displayDate.AddMonths(increment);
-        await RefreshCalendarData();
+        calendarDays.Clear();
+        var start = new DateTime(currentMonth.Year, currentMonth.Month, 1);
+        int offset = (int)start.DayOfWeek;
+        var drawDate = start.AddDays(-offset);
+        for (int i = 0; i < 42; i++)
+        {
+            calendarDays.Add(drawDate.AddDays(i));
+        }
     }
 
-    private void OpenDayDetails(DateTime day)
+    private List<DisplayItem> GetEventsForDate(DateTime date)
     {
-        if (day == DateTime.MinValue) return;
-        selectedDate = day;
-
-        selectedDayEvents = userEvents
-            .Where(e => day.Date >= e.StartDateTime.Date && day.Date <= e.EndDateTime.Date)
-            .ToList();
-
-        showPopup = true;
+        return allEvents.Where(e => e.Event.StartDateTime.Date <= date.Date && e.Event.EndDateTime.Date >= date.Date)
+            .Where(e =>
+            {
+                if (e.Status == "Pending") return ActivityFilters["Invites"];
+                var type = e.Event.UserActivity?.ActivityType?.TypeName ?? "Others";
+                return ActivityFilters.ContainsKey(type) && ActivityFilters[type];
+            }).ToList();
     }
 
+    private void ToggleFilter(string key, object? val)
+    {
+        ActivityFilters[key] = (bool)(val ?? true);
+        StateHasChanged();
+    }
+
+    private async Task Respond(int id, bool accept)
+    {
+        using var context = DbFactory.CreateDbContext();
+        var p = await context.EventParticipant.FindAsync(id);
+        if (p != null)
+        {
+            p.ParticipationStatus = accept ? "Accepted" : "Rejected";
+            await context.SaveChangesAsync();
+            await LoadData();
+            if (selectedDate.HasValue) selectedDayEvents = GetEventsForDate(selectedDate.Value);
+        }
+    }
+
+    private async Task LeaveEvent(int eventId)
+    {
+        using var context = DbFactory.CreateDbContext();
+        var p = await context.EventParticipant.FirstOrDefaultAsync(x => x.CalendarEventId == eventId && x.UserId == currentUserId);
+        if (p != null)
+        {
+            p.ParticipationStatus = "Left";
+            await context.SaveChangesAsync();
+            await LoadData();
+            showPopup = false;
+        }
+    }
+
+    private string GetCssClass(DisplayItem item)
+    {
+        if (item.Status == "Pending") return "pending-invite";
+        var typeString = item.Event.UserActivity?.ActivityType?.TypeName ?? "Others";
+        return Sanitize(typeString);
+    }
+
+    private string Sanitize(string input) => input.ToLower().Replace(" ", "");
+
+    private string GetActivityTypeBadge(string? type)
+    {
+        return (type ?? "Others") switch
+        {
+            "Work" => "bg-primary text-white",
+            "Meetings" => "bg-info text-dark",
+            "Hobby" => "bg-success text-white",
+            "Life" => "bg-warning text-dark",
+            "Family Time" => "bg-danger text-white",
+            _ => "bg-secondary text-white"
+        };
+    }
+
+    private string GetStatusBadge(string? status)
+    {
+        return (status ?? "Upcoming") switch
+        {
+            "Ongoing" => "bg-success text-white",
+            "Concluded" => "bg-secondary text-white",
+            "On Hold" => "bg-warning text-dark",
+            _ => "bg-info text-dark"
+        };
+    }
+
+    private void OpenPopup(DateTime d) { selectedDate = d; selectedDayEvents = GetEventsForDate(d); showPopup = true; }
     private void ClosePopup() => showPopup = false;
+    private void PrevMonth() { currentMonth = currentMonth.AddMonths(-1); GenerateCalendar(); }
+    private void NextMonth() { currentMonth = currentMonth.AddMonths(1); GenerateCalendar(); }
+    private void GoToToday() { currentMonth = DateTime.Today; GenerateCalendar(); }
 
-    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+    public class DisplayItem
+    {
+        public CalendarEvent Event { get; set; } = default!;
+        public string Status { get; set; } = "";
+        public string Role { get; set; } = "";
+        public int ParticipantId { get; set; }
+    }
 }
