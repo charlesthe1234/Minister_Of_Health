@@ -13,6 +13,25 @@
     <div class="card shadow-lg p-4">
         <h2 class="mb-4">Schedule New Event</h2>
 
+        @* Event Type Selection *@
+        <div class="btn-group w-100 mb-4" role="group">
+            <button type="button" 
+                    class="btn @(eventCreationType == "Single" ? "btn-primary" : "btn-outline-primary")" 
+                    @onclick='() => SetEventCreationType("Single")'>
+                <i class="bi bi-calendar-event me-2"></i>Single Event
+            </button>
+            <button type="button" 
+                    class="btn @(eventCreationType == "Batch" ? "btn-primary" : "btn-outline-primary")" 
+                    @onclick='() => SetEventCreationType("Batch")'>
+                <i class="bi bi-calendar3-range me-2"></i>Batch Events (Working Hours)
+            </button>
+            <button type="button" 
+                    class="btn @(eventCreationType == "Recurring" ? "btn-primary" : "btn-outline-primary")" 
+                    @onclick='() => SetEventCreationType("Recurring")'>
+                <i class="bi bi-arrow-repeat me-2"></i>Recurring Event
+            </button>
+        </div>
+
         @if (!string.IsNullOrEmpty(errorMessage))
         {
             <div class="alert alert-danger shadow-sm">
@@ -35,96 +54,247 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label class="form-label fw-bold">Start Date & Time</label>
-                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="Input.StartDateTime" @bind-Value:after="SyncDates" class="form-control" />
-                    <ValidationMessage For="() => Input.StartDateTime" class="text-danger" />
+            @* SINGLE EVENT FIELDS *@
+            @if (eventCreationType == "Single")
+            {
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Start Date & Time</label>
+                        <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="Input.StartDateTime" @bind-Value:after="SyncDates" class="form-control" />
+                        <ValidationMessage For="() => Input.StartDateTime" class="text-danger" />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">End Date & Time</label>
+                        <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="Input.EndDateTime" class="form-control" />
+                        <ValidationMessage For="() => Input.EndDateTime" class="text-danger" />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Activity</label>
+                        <div class="d-flex gap-2">
+                            <InputSelect @bind-Value="Input.UserActivityId" @bind-Value:after="OnActivityChanged" class="form-select">
+                                <option value="0">-- Select Activity --</option>
+                                @foreach (var activity in Suggestions)
+                                {
+                                    <option value="@activity.Id">@activity.Name (@(activity.ActivityType ?? "Others"))</option>
+                                }
+                            </InputSelect>
+                            <a href="/useractivities/create" class="btn btn-outline-primary" title="New Activity">+</a>
+                        </div>
+                        <ValidationMessage For="() => Input.UserActivityId" class="text-danger" />
+                        @if (!string.IsNullOrEmpty(selectedActivityType))
+                        {
+                            <small class="text-muted d-block mt-1">
+                                Type: <span class="badge @GetActivityTypeBadge(selectedActivityType)">@selectedActivityType</span>
+                                @if (!string.IsNullOrEmpty(selectedCategory))
+                                {
+                                    <span class="ms-2">Category: <span class="badge bg-secondary">@selectedCategory</span></span>
+                                }
+                            </small>
+                        }
+                    </div>
                 </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label fw-bold">End Date & Time</label>
-                    <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="Input.EndDateTime" class="form-control" />
-                    <ValidationMessage For="() => Input.EndDateTime" class="text-danger" />
+            }
+
+            @* BATCH EVENT FIELDS (Working Hours) *@
+            @if (eventCreationType == "Batch")
+            {
+                <div class="alert alert-info mb-3 shadow-sm border-start border-4 border-info">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    <strong>Batch Mode:</strong> Best for repeating work shifts or consistent schedules.
                 </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label fw-bold">Activity</label>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Start Time (Daily)</label>
+                        @* Added :after to refresh calculation instantly *@
+                        <InputDate Type="InputDateType.Time" @bind-Value="Input.BatchStartTime"
+                                   @bind-Value:after="GenerateBatchPreview" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">End Time (Daily)</label>
+                        @* Added :after to refresh calculation instantly *@
+                        <InputDate Type="InputDateType.Time" @bind-Value="Input.BatchEndTime"
+                                   @bind-Value:after="GenerateBatchPreview" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Start Date</label>
+                        <InputDate Type="InputDateType.Date" @bind-Value="Input.BatchStartDate"
+                                   @bind-Value:after="GenerateBatchPreview" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Repeat Until</label>
+                        <InputDate Type="InputDateType.Date" @bind-Value="Input.BatchEndDate"
+                                   @bind-Value:after="GenerateBatchPreview" class="form-control" />
+                        <small class="text-muted d-block mt-1">Maximum 6 months from start date</small>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold d-block">Days of Week</label>
+                    <div class="d-flex flex-wrap gap-3 p-2 bg-light rounded border">
+                        @foreach (var day in daysOfWeek)
+                        {
+                            <div class="form-check form-check-inline">
+                                <input type="checkbox" class="form-check-input" id="day-@day"
+                                       checked="@Input.SelectedDays.Contains(day)"
+                                       @onchange="(e) => { ToggleDaySelection(day, e.Value); GenerateBatchPreview(); }" />
+                                <label class="form-check-label fw-medium" for="day-@day">@day.ToString().Substring(0, 3)</label>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Activity Type</label>
                     <div class="d-flex gap-2">
-                        <InputSelect @bind-Value="Input.UserActivityId" @bind-Value:after="OnActivityChanged" class="form-select">
+                        <InputSelect @bind-Value="Input.UserActivityId" @bind-Value:after="OnActivityChanged" class="form-select shadow-sm">
                             <option value="0">-- Select Activity --</option>
                             @foreach (var activity in Suggestions)
                             {
                                 <option value="@activity.Id">@activity.Name (@(activity.ActivityType ?? "Others"))</option>
                             }
                         </InputSelect>
-                        <a href="/useractivities/create" class="btn btn-outline-primary" title="New Activity">+</a>
+                        <a href="/useractivities/create" class="btn btn-primary" title="Create New Activity">
+                            <i class="bi bi-plus-lg"></i>
+                        </a>
                     </div>
-                    <ValidationMessage For="() => Input.UserActivityId" class="text-danger" />
-                    @if (!string.IsNullOrEmpty(selectedActivityType))
-                    {
-                        <small class="text-muted d-block mt-1">
-                            Type: <span class="badge @GetActivityTypeBadge(selectedActivityType)">@selectedActivityType</span>
-                            @if (!string.IsNullOrEmpty(selectedCategory))
+                </div>
+            }
+
+            @* RECURRING EVENT FIELDS *@
+            @if (eventCreationType == "Recurring")
+            {
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Recurring Events:</strong> Schedule events that repeat (e.g., Weekly team meeting, Annual birthday)
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">First Occurrence</label>
+                        <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="Input.StartDateTime" @bind-Value:after="SyncDates" class="form-control" />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">End Time</label>
+                        <InputDate Type="InputDateType.DateTimeLocal" @bind-Value="Input.EndDateTime" class="form-control" />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Recurrence Pattern</label>
+                        <InputSelect @bind-Value="Input.RecurrencePattern" class="form-select">
+                            <option value="Daily">Daily</option>
+                            <option value="Weekly">Weekly</option>
+                            <option value="Monthly">Monthly</option>
+                            <option value="Yearly">Yearly</option>
+                        </InputSelect>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Repeat Until</label>
+                        <InputDate Type="InputDateType.Date" @bind-Value="Input.RecurrenceEndDate" class="form-control" />
+                        <small class="text-muted">Leave empty for indefinite recurrence (max 2 years)</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Activity</label>
+                        <div class="d-flex gap-2">
+                            <InputSelect @bind-Value="Input.UserActivityId" @bind-Value:after="OnActivityChanged" class="form-select">
+                                <option value="0">-- Select Activity --</option>
+                                @foreach (var activity in Suggestions)
+                                {
+                                    <option value="@activity.Id">@activity.Name (@(activity.ActivityType ?? "Others"))</option>
+                                }
+                            </InputSelect>
+                            <a href="/useractivities/create" class="btn btn-outline-primary" title="New Activity">+</a>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @* Common fields for all event types *@
+            @if (eventCreationType == "Single" || eventCreationType == "Recurring")
+            {
+                <div class="mb-3">
+                    <label class="form-label fw-bold d-block">Invite Users</label>
+                    <div class="mb-2 p-2 border rounded bg-light" style="min-height: 40px;">
+                        @if (!inviteStatusList.Any())
+                        {
+                            <span class="text-muted small fst-italic">Enter emails separated by commas...</span>
+                        }
+                        @foreach (var status in inviteStatusList)
+                        {
+                            @if (status.IsDuplicate)
                             {
-                                <span class="ms-2">Category: <span class="badge bg-secondary">@selectedCategory</span></span>
+                                <span class="badge bg-danger me-1" title="Duplicate or Host Email">
+                                    @status.Email <i class="bi bi-exclamation-triangle-fill"></i>
+                                </span>
                             }
-                        </small>
-                    }
+                            else if (!status.IsValidRole)
+                            {
+                                <span class="badge bg-danger me-1" title="Invalid Role">
+                                    @status.Email (@status.RoleName) <i class="bi bi-x-circle-fill"></i>
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge @(status.IsRegistered ? "bg-success" : "bg-warning text-dark") me-1">
+                                    @status.Email (@status.RoleName) @(status.IsRegistered ? "✓" : "?")
+                                </span>
+                            }
+                        }
+                    </div>
+
+                    <InputTextArea @bind-Value="Input.InvitedEmails"
+                                   @oninput="OnInviteInputChanged"
+                                   class="form-control" rows="2"
+                                   placeholder="user@email.com, friend@email.com (Editor)" />
+                    <small class="text-muted">Valid roles: <strong>Editor</strong> or <strong>Viewer</strong> (default)</small>
                 </div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-bold d-block">Invite Users</label>
-
-                <div class="mb-2 p-2 border rounded bg-light" style="min-height: 40px;">
-                    @if (!inviteStatusList.Any())
-                    {
-                        <span class="text-muted small fst-italic">Enter emails separated by commas...</span>
-                    }
-                    @foreach (var status in inviteStatusList)
-                    {
-                        @if (status.IsDuplicate)
-                        {
-                            <span class="badge bg-danger me-1" title="Duplicate or Host Email">
-                                @status.Email <i class="bi bi-exclamation-triangle-fill"></i>
-                            </span>
-                        }
-                        else if (!status.IsValidRole)
-                        {
-                            <span class="badge bg-danger me-1" title="Invalid Role - Only 'Editor' or 'Viewer' allowed">
-                                @status.Email (@status.RoleName) <i class="bi bi-x-circle-fill"></i>
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="badge @(status.IsRegistered ? "bg-success" : "bg-warning text-dark") me-1">
-                                @status.Email (@status.RoleName) @(status.IsRegistered ? "✓" : "?")
-                            </span>
-                        }
-                    }
-                </div>
-
-                <InputTextArea @bind-Value="Input.InvitedEmails"
-                               @oninput="OnInviteInputChanged"
-                               class="form-control" rows="2"
-                               placeholder="user@email.com, friend@email.com (Editor)" />
-                <small class="text-muted">Separate multiple emails with commas. Valid roles: <strong>Editor</strong> or <strong>Viewer</strong> (default). Example: user@email.com (Editor)</small>
-            </div>
+            }
 
             <div class="mb-3">
                 <label class="form-label fw-bold">Description</label>
                 <InputTextArea @bind-Value="Input.Description" class="form-control" rows="3" placeholder="Add event details..." />
             </div>
 
+            @* Preview for batch/recurring events *@
+            @if ((eventCreationType == "Batch" || eventCreationType == "Recurring") && eventsPreview.Any())
+            {
+                <div class="alert alert-secondary">
+                    <strong>Preview:</strong> @eventsPreview.Count event(s) will be created
+                    <div class="mt-2 small">
+                        @foreach (var preview in eventsPreview.Take(5))
+                        {
+                            <div>• @preview</div>
+                        }
+                        @if (eventsPreview.Count > 5)
+                        {
+                            <div class="text-muted">... and @(eventsPreview.Count - 5) more</div>
+                        }
+                    </div>
+                </div>
+            }
+
             <div class="d-flex justify-content-end gap-2 mt-4">
                 <a href="/calendarevents" class="btn btn-light border">Cancel</a>
                 <button type="submit" class="btn btn-primary px-4" disabled="@isSubmitting">
-                    <i class="bi bi-calendar-check me-2"></i>Create Event
+                    @if (isSubmitting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-calendar-check me-2"></i>
+                    }
+                    Create @(eventCreationType == "Single" ? "Event" : eventCreationType == "Batch" ? $"{eventsPreview.Count} Events" : $"Recurring Event")
                 </button>
             </div>
         </EditForm>
     </div>
 </div>
-
 @code {
     private string? errorMessage;
     private bool isSubmitting = false;
@@ -132,7 +302,9 @@
     private List<EmailStatus> inviteStatusList = new();
     private string? selectedActivityType;
     private string? selectedCategory;
-
+    private string eventCreationType = "Single";
+    private List<string> eventsPreview = new();
+    private string[] daysOfWeek = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
     private class EmailStatus
     {
         public string Email { get; set; } = "";
@@ -147,7 +319,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Initialize with query parameter date or default to now
         if (!string.IsNullOrEmpty(Date) && DateTime.TryParse(Date, out var parsedDate))
         {
             Input.StartDateTime = parsedDate;
@@ -158,6 +329,12 @@
             Input.StartDateTime = DateTime.Now;
             Input.EndDateTime = DateTime.Now.AddHours(1);
         }
+
+        Input.BatchStartDate = DateTime.Today;
+        Input.BatchEndDate = DateTime.Today.AddMonths(1);
+        Input.BatchStartTime = DateTime.Today.AddHours(9);
+        Input.BatchEndTime = DateTime.Today.AddHours(17);
+        Input.RecurrenceEndDate = DateTime.Today.AddMonths(6);
 
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var userIdStr = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -170,6 +347,85 @@
                 .OrderBy(a => a.ActivityType)
                 .ThenBy(a => a.Name)
                 .ToListAsync();
+        }
+    }
+
+    private void SetEventCreationType(string type)
+    {
+        eventCreationType = type;
+        eventsPreview.Clear();
+        errorMessage = null;
+
+        if (type == "Batch")
+        {
+            GenerateBatchPreview();
+        }
+        else if (type == "Recurring")
+        {
+            GenerateRecurringPreview();
+        }
+    }
+
+    private void ToggleDaySelection(string day, object? value)
+    {
+        bool isChecked = (bool)(value ?? false);
+        if (isChecked && !Input.SelectedDays.Contains(day))
+        {
+            Input.SelectedDays.Add(day);
+        }
+        else if (!isChecked)
+        {
+            Input.SelectedDays.Remove(day);
+        }
+        GenerateBatchPreview();
+    }
+
+    private void GenerateBatchPreview()
+    {
+        eventsPreview.Clear();
+
+        if (!Input.SelectedDays.Any() || Input.BatchEndDate <= Input.BatchStartDate)
+            return;
+
+        var current = Input.BatchStartDate;
+        var maxDate = Input.BatchEndDate > Input.BatchStartDate.AddMonths(6)
+            ? Input.BatchStartDate.AddMonths(6)
+            : Input.BatchEndDate;
+
+        while (current <= maxDate && eventsPreview.Count < 100) // Limit to 100 events
+        {
+            if (Input.SelectedDays.Contains(current.DayOfWeek.ToString()))
+            {
+                eventsPreview.Add($"{current:ddd, MMM dd} - {Input.BatchStartTime:hh:mm tt} to {Input.BatchEndTime:hh:mm tt}");
+            }
+            current = current.AddDays(1);
+        }
+    }
+
+    private void GenerateRecurringPreview()
+    {
+        eventsPreview.Clear();
+
+        var maxDate = Input.RecurrenceEndDate == default || Input.RecurrenceEndDate > Input.StartDateTime.AddYears(2)
+            ? Input.StartDateTime.AddYears(2)
+            : Input.RecurrenceEndDate;
+
+        var current = Input.StartDateTime;
+        int count = 0;
+
+        while (current <= maxDate && count < 50) // Limit preview to 50 occurrences
+        {
+            eventsPreview.Add($"{current:ddd, MMM dd yyyy - hh:mm tt}");
+
+            current = Input.RecurrencePattern switch
+            {
+                "Daily" => current.AddDays(1),
+                "Weekly" => current.AddDays(7),
+                "Monthly" => current.AddMonths(1),
+                "Yearly" => current.AddYears(1),
+                _ => current.AddDays(1)
+            };
+            count++;
         }
     }
 
@@ -211,6 +467,11 @@
         {
             Input.EndDateTime = Input.StartDateTime.AddHours(1);
         }
+
+        if (eventCreationType == "Recurring")
+        {
+            GenerateRecurringPreview();
+        }
     }
 
     private async Task OnInviteInputChanged(ChangeEventArgs e)
@@ -230,7 +491,6 @@
             bool isHost = emailLower == hostEmail;
             bool duplicate = !seen.Add(emailLower) || isHost;
 
-            // Validate role - only Editor or Viewer allowed (case-insensitive)
             var normalizedRole = item.RoleName.Trim();
             bool isValidRole = normalizedRole.Equals("Editor", StringComparison.OrdinalIgnoreCase) ||
                               normalizedRole.Equals("Viewer", StringComparison.OrdinalIgnoreCase);
@@ -248,7 +508,6 @@
         }
         inviteStatusList = newList;
 
-        // Show appropriate error messages
         if (inviteStatusList.Any(x => x.IsDuplicate))
             errorMessage = "Please remove duplicates or your own email from the invite list.";
         else if (inviteStatusList.Any(x => !x.IsValidRole))
@@ -284,37 +543,27 @@
     {
         errorMessage = null;
 
-        // Validate activity selection
         if (Input.UserActivityId <= 0)
         {
             errorMessage = "Please select a valid activity.";
             return;
         }
 
-        // Validate dates - cannot create events in the past
-        if (Input.StartDateTime < DateTime.Now.AddMinutes(-5))
+        if (eventCreationType == "Single" && Input.StartDateTime < DateTime.Now.AddMinutes(-5))
         {
-            errorMessage = "Cannot create an event in the past. Please select a future date and time.";
+            errorMessage = "Cannot create an event in the past.";
             return;
         }
 
-        if (Input.EndDateTime <= Input.StartDateTime)
-        {
-            errorMessage = "End time must be after start time.";
-            return;
-        }
-
-        // Validate invites - check for duplicates
         if (inviteStatusList.Any(x => x.IsDuplicate))
         {
-            errorMessage = "Please fix duplicate invites or self-invites before saving.";
+            errorMessage = "Please fix duplicate invites.";
             return;
         }
 
-        // Validate invites - check for invalid roles
         if (inviteStatusList.Any(x => !x.IsValidRole))
         {
-            errorMessage = "Invalid roles detected. Only 'Editor' or 'Viewer' roles are allowed.";
+            errorMessage = "Invalid roles detected.";
             return;
         }
 
@@ -334,46 +583,17 @@
                 return;
             }
 
-            var activityType = selectedActivity.ActivityType ?? "Others";
-            if (!IsValidActivityType(activityType))
+            if (eventCreationType == "Single")
             {
-                errorMessage = $"Invalid activity type: {activityType}. Please update the activity to have a valid type.";
-                isSubmitting = false;
-                return;
+                await CreateSingleEvent(context, currentUserId);
             }
-
-            // Create the event with Status always set to "Upcoming"
-            var newEvent = new CalendarEvent
+            else if (eventCreationType == "Batch")
             {
-                EventName = Input.EventName,
-                Location = Input.Location,
-                StartDateTime = Input.StartDateTime,
-                EndDateTime = Input.EndDateTime,
-                HostUserId = currentUserId,
-                UserActivityId = Input.UserActivityId,
-                Status = "Upcoming", // Always set to Upcoming
-                Description = Input.Description,
-                DateCreated = DateTime.Now
-            };
-
-            context.CalendarEvent.Add(newEvent);
-
-            // Add invites
-            foreach (var invite in inviteStatusList)
+                await CreateBatchEvents(context, currentUserId);
+            }
+            else if (eventCreationType == "Recurring")
             {
-                var regUser = await context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == invite.Email.ToLower());
-
-                // Normalize role to proper case
-                var roleId = invite.RoleName.Equals("Editor", StringComparison.OrdinalIgnoreCase) ? 2 : 1;
-
-                context.EventParticipant.Add(new EventParticipant
-                {
-                    CalendarEvent = newEvent,
-                    InviteeEmail = invite.Email,
-                    UserId = regUser?.Id,
-                    EventRoleId = roleId,
-                    ParticipationStatus = "Pending"
-                });
+                await CreateRecurringEvents(context, currentUserId);
             }
 
             await context.SaveChangesAsync();
@@ -381,8 +601,118 @@
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error creating event: {ex.Message}";
+            errorMessage = $"Error: {ex.Message}";
             isSubmitting = false;
+        }
+    }
+
+    private async Task CreateSingleEvent(Minister_Of_Time.Data.Minister_Of_TimeContext context, string userId)
+    {
+        var newEvent = new CalendarEvent
+        {
+            EventName = Input.EventName,
+            Location = Input.Location,
+            StartDateTime = Input.StartDateTime,
+            EndDateTime = Input.EndDateTime,
+            HostUserId = userId,
+            UserActivityId = Input.UserActivityId,
+            Status = "Upcoming",
+            Description = Input.Description,
+            DateCreated = DateTime.Now
+        };
+
+        context.CalendarEvent.Add(newEvent);
+        await AddParticipants(context, newEvent);
+    }
+
+    private async Task CreateBatchEvents(Minister_Of_Time.Data.Minister_Of_TimeContext context, string userId)
+    {
+        var batchId = Guid.NewGuid();
+        var current = Input.BatchStartDate;
+        var maxDate = Input.BatchEndDate > Input.BatchStartDate.AddMonths(6)
+            ? Input.BatchStartDate.AddMonths(6)
+            : Input.BatchEndDate;
+
+        while (current <= maxDate)
+        {
+            if (Input.SelectedDays.Contains(current.DayOfWeek.ToString()))
+            {
+                var startDateTime = current.Date.Add(Input.BatchStartTime.TimeOfDay);
+                var endDateTime = current.Date.Add(Input.BatchEndTime.TimeOfDay);
+
+                var newEvent = new CalendarEvent
+                {
+                    EventName = Input.EventName,
+                    Location = Input.Location,
+                    StartDateTime = startDateTime,
+                    EndDateTime = endDateTime,
+                    HostUserId = userId,
+                    UserActivityId = Input.UserActivityId,
+                    Status = "Upcoming",
+                    Description = Input.Description + $"\n[Batch ID: {batchId}]",
+                    DateCreated = DateTime.Now
+                };
+
+                context.CalendarEvent.Add(newEvent);
+            }
+            current = current.AddDays(1);
+        }
+    }
+
+    private async Task CreateRecurringEvents(Minister_Of_Time.Data.Minister_Of_TimeContext context, string userId)
+    {
+        var batchId = Guid.NewGuid();
+        var maxDate = Input.RecurrenceEndDate == default || Input.RecurrenceEndDate > Input.StartDateTime.AddYears(2)
+            ? Input.StartDateTime.AddYears(2)
+            : Input.RecurrenceEndDate;
+
+        var current = Input.StartDateTime;
+        var duration = Input.EndDateTime - Input.StartDateTime;
+
+        while (current <= maxDate)
+        {
+            var newEvent = new CalendarEvent
+            {
+                EventName = Input.EventName,
+                Location = Input.Location,
+                StartDateTime = current,
+                EndDateTime = current.Add(duration),
+                HostUserId = userId,
+                UserActivityId = Input.UserActivityId,
+                Status = "Upcoming",
+                Description = Input.Description + $"\n[Recurring ID: {batchId}]",
+                DateCreated = DateTime.Now
+            };
+
+            context.CalendarEvent.Add(newEvent);
+            await AddParticipants(context, newEvent);
+
+            current = Input.RecurrencePattern switch
+            {
+                "Daily" => current.AddDays(1),
+                "Weekly" => current.AddDays(7),
+                "Monthly" => current.AddMonths(1),
+                "Yearly" => current.AddYears(1),
+                _ => current.AddDays(1)
+            };
+        }
+    }
+
+    private async Task AddParticipants(Minister_Of_Time.Data.Minister_Of_TimeContext context, CalendarEvent calendarEvent)
+    {
+        foreach (var invite in inviteStatusList)
+        {
+            var regUser = await context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == invite.Email.ToLower());
+            var roleId = invite.RoleName.Equals("Editor", StringComparison.OrdinalIgnoreCase) ? 2 : 1;
+
+            context.EventParticipant.Add(new EventParticipant
+            {
+                CalendarEvent = calendarEvent,
+                InviteeEmail = invite.Email,
+                UserId = regUser?.Id,
+                EventRoleId = roleId,
+                ParticipationStatus = "Pending"
+            });
         }
     }
 
@@ -394,24 +724,39 @@
 
     private sealed class EventInputModel
     {
-        [Required(ErrorMessage = "Event name is required")]
-        [StringLength(100, ErrorMessage = "Event name cannot exceed 100 characters")]
-        public string EventName { get; set; } = "";
-
-        [Required(ErrorMessage = "Location is required")]
-        public string Location { get; set; } = "";
-
-        [Range(1, int.MaxValue, ErrorMessage = "Please select an activity")]
-        public int UserActivityId { get; set; }
-
-        [Required]
-        public DateTime StartDateTime { get; set; }
-
-        [Required]
-        public DateTime EndDateTime { get; set; }
-
+        [Required] public string EventName { get; set; } = "";
+        [Required] public string Location { get; set; } = "";
+        [Range(1, int.MaxValue)] public int UserActivityId { get; set; }
+        [Required] public DateTime StartDateTime { get; set; }
+        [Required] public DateTime EndDateTime { get; set; }
         public string InvitedEmails { get; set; } = "";
-
         public string Description { get; set; } = "";
+
+        // Batch fields
+        public DateTime BatchStartDate { get; set; }
+        public DateTime BatchEndDate { get; set; }
+        public DateTime BatchStartTime { get; set; }
+        public DateTime BatchEndTime { get; set; }
+        public List<string> SelectedDays { get; set; } = new();
+
+        // Recurring fields
+        public string RecurrencePattern { get; set; } = "Weekly";
+        public DateTime RecurrenceEndDate { get; set; }
     }
 }
+@* 
+## Key Features Implemented:
+
+### Edit Page:
+1. ✅ **Auto-Status Detection** - Status calculated from changes, not user-selected
+2. ✅ **Change Tracking** - Detects schedule, duration, and location changes
+3. ✅ **Participant Notifications** - Sends detailed change summaries
+4. ✅ **Optional Reason Field** - Users can explain why changes were made
+5. ✅ **Status Types**: Upcoming, Ongoing, Postponed, Brought Forward, On Hold, Cancelled
+
+### Create Page:
+1. ✅ **3 Mutually Exclusive Modes** - Single, Batch, Recurring
+2. ✅ **Batch Events** - Working hours with day selection, 6-month limit
+3. ✅ **Recurring Events** - Daily/Weekly/Monthly/Yearly patterns
+4. ✅ **Event Preview** - Shows what will be created
+5. ✅ **Batch ID Tracking** - Groups related events with GUID *@
