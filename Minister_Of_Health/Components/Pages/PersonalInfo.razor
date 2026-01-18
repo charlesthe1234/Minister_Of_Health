@@ -41,9 +41,12 @@
                     <div class="dial">
                         <div class="needle @gauge.Item3" style="transform: rotate(@(NeedleAngle(gauge.Item2))deg)"></div>
                     </div>
-                    @* Bracketed status text directly beside percentage *@
+                    @* Bracketed status text with dynamic color *@
                     <div class="gauge-label">
-                        @gauge.Item2% (@(gauge.Item1 == "STRESS" ? GetStressStatus(gauge.Item2) : GetHealthStatus(gauge.Item2)))
+                        @gauge.Item2% 
+                        (<span style="color: @GetStatusColor(gauge.Item2, gauge.Item1 == "STRESS")">
+                            @(gauge.Item1 == "STRESS" ? GetStressStatus(gauge.Item2) : GetHealthStatus(gauge.Item2))
+                        </span>)
                     </div>
                 </div>
             }
@@ -88,11 +91,11 @@
                 {
                     double hours = (ev.EndDateTime - ev.StartDateTime).TotalHours;
 
-                    // Stress Logic: (Work hours * Weight) - (Recovery hours * Weight)
+                    // Stress calculation logic
                     double weight = ev.UserActivity?.ActivityType?.StressLevel ?? 0;
                     totalThreeDayScore += (hours * weight);
 
-                    // Health Logic: Total hours categorized as 'Exercise'
+                    // Health logic: Sum hours where type is 'Exercise'
                     if (ev.UserActivity?.ActivityType?.TypeName == "Exercise")
                     {
                         totalExerciseHours += hours;
@@ -100,12 +103,34 @@
                 }
 
                 // Stress Threshold: 16hrs work avg/day = 100% capacity limit
-                double maxThreeDayScore = 16 * 0.65 * 3;
+                double maxThreeDayScore = 31.2; // 16 * 0.65 * 3
                 StressLevel = (int)Math.Clamp((totalThreeDayScore / maxThreeDayScore) * 100, 0, 100);
 
                 // Health Threshold: 7hrs avg/day over 3 days (21 total) = 100% recovery
                 double targetHealthHours = 21;
                 HealthLevel = (int)Math.Clamp((totalExerciseHours / targetHealthHours) * 100, 0, 100);
+            }
+        }
+    }
+
+    // Simplest way to get dynamic color
+    private string GetStatusColor(int level, bool isStress)
+    {
+        if (isStress)
+        {
+            if (level <= 30) return "#2e8b57"; // Green
+            if (level <= 50) return "#daa520"; // Gold
+            if (level <= 80) return "#ff8c00"; // Orange
+            return "#b03060"; // Red
+        }
+        else
+        {
+            {
+                if (level <= 10) return "#FF0000"; // Red
+                if (level <= 30) return "#FFA500"; // Orange
+                if (level <= 50) return "#FFFF00"; // Yellow
+                if (level <= 70) return "#90EE90"; // LightGreen
+                return "#006400"; // DarkGreen
             }
         }
     }
