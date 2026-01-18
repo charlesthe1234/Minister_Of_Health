@@ -39,11 +39,11 @@
                         {
                             @foreach (var ev in todaysEvents)
                             {
-                                <div class="agenda-item @ev.Event.UserActivity?.ActivityType?.ToLower().Replace(" ", "")">
+                                <div class="agenda-item @ev.Event.UserActivity?.ActivityType?.TypeName.ToLower().Replace(" ", "")">
                                     <div class="time-slot">@ev.Event.StartDateTime.ToString("h:mm tt")</div>
                                     <div class="event-info">
                                         <div class="event-name">@ev.Event.EventName</div>
-                                        <div class="event-meta">@ev.Role • @(ev.Event.UserActivity?.ActivityType ?? "Other")</div>
+                                        <div class="event-meta">@ev.Role • @(ev.Event.UserActivity?.ActivityType?.TypeName ?? "Other")</div>
                                     </div>
                                 </div>
                             }

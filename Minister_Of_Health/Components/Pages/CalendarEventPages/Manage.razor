@@ -61,8 +61,8 @@
                         <tr>
                             <td>
                                 <div class="fw-bold">@item.Event.EventName</div>
-                                <span class="badge rounded-pill @GetActivityTypeBadge(item.Event.UserActivity?.ActivityType)">
-                                    @(item.Event.UserActivity?.ActivityType ?? "Others")
+                                <span class="badge rounded-pill @GetActivityTypeBadge(item.Event.UserActivity?.ActivityType.TypeName)">
+                                    @(item.Event.UserActivity?.ActivityType.TypeName ?? "Others")
                                 </span>
                             </td>
                             <td>@(item.Event.HostUser?.Email ?? "System")</td>
@@ -138,8 +138,8 @@
                             </span>
                         </div>
                     </div>
-                    <span class="badge rounded-pill @GetActivityTypeBadge(item.Event.UserActivity?.ActivityType)">
-                        @(item.Event.UserActivity?.ActivityType ?? "Others")
+                    <span class="badge rounded-pill @GetActivityTypeBadge(item.Event.UserActivity?.ActivityType.TypeName)">
+                        @(item.Event.UserActivity?.ActivityType.TypeName ?? "Others")
                     </span>
                 </div>
 
@@ -277,7 +277,7 @@
     }
 
     private string GetCssClass(EventWrapper item) =>
-        (item.Event.UserActivity?.ActivityType ?? "Others").ToLower().Replace(" ", "");
+        (item.Event.UserActivity?.ActivityType.TypeName ?? "Others").ToLower().Replace(" ", "");
 
     private string GetActivityTypeBadge(string? type) => type?.ToLower().Replace(" ", "") switch
     {

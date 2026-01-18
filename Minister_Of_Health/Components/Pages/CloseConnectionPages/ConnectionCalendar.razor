@@ -155,7 +155,7 @@
                         e.EndDateTime.Date >= date.Date)
             .Where(e =>
             {
-                var type = e.UserActivity?.ActivityType ?? "Others";
+                var type = e.UserActivity?.ActivityType.TypeName ?? "Others";
                 return ActivityFilters.ContainsKey(type) && ActivityFilters[type];
             })
             .ToList();
@@ -172,7 +172,7 @@
     private void GoToToday() { currentMonth = DateTime.Today; GenerateCalendar(); }
 
     private string GetCssClass(CalendarEvent e)
-        => Sanitize(e.UserActivity?.ActivityType ?? "Others");
+        => Sanitize(e.UserActivity?.ActivityType.TypeName ?? "Others");
 
     private static string Sanitize(string s)
         => s.ToLower().Replace(" ", "");
