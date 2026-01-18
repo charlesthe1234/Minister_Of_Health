@@ -1,30 +1,101 @@
 ﻿@page "/work"
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@using Minister_Of_Time.Domain
+@rendermode InteractiveServer
+
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthStateProvider
+@inject UserManager<User> UserManager
+@inject IDbContextFactory<Minister_Of_TimeContext> DbFactory
+
 <PageTitle>Work Page</PageTitle>
 
 <div class="work-background">
-
     <div class="work-header-block">
-        <img src="/images/BigLogo.png" class="work-logo-image" alt="Minister of Time Logo" />
+        <img src="/images/BigLogo.png" class="work-logo-image" alt="Logo" />
         <h1 class="work-main-title">Dear @DisplayName</h1>
-        <blockquote class="work-quote">"Plan for what is difficult while it is easy, do what is great while it is small."</blockquote>
+        <blockquote class="work-quote">"Plan for what is difficult while it is easy..."</blockquote>
     </div>
 
-    <a href="/vision" class="work-link vision-link">Vision (Calender)</a>
-    <a href="/statistics" class="work-link statistics-link">Statistics</a>
-    <a href="/matrix" class="work-link matrix-link">Urgent Importance Matrix</a>
+    <div style="width: 85%; margin: 2rem auto; background: rgba(0,0,0,0.5); padding: 20px; border-radius: 15px;">
+        <h2 style="color: white; text-align: center;">Recent days Record</h2>
+        <canvas id="workLineChart"></canvas>
+    </div>
 
+    <div class="links-container">
+        <a href="/vision" class="work-link">Vision (Calendar)</a>
+        <a href="/statistics" class="work-link">Statistics</a>
+        <a href="/matrix" class="work-link">Urgent Importance Matrix</a>
+    </div>
 </div>
 
-
-@code
-{
+@code {
     private string DisplayName = "Guest";
 
     protected override async Task OnInitializedAsync()
     {
-        var authstate = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authstate.User;
-            DisplayName = authstate.User.FindFirst("FullName")?.Value;
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userClaims = authState.User;
+        if (userClaims.Identity?.IsAuthenticated == true)
+        {
+            using var context = DbFactory.CreateDbContext();
+            var userIdString = UserManager.GetUserId(userClaims);
+            var dbUser = await context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userIdString);
+            if (dbUser != null) DisplayName = dbUser.Name ?? "Guest";
+        }
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated == true)
+            {
+                var userIdString = UserManager.GetUserId(authState.User);
+                using var context = DbFactory.CreateDbContext();
+
+                // Define the 30-day start point
+                var startDate = DateTime.Today.AddDays(-29);
+
+                // Fetch events and include UserActivity to access the Category column
+                var events = await context.CalendarEvent
+                    .Include(e => e.UserActivity)
+                    .ThenInclude(ua => ua.ActivityType)
+                    .Where(e => e.HostUserId.ToString() == userIdString && e.StartDateTime >= startDate)
+                    .ToListAsync();
+
+                if (events.Any())
+                {
+                    // 1. Labels for last 30 days
+                    var lastThirtyDays = Enumerable.Range(0, 30)
+                        .Select(i => startDate.AddDays(i).ToString("MM/dd"))
+                        .ToList();
+
+                    // 2. Identify unique activity types but FILTER for "Work" category only
+                    var activityTypes = events
+                        .Where(e => e.UserActivity?.Category == "Work") // This removes Basket Ball, Workout, etc.
+                        .Select(e => e.UserActivity?.ActivityType?.TypeName ?? "Other")
+                        .Distinct().ToList();
+
+                    // 3. Create Multi-series data
+                    var multiLineData = activityTypes.Select(type => new
+                    {
+                        Label = type,
+                        Data = lastThirtyDays.Select(day =>
+                            events.Where(e => (e.UserActivity?.ActivityType?.TypeName ?? "Other") == type
+                                           && e.UserActivity?.Category == "Work" // Ensure we only sum Work data
+                                           && e.StartDateTime.ToString("MM/dd") == day)
+                                  .Sum(e => (e.EndDateTime - e.StartDateTime).TotalHours)
+                        ).ToList()
+                    }).ToList();
+
+                    // 4. Send to JS
+                    await JSRuntime.InvokeVoidAsync("renderWorkChart", lastThirtyDays, multiLineData);
+                }
+            }
+        }
+    }
 }

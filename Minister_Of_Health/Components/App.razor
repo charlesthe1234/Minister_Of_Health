@@ -1,6 +1,5 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,20 +10,50 @@
     <link rel="icon" type="image/png" href="/images/SmallLogo.png" />
     <HeadOutlet />
 </head>
-
 <body>
     <Routes />
     <script src="_framework/blazor.web.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-        // Catch all 4 arguments: Pie labels, Pie values, Line labels, Line values
+        // --- WORK PAGE CHART ---
+        window.renderWorkChart = (lineLabels, lineValues) => {
+            const ctx = document.getElementById('workLineChart');
+            if (ctx) {
+                try {
+                    let existingLine = Chart.getChart("workLineChart");
+                    if (existingLine) existingLine.destroy();
+
+                    const workColors = ['#00d2ff', '#4BC0C0', '#36A2EB', '#9966FF'];
+
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: lineLabels,
+                            datasets: lineValues.map((item, index) => ({
+                                label: item.label,
+                                data: item.data,
+                                borderColor: workColors[index % workColors.length],
+                                backgroundColor: 'transparent',
+                                tension: 0.4,
+                                fill: false
+                            }))
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { labels: { color: 'white' } } },
+                            scales: {
+                                y: { beginAtZero: true, ticks: { color: 'white', callback: v => v + 'h' } },
+                                x: { ticks: { color: 'white' } }
+                            }
+                        }
+                    });
+                } catch (err) { console.error("Work Chart Error:", err); }
+            }
+        };
+
+        // --- LIFE PAGE CHARTS ---
         window.renderLifeCharts = (pieLabels, pieValues, lineLabels, lineValues) => {
-
-            console.log("Pie Data:", pieLabels, pieValues);
-            console.log("Line Data:", lineLabels, lineValues);
-
-            // --- LINE CHART ---
             const lineCtx = document.getElementById('lifeLineChart');
             if (lineCtx) {
                 try {
@@ -36,7 +65,7 @@
                     new Chart(lineCtx, {
                         type: 'line',
                         data: {
-                            labels: lineLabels, // Now correctly linked to the 3rd argument
+                            labels: lineLabels,
                             datasets: lineValues.map((item, index) => ({
                                 label: item.label,
                                 data: item.data,
@@ -48,24 +77,16 @@
                         },
                         options: {
                             responsive: true,
-                            plugins: {
-                                legend: { labels: { color: 'white' } }
-                            },
+                            plugins: { legend: { labels: { color: 'white' } } },
                             scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: { color: 'white', callback: v => v + 'h' }
-                                },
+                                y: { beginAtZero: true, ticks: { color: 'white', callback: v => v + 'h' } },
                                 x: { ticks: { color: 'white' } }
                             }
                         }
                     });
-                } catch (err) {
-                    console.error("Line Chart Error:", err);
-                }
+                } catch (err) { console.error("Line Chart Error:", err); }
             }
 
-            // --- PIE CHART ---
             const pieCtx = document.getElementById('lifePieChart');
             if (pieCtx) {
                 try {
@@ -75,9 +96,9 @@
                     new Chart(pieCtx, {
                         type: 'pie',
                         data: {
-                            labels: pieLabels, // Linked to 1st argument
+                            labels: pieLabels,
                             datasets: [{
-                                data: pieValues, // Linked to 2nd argument
+                                data: pieValues,
                                 backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40']
                             }]
                         },
@@ -91,21 +112,16 @@
                                             let totalMinutes = context.parsed;
                                             let hours = Math.floor(totalMinutes / 60);
                                             let mins = Math.round(totalMinutes % 60);
-                                            return context.label + ': ' +
-                                                   hours.toString().padStart(2, '0') + 'h ' +
-                                                   mins.toString().padStart(2, '0') + 'm';
+                                            return context.label + ': ' + hours.toString().padStart(2, '0') + 'h ' + mins.toString().padStart(2, '0') + 'm';
                                         }
                                     }
                                 }
                             }
                         }
                     });
-                } catch (err) {
-                    console.error("Pie Chart Error:", err);
-                }
+                } catch (err) { console.error("Pie Chart Error:", err); }
             }
         };
     </script>
 </body>
-
 </html>
