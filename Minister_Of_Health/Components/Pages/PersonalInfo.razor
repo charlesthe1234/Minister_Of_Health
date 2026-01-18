@@ -77,12 +77,15 @@
 {
     <div class="stress-alert-top">
         <div class="character-container">
-            @* Replace 'figure.png' with your actual file name *@
             <img src="/images/SmallLogo.png" class="character-img" alt="Warning Character" />
             <div class="speech-bubble">
                 <div class="bubble-content">
                     <strong>@DisplayName, your majesty</strong>
-                    <p>Your currrent stress level has reached @StressLevel%. It is not good for your health, how about take some time to enjoy{},you haven't done that for{}'.</p>
+                    <p>
+                        Your current stress level has reached @StressLevel%. It is not good for your health,
+                        how about take some time to enjoy <strong>@RandomHobbyName</strong>?
+                        You haven't done that for <strong>@FormattedRecentRecord</strong>.
+                    </p>
                 </div>
                 <button type="button" class="btn-close-custom" @onclick="() => showStressWarning = false">×</button>
             </div>
@@ -98,6 +101,10 @@
     private bool isEditing;
     private bool showStressWarning = false;
 
+    // New variables for the speech bubble
+    private string RandomHobbyName = "";
+    private string FormattedRecentRecord = "";
+
     [Inject] private IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory { get; set; }
     [Inject] private UserManager<User> UserManager { get; set; }
 
@@ -108,7 +115,10 @@
 
         if (userClaims.Identity?.IsAuthenticated == true)
         {
-            // 1. Fetch User Data for the Profile Card
+            var userIdString = UserManager.GetUserId(userClaims);
+            using var context = DbFactory.CreateDbContext();
+
+            // 1. Fetch User Data
             var user = await UserManager.GetUserAsync(userClaims);
             if (user != null)
             {
@@ -119,11 +129,8 @@
                 Birthday = user.Birthday;
             }
 
-            // 2. Fetch Event Data for Gauges
-            using var context = DbFactory.CreateDbContext();
-            var userIdString = UserManager.GetUserId(userClaims);
+            // 2. Stress & Health Calculation (Your existing code)
             var threeDaysAgo = DateTime.Today.AddDays(-2);
-
             var recentEvents = await context.CalendarEvent
                 .Include(e => e.UserActivity).ThenInclude(ua => ua.ActivityType)
                 .Where(e => e.HostUserId.ToString() == userIdString && e.StartDateTime >= threeDaysAgo)
@@ -139,22 +146,48 @@
                     double hours = (ev.EndDateTime - ev.StartDateTime).TotalHours;
                     double weight = ev.UserActivity?.ActivityType?.StressLevel ?? 0;
                     totalThreeDayScore += (hours * weight);
-
-                    if (ev.UserActivity?.ActivityType?.TypeName == "Exercise")
-                    {
-                        totalExerciseHours += hours;
-                    }
+                    if (ev.UserActivity?.ActivityType?.TypeName == "Exercise") totalExerciseHours += hours;
                 }
 
-                double maxThreeDayScore = 31.2;
-                StressLevel = (int)Math.Clamp((totalThreeDayScore / maxThreeDayScore) * 100, 0, 100);
+                StressLevel = (int)Math.Clamp((totalThreeDayScore / 31.2) * 100, 0, 100);
+                HealthLevel = (int)Math.Clamp((totalExerciseHours / 21) * 100, 0, 100);
 
-                double targetHealthHours = 21;
-                HealthLevel = (int)Math.Clamp((totalExerciseHours / targetHealthHours) * 100, 0, 100);
-
+                // 3. Logic for the Random Hobby Suggestion
                 if (StressLevel > 50)
                 {
-                    showStressWarning = true;
+                    var twoYearsAgo = DateTime.Now.AddYears(-2);
+                    var oneMonthAgo = DateTime.Now.AddMonths(-1);
+
+                    // Filter: Must be 'Hobby', within 1 month to 2 years, and belong to current user
+                    var potentialHobbies = await context.UserActivity
+                        .Include(a => a.ActivityType)
+                        .Where(a => a.UserId == userIdString &&
+                                    a.ActivityType.TypeName == "Hobby" &&
+                                    a.RecentRecord >= twoYearsAgo &&
+                                    a.RecentRecord <= oneMonthAgo)
+                        .ToListAsync();
+
+                    if (potentialHobbies.Any())
+                    {
+                        var random = new Random();
+                        var selectedHobby = potentialHobbies[random.Next(potentialHobbies.Count)];
+
+                        RandomHobbyName = selectedHobby.Name;
+
+                        // Format the time since last done (e.g., "4 months")
+                        var timeSpan = DateTime.Now - selectedHobby.RecentRecord;
+                        int months = (int)(timeSpan.TotalDays / 30.44); // Average month length
+                        FormattedRecentRecord = months >= 12 ? $"{(months / 12)} year(s)" : $"{months} month(s)";
+
+                        showStressWarning = true;
+                    }
+                    else
+                    {
+                        // Fallback if no hobby fits the 1mo-2yr criteria
+                        RandomHobbyName = "something you love";
+                        FormattedRecentRecord = "quite a while";
+                        showStressWarning = true;
+                    }
                 }
             }
         }
