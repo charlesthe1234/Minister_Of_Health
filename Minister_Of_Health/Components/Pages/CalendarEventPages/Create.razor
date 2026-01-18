@@ -586,6 +586,8 @@
                 return;
             }
 
+            selectedActivity.RecentRecord = DateTime.Now;
+
             if (eventCreationType == "Single")
             {
                 await CreateSingleEvent(context, currentUserId);
