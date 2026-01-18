@@ -1,4 +1,7 @@
 ﻿@page "/account/personalInfo"
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@inject AuthenticationStateProvider AuthStateProvider
 
 <div class="book">
     <div class="bg-image"></div>
@@ -13,7 +16,6 @@
                 <div class="info-list">
                     <p><strong>Phone:</strong> @PhoneNumber</p>
                     <p><strong>Email:</strong> @Email</p>
-                    <p><strong>Birthday:</strong> @Birthday.ToShortDateString()</p>
                 </div>
                 <button class="btn-edit" @onclick="() => isEditing = true">EDIT</button>
             }
@@ -39,7 +41,10 @@
                     <div class="dial">
                         <div class="needle @gauge.Item3" style="transform: rotate(@(NeedleAngle(gauge.Item2))deg)"></div>
                     </div>
-                    <div class="gauge-label">@gauge.Item2%</div>
+                    @* Bracketed status text directly beside percentage *@
+                    <div class="gauge-label">
+                        @gauge.Item2% (@(gauge.Item1 == "STRESS" ? GetStressStatus(gauge.Item2) : GetHealthStatus(gauge.Item2)))
+                    </div>
                 </div>
             }
         </div>
@@ -47,25 +52,81 @@
 </div>
 
 @code {
+    private string DisplayName = "Unknown", PhoneNumber = "", Email = "";
+    private int StressLevel = 0;
+    private int HealthLevel = 0;
     private bool isEditing;
-    private string DisplayName = "Unknown", PhoneNumber = "", Email = "user@local.com";
-    private DateTime Birthday = new(1998, 2, 23);
-    private int StressLevel = 80, HealthLevel = 80;
+
+    [Inject] private IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory { get; set; }
+    [Inject] private UserManager<User> UserManager { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = auth.User;
-        if (user.Identity?.IsAuthenticated ?? false)
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userClaims = authState.User;
+
+        if (userClaims.Identity?.IsAuthenticated == true)
         {
-            DisplayName = auth.User.FindFirst("FullName")?.Value;
-            Email = user.FindFirst(c => c.Type.Contains("email"))?.Value ?? Email;
+            using var context = DbFactory.CreateDbContext();
+            var userIdString = UserManager.GetUserId(userClaims);
+            DisplayName = userClaims.FindFirst("FullName")?.Value ?? "User";
+            Email = userClaims.Identity.Name ?? "";
+
+            var threeDaysAgo = DateTime.Today.AddDays(-2);
+
+            var recentEvents = await context.CalendarEvent
+                .Include(e => e.UserActivity).ThenInclude(ua => ua.ActivityType)
+                .Where(e => e.HostUserId.ToString() == userIdString && e.StartDateTime >= threeDaysAgo)
+                .ToListAsync();
+
+            if (recentEvents.Any())
+            {
+                double totalThreeDayScore = 0;
+                double totalExerciseHours = 0;
+
+                foreach (var ev in recentEvents)
+                {
+                    double hours = (ev.EndDateTime - ev.StartDateTime).TotalHours;
+
+                    // Stress Logic: (Work hours * Weight) - (Recovery hours * Weight)
+                    double weight = ev.UserActivity?.ActivityType?.StressLevel ?? 0;
+                    totalThreeDayScore += (hours * weight);
+
+                    // Health Logic: Total hours categorized as 'Exercise'
+                    if (ev.UserActivity?.ActivityType?.TypeName == "Exercise")
+                    {
+                        totalExerciseHours += hours;
+                    }
+                }
+
+                // Stress Threshold: 16hrs work avg/day = 100% capacity limit
+                double maxThreeDayScore = 16 * 0.65 * 3;
+                StressLevel = (int)Math.Clamp((totalThreeDayScore / maxThreeDayScore) * 100, 0, 100);
+
+                // Health Threshold: 7hrs avg/day over 3 days (21 total) = 100% recovery
+                double targetHealthHours = 21;
+                HealthLevel = (int)Math.Clamp((totalExerciseHours / targetHealthHours) * 100, 0, 100);
+            }
         }
     }
 
+    private string GetStressStatus(int level) => level switch
+    {
+        <= 30 => "Comfort",
+        <= 50 => "Stretch",
+        <= 80 => "Overly Stressed",
+        _ => "Burnout"
+    };
+
+    private string GetHealthStatus(int level) => level switch
+    {
+        <= 10 => "Poor",
+        <= 30 => "Try More",
+        <= 50 => "Standard",
+        <= 70 => "Active",
+        _ => "Excellent"
+    };
+
     void Save() => isEditing = false;
     double NeedleAngle(int val) => (val * 1.8) - 90;
-
 }
-}
-

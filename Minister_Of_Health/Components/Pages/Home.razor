@@ -11,7 +11,7 @@
     <div class="content-container">
         <AuthorizeView>
             <Authorized>
-                <h1 class="user-name">Dear @(displayName ?? "...")</h1>
+                <h1 class="user-name">Dear Mr. @(displayName ?? "...")</h1>
             </Authorized>
             <NotAuthorized>
                 @* if user didn't login, no name will be displayey(However if the app work normally the user can only be in this page when login in, thus this fuction is only for testing) *@
