@@ -75,7 +75,7 @@
                                 <option value="0">-- Select Activity --</option>
                                 @foreach (var activity in Suggestions)
                                 {
-                                    <option value="@activity.Id">@activity.Name (@(activity.ActivityType ?? "Others"))</option>
+                                    <option value="@activity.Id">@activity.Name (@(activity.ActivityType.TypeName ?? "Others"))</option>
                                 }
                             </InputSelect>
                             <a href="/useractivities/create" class="btn btn-outline-primary" title="New Activity">+</a>
@@ -206,7 +206,7 @@
                                 <option value="0">-- Select Activity --</option>
                                 @foreach (var activity in Suggestions)
                                 {
-                                    <option value="@activity.Id">@activity.Name (@(activity.ActivityType ?? "Others"))</option>
+                                    <option value="@activity.Id">@activity.Name (@(activity.ActivityType.TypeName ?? "Others"))</option>
                                 }
                             </InputSelect>
                             <a href="/useractivities/create" class="btn btn-outline-primary" title="New Activity">+</a>
@@ -439,7 +439,7 @@
             var activity = Suggestions.FirstOrDefault(a => a.Id == Input.UserActivityId);
             if (activity != null)
             {
-                selectedActivityType = activity.ActivityType ?? "Others";
+                selectedActivityType = activity.ActivityType?.TypeName ?? "Others";
                 selectedCategory = activity.Category;
             }
         }

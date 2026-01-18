@@ -16,7 +16,6 @@ namespace Minister_Of_Time.Domain
 
         [ForeignKey("ConnectedUserId")]
         public virtual User? ConnectedUser { get; set; }
-
         public string? ConnectionType { get; set; }
         public bool ViewLifeCalendar { get; set; }
         public bool ViewWorkCalendar { get; set; }

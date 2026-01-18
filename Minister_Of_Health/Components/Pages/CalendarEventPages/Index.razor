@@ -136,8 +136,8 @@
                                         </span>
                                     </div>
                                 </div>
-                                <span class="badge rounded-pill @GetActivityTypeBadge(item.Event.UserActivity?.ActivityType)">
-                                    @(item.Event.UserActivity?.ActivityType ?? "Others")
+                                <span class="badge rounded-pill @GetActivityTypeBadge(item.Event.UserActivity?.ActivityType?.TypeName)">
+                                    @(item.Event.UserActivity?.ActivityType?.TypeName ?? "Others")
                                 </span>
                             </div>
 
@@ -321,7 +321,7 @@
             .Where(e =>
             {
                 if (e.Status == "Pending") return ActivityFilters["Invites"];
-                var type = e.Event.UserActivity?.ActivityType ?? "Others";
+                var type = e.Event.UserActivity?.ActivityType?.TypeName ?? "Others";
                 return ActivityFilters.ContainsKey(type) && ActivityFilters[type];
             }).ToList();
     }
@@ -361,7 +361,7 @@
     private string GetCssClass(DisplayItem item)
     {
         if (item.Status == "Pending") return "pending-invite";
-        var typeString = item.Event.UserActivity?.ActivityType ?? "Others";
+        var typeString = item.Event.UserActivity?.ActivityType?.TypeName ?? "Others";
         return Sanitize(typeString);
     }
 
