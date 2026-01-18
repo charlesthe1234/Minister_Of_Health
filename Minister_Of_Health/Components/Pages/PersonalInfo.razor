@@ -1,10 +1,16 @@
 ﻿@page "/account/personalInfo"
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@using Minister_Of_Time.Domain
+@inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
 
 <div class="book">
     <div class="bg-image"></div>
 
     <div class="manage-content">
-        @* Profile Section *@
+        @* Left Page: Profile Section *@
         <div class="profile-card">
             <h1 class="display-name">@DisplayName</h1>
 
@@ -13,24 +19,40 @@
                 <div class="info-list">
                     <p><strong>Phone:</strong> @PhoneNumber</p>
                     <p><strong>Email:</strong> @Email</p>
-                    <p><strong>Birthday:</strong> @Birthday.ToShortDateString()</p>
+                    <p><strong>Gender:</strong> @Gender</p>
+                    <p><strong>Birthday:</strong> @(Birthday?.ToString("MM/dd/yyyy") ?? "Not Set")</p>
                 </div>
                 <button class="btn-edit" @onclick="() => isEditing = true">EDIT</button>
             }
             else
             {
                 <div class="edit-form">
-                    <input class="form-control" @bind="PhoneNumber" placeholder="Phone" />
-                    <input class="form-control" @bind="Email" placeholder="Email" />
-                    <div class="edit-actions">
-                        <button class="btn-save" @onclick="Save">Save</button>
-                        <button class="btn-cancel" @onclick="() => isEditing = false">Cancel</button>
+                    <div class="mb-2">
+                        <label class="small fw-bold">Phone</label>
+                        <input class="form-control form-control-sm" @bind="PhoneNumber" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="small fw-bold">Gender</label>
+                        <select class="form-select form-select-sm" @bind="Gender">
+                            <option value="">Select...</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="small fw-bold">Birthday</label>
+                        <input type="date" class="form-control form-control-sm" @bind="Birthday" />
+                    </div>
+                    <div class="edit-actions mt-3">
+                        <button class="btn btn-sm btn-success me-2" @onclick="Save">Save</button>
+                        <button class="btn btn-sm btn-secondary" @onclick="() => isEditing = false">Cancel</button>
                     </div>
                 </div>
             }
         </div>
 
-        @* Gauges Section *@
+        @* Right Page: Gauges Section *@
         <div class="right-column">
             @foreach (var gauge in new[] { ("STRESS", StressLevel, ""), ("HEALTH", HealthLevel, "health") })
             {
@@ -39,7 +61,12 @@
                     <div class="dial">
                         <div class="needle @gauge.Item3" style="transform: rotate(@(NeedleAngle(gauge.Item2))deg)"></div>
                     </div>
-                    <div class="gauge-label">@gauge.Item2%</div>
+                    <div class="gauge-label">
+                        @gauge.Item2%
+                        (<span style="color: @GetStatusColor(gauge.Item2, gauge.Item1 == "STRESS")">
+                            @(gauge.Item1 == "STRESS" ? GetStressStatus(gauge.Item2) : GetHealthStatus(gauge.Item2))
+                        </span>)
+                    </div>
                 </div>
             }
         </div>
@@ -47,25 +74,125 @@
 </div>
 
 @code {
+    private string DisplayName = "User", PhoneNumber = "", Email = "", Gender = "";
+    private DateTime? Birthday;
+    private int StressLevel = 0;
+    private int HealthLevel = 0;
     private bool isEditing;
-    private string DisplayName = "Unknown", PhoneNumber = "", Email = "user@local.com";
-    private DateTime Birthday = new(1998, 2, 23);
-    private int StressLevel = 65, HealthLevel = 80;
+
+    [Inject] private IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory { get; set; }
+    [Inject] private UserManager<User> UserManager { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = auth.User;
-        if (user.Identity?.IsAuthenticated ?? false)
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userClaims = authState.User;
+
+        if (userClaims.Identity?.IsAuthenticated == true)
         {
-            DisplayName = auth.User.FindFirst("FullName")?.Value;
-            Email = user.FindFirst(c => c.Type.Contains("email"))?.Value ?? Email;
+            // 1. Fetch User Data for the Profile Card
+            var user = await UserManager.GetUserAsync(userClaims);
+            if (user != null)
+            {
+                DisplayName = user.Name ?? "User";
+                Email = user.Email ?? "";
+                PhoneNumber = user.PhoneNumber ?? "";
+                Gender = user.Gender ?? "";
+                Birthday = user.Birthday;
+            }
+
+            // 2. Fetch Event Data for Gauges
+            using var context = DbFactory.CreateDbContext();
+            var userIdString = UserManager.GetUserId(userClaims);
+            var threeDaysAgo = DateTime.Today.AddDays(-2);
+
+            var recentEvents = await context.CalendarEvent
+                .Include(e => e.UserActivity).ThenInclude(ua => ua.ActivityType)
+                .Where(e => e.HostUserId.ToString() == userIdString && e.StartDateTime >= threeDaysAgo)
+                .ToListAsync();
+
+            if (recentEvents.Any())
+            {
+                double totalThreeDayScore = 0;
+                double totalExerciseHours = 0;
+
+                foreach (var ev in recentEvents)
+                {
+                    double hours = (ev.EndDateTime - ev.StartDateTime).TotalHours;
+                    double weight = ev.UserActivity?.ActivityType?.StressLevel ?? 0;
+                    totalThreeDayScore += (hours * weight);
+
+                    if (ev.UserActivity?.ActivityType?.TypeName == "Exercise")
+                    {
+                        totalExerciseHours += hours;
+                    }
+                }
+
+                double maxThreeDayScore = 31.2;
+                StressLevel = (int)Math.Clamp((totalThreeDayScore / maxThreeDayScore) * 100, 0, 100);
+
+                double targetHealthHours = 21;
+                HealthLevel = (int)Math.Clamp((totalExerciseHours / targetHealthHours) * 100, 0, 100);
+            }
         }
     }
 
-    void Save() => isEditing = false;
+    private async Task Save()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = await UserManager.GetUserAsync(authState.User);
+
+        if (user != null)
+        {
+            // Update Identity User properties
+            user.PhoneNumber = PhoneNumber;
+            user.Gender = Gender;
+            user.Birthday = Birthday;
+
+            var result = await UserManager.UpdateAsync(user);
+            if (result.Succeeded)
+            {
+                isEditing = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private string GetStatusColor(int level, bool isStress)
+    {
+        if (isStress)
+        {
+            if (level <= 30) return "#2e8b57";
+            if (level <= 50) return "#daa520";
+            if (level <= 80) return "#ff8c00";
+            return "#b03060";
+        }
+        else
+        {
+            if (level <= 10) return "#FF0000";
+            if (level <= 30) return "#FFA500";
+            if (level <= 50) return "#FFFF00";
+            if (level <= 70) return "#90EE90";
+            return "#006400";
+        }
+    }
+
+    private string GetStressStatus(int level) => level switch
+    {
+        <= 30 => "Comfort",
+        <= 50 => "Stretch",
+        <= 80 => "Overly Stressed",
+        _ => "Burnout"
+    };
+
+    private string GetHealthStatus(int level) => level switch
+    {
+        <= 10 => "Poor",
+        <= 30 => "Try More",
+        <= 50 => "Standard",
+        <= 70 => "Active",
+        _ => "Excellent"
+    };
+
     double NeedleAngle(int val) => (val * 1.8) - 90;
-
 }
-}
-
