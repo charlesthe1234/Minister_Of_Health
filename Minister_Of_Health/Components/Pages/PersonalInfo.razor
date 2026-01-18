@@ -73,12 +73,30 @@
     </div>
 </div>
 
+@if (showStressWarning)
+{
+    <div class="stress-alert-top">
+        <div class="character-container">
+            @* Replace 'figure.png' with your actual file name *@
+            <img src="/images/SmallLogo.png" class="character-img" alt="Warning Character" />
+            <div class="speech-bubble">
+                <div class="bubble-content">
+                    <strong>@DisplayName, your majesty</strong>
+                    <p>Your currrent stress level has reached @StressLevel%. It is not good for your health, how about take some time to enjoy{},you haven't done that for{}'.</p>
+                </div>
+                <button type="button" class="btn-close-custom" @onclick="() => showStressWarning = false">×</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private string DisplayName = "User", PhoneNumber = "", Email = "", Gender = "";
     private DateTime? Birthday;
     private int StressLevel = 0;
     private int HealthLevel = 0;
     private bool isEditing;
+    private bool showStressWarning = false;
 
     [Inject] private IDbContextFactory<Minister_Of_Time.Data.Minister_Of_TimeContext> DbFactory { get; set; }
     [Inject] private UserManager<User> UserManager { get; set; }
@@ -133,6 +151,11 @@
 
                 double targetHealthHours = 21;
                 HealthLevel = (int)Math.Clamp((totalExerciseHours / targetHealthHours) * 100, 0, 100);
+
+                if (StressLevel > 50)
+                {
+                    showStressWarning = true;
+                }
             }
         }
     }
@@ -162,10 +185,10 @@
     {
         if (isStress)
         {
-            if (level <= 30) return "#2e8b57";
-            if (level <= 50) return "#daa520";
-            if (level <= 80) return "#ff8c00";
-            return "#b03060";
+            if (level <= 30) return "#2e8b57"; //Green
+            if (level <= 50) return "#daa520"; //orange
+            if (level <= 80) return "#ff8c00"; //yellow
+            return "#b03060"; //dark red
         }
         else
         {

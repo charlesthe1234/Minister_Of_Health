@@ -95,6 +95,77 @@
     transition: transform 0.6s;
 }
 
-    .needle.health {
-        background: #2e8b57;
+.needle.health {
+    background: #2e8b57;
+}
+
+.toast-container {
+    pointer-events: none; /* Allows clicking things behind the container */
+}
+
+.stress-alert-top {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: 90%;
+    max-width: 600px;
+    pointer-events: none; /* Allow clicking through the background */
+}
+
+.character-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    pointer-events: auto; /* Enable clicking on the toast itself */
+}
+
+.character-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid #b03060;
+    background-color: white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.speech-bubble {
+    background: linear-gradient(135deg, #b03060 0%, #800000 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 15px;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    flex-grow: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+    /* The little triangle for the speech bubble */
+    .speech-bubble::after {
+        content: '';
+        position: absolute;
+        left: -10px;
+        top: 30px;
+        border-top: 10px solid transparent;
+        border-bottom: 10px solid transparent;
+        border-right: 10px solid #b03060;
     }
+
+.bubble-content p {
+    margin: 0;
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.btn-close-custom {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 0 0 10px;
+}
