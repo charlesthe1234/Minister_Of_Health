@@ -194,7 +194,7 @@
             .Include(e => e.UserActivity)
             .FirstOrDefaultAsync(m => m.Id == Id);
 
-        if (CalendarEvent is null)
+        if (ev.HostUserId != userId && !isAdmin)
         {
             NavigationManager.NavigateTo("/calendarevents");
             return;

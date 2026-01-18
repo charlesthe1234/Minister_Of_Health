@@ -45,8 +45,7 @@
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">Event Name</label>
-                    <InputText @bind-Value="Input.EventName" class="form-control" placeholder="What's happening?" />
-                    <ValidationMessage For="() => Input.EventName" class="text-danger" />
+                    <InputText @bind-Value="Input.EventName" class="form-control" />
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">Location</label>
@@ -296,6 +295,7 @@
     </div>
 </div>
 @code {
+    [SupplyParameterFromQuery] public string? Date { get; set; }
     private string? errorMessage;
     private bool isSubmitting = false;
     private List<UserActivity> Suggestions = new();
@@ -329,6 +329,15 @@
             Input.StartDateTime = DateTime.Now;
             Input.EndDateTime = DateTime.Now.AddHours(1);
         }
+    }
+
+    private async Task OnInviteInputChanged(ChangeEventArgs e)
+    {
+        var input = e.Value?.ToString() ?? "";
+        Input.InvitedEmails = input;
+        var parsed = ParseInvites(input);
+        var newList = new List<EmailStatus>();
+        var seenEmails = new HashSet<string>();
 
         Input.BatchStartDate = DateTime.Today;
         Input.BatchEndDate = DateTime.Today.AddMonths(1);
@@ -348,6 +357,10 @@
                 .ThenBy(a => a.Name)
                 .ToListAsync();
         }
+        inviteStatusList = newList;
+
+        if (!inviteStatusList.Any(x => x.IsDuplicate)) errorMessage = null;
+        StateHasChanged();
     }
 
     private void SetEventCreationType(string type)
@@ -465,6 +478,14 @@
     {
         if (Input.StartDateTime >= Input.EndDateTime)
         {
+            var now = DateTime.Now;
+            Input.StartDateTime = new DateTime(passedDate.Year, passedDate.Month, passedDate.Day, now.Hour, 0, 0);
+            Input.EndDateTime = Input.StartDateTime.AddHours(1);
+        }
+        else if (Input.StartDateTime == default)
+        {
+            var now = DateTime.Now;
+            Input.StartDateTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0);
             Input.EndDateTime = Input.StartDateTime.AddHours(1);
         }
 
@@ -696,6 +717,9 @@
                 _ => current.AddDays(1)
             };
         }
+
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/calendarevents?success=true");
     }
 
     private async Task AddParticipants(Minister_Of_Time.Data.Minister_Of_TimeContext context, CalendarEvent calendarEvent)
