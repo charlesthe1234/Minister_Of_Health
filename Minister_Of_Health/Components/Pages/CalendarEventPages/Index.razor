@@ -211,6 +211,7 @@
 
     private Dictionary<string, bool> ActivityFilters = new() {
         { "Working Hours", true },
+        { "Exercise", true },
         { "Meetings", true },
         { "Hobby", true },
         { "Life", true },
@@ -350,6 +351,7 @@
         return (type ?? "Others") switch
         {
             "Working Hours" => "bg-primary text-white",
+            "Work" => "bg-warning text-dark",
             "Meetings" => "bg-info text-dark",
             "Hobby" => "bg-success text-white",
             "Life" => "bg-warning text-dark",

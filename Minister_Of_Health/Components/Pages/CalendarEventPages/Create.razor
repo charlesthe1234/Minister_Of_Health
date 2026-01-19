@@ -95,7 +95,6 @@
                 </div>
             }
 
-            @* BATCH EVENT FIELDS (Working Hours) *@
             @if (eventCreationType == "Batch")
             {
                 <div class="alert alert-info mb-3 shadow-sm border-start border-4 border-info">
@@ -154,7 +153,6 @@
                           <option value="0">-- Select an Activity --</option>
                           @foreach (var activity in Suggestions)
                           {
-                              @* Use the joined TypeName you seeded (Meeting, Hobby, etc) *@
                               <option value="@activity.Id">
                                   @activity.Name (@(activity.ActivityType?.TypeName ?? "Others"))
                               </option>
@@ -454,12 +452,12 @@
     {
         return activityType switch
         {
-            "Work" => "bg-primary text-white",
+            "Working Hours" => "bg-primary text-white",
             "Meetings" => "bg-info text-dark",
             "Hobby" => "bg-success text-white",
-            "Life" => "bg-warning text-dark",
+            "Exercise" => "bg-warning text-dark",
             "Family Time" => "bg-danger text-white",
-            "Others" => "bg-secondary text-white",
+            "General Event" => "bg-secondary text-white",
             _ => "bg-secondary text-white"
         };
     }
