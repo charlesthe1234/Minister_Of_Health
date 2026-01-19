@@ -213,9 +213,10 @@
     {
         using var ctx = DbFactory.CreateDbContext();
 
-        // 1. Get hosted events
+        // 1. Added ThenInclude for ActivityType
         var hosted = await ctx.CalendarEvent
             .Include(e => e.UserActivity)
+                .ThenInclude(ua => ua.ActivityType) // <--- Added this
             .Include(e => e.HostUser)
             .Where(e => e.HostUserId == currentUserId)
             .Select(e => new EventWrapper
@@ -226,21 +227,19 @@
             })
             .ToListAsync();
 
-        // 2. Get participated events
+        // 2. Added ThenInclude for ActivityType here as well
         var participated = await ctx.EventParticipant
-            .Include(c => c.CalendarEvent).ThenInclude(e => e.UserActivity)
+            .Include(c => c.CalendarEvent)
+                .ThenInclude(e => e.UserActivity)
+                    .ThenInclude(ua => ua.ActivityType) // <--- Added this
             .Include(c => c.CalendarEvent).ThenInclude(e => e.HostUser)
             .Where(c => c.UserId == currentUserId)
             .ToListAsync();
 
-        // 3. Project with Null Checks
+        // 3. Project with Null Checks (Kept your existing logic)
         var collaborated = participated.Select(c => new EventWrapper
         {
-            // Ensure the Event itself isn't null
             Event = c.CalendarEvent ?? new CalendarEvent { EventName = "Unknown Event" },
-
-            // Fix: Use ?. to check for null before calling ToString()
-            // Use ?? to provide a default string if the database value was null
             Role = c.EventRole?.ToString() ?? "Viewer",
             Status = c.ParticipationStatus?.ToString() ?? "Pending"
         }).ToList();

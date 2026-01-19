@@ -30,7 +30,7 @@
                 {
                     <div class="list-group-item d-flex justify-content-between align-items-center">
                         <div>
-                            <strong>@req.RequesterUser?.Email</strong> wants to connect.
+                            <strong>@(req.RequesterUser?.Email ?? "A user")</strong> wants to connect.
                         </div>
                         <div class="btn-group">
                             <button class="btn btn-sm btn-success" @onclick="() => Respond(req, true)">Accept</button>
@@ -48,10 +48,13 @@
         {
             @foreach (var conn in activeConnections)
             {
-                // Determine who the "Other" person is
                 var isMeRequester = conn.RequesterUserId == currentUserId;
                 var friendId = isMeRequester ? conn.TargetUserId : conn.RequesterUserId;
-                var friendEmail = isMeRequester ? conn.TargetUserEmail : conn.RequesterUser?.Email;
+
+                // FIX: Ensure we handle null objects by checking both User object and the Email fallback string
+                var friendEmail = isMeRequester
+                ? (conn.TargetUser?.Email ?? conn.TargetUserEmail)
+                : (conn.RequesterUser?.Email ?? "Unknown User");
 
                 <div class="col-md-4">
                     <div class="card h-100 shadow-sm border-0 bg-light">
@@ -116,7 +119,7 @@
 }
 
 @code {
-    private string currentUserId;
+    private string currentUserId = "";
     private List<CloseConnection> activeConnections = new();
     private List<CloseConnection> incomingRequests = new();
 
@@ -127,7 +130,7 @@
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
         await LoadConnections();
     }
 
@@ -135,14 +138,12 @@
     {
         using var context = DbFactory.CreateDbContext();
 
-        // Load Confirmed Connections
         activeConnections = await context.CloseConnection
             .Include(c => c.RequesterUser)
             .Include(c => c.TargetUser)
             .Where(c => (c.RequesterUserId == currentUserId || c.TargetUserId == currentUserId) && c.Status == "Accepted")
             .ToListAsync();
 
-        // Load Pending Requests sent TO me
         incomingRequests = await context.CloseConnection
             .Include(c => c.RequesterUser)
             .Where(c => c.TargetUserId == currentUserId && c.Status == "Pending")
@@ -156,7 +157,6 @@
 
         using var context = DbFactory.CreateDbContext();
 
-        // 1. Find User by Email
         var targetUser = await context.Users.FirstOrDefaultAsync(u => u.Email == newConnectionEmail);
 
         if (targetUser == null)
@@ -171,7 +171,6 @@
             return;
         }
 
-        // 2. Check duplicates
         var exists = await context.CloseConnection.AnyAsync(c =>
             (c.RequesterUserId == currentUserId && c.TargetUserId == targetUser.Id) ||
             (c.TargetUserId == currentUserId && c.RequesterUserId == targetUser.Id));
@@ -182,12 +181,11 @@
             return;
         }
 
-        // 3. Create Connection
         var conn = new CloseConnection
         {
             RequesterUserId = currentUserId,
             TargetUserId = targetUser.Id,
-            TargetUserEmail = newConnectionEmail, // Store for display
+            TargetUserEmail = newConnectionEmail,
             Status = "Pending"
         };
 
@@ -195,12 +193,12 @@
         await context.SaveChangesAsync();
         showAddPopup = false;
         newConnectionEmail = "";
+        await LoadConnections();
     }
 
     private async Task Respond(CloseConnection req, bool accept)
     {
         using var context = DbFactory.CreateDbContext();
-        // Re-fetch to ensure tracking
         var record = await context.CloseConnection.FindAsync(req.Id);
         if (record != null)
         {
