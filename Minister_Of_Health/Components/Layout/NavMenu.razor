@@ -42,8 +42,8 @@
             <Authorized>
                 @* UPDATED: Changed "Change Account" to something more descriptive if needed, but kept original functionality *@
                 <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Activities  
+                    <NavLink class="nav-link" href="Connections">
+                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Connections  
                     </NavLink>
                 </div>
 
@@ -53,7 +53,6 @@
                     </NavLink>
                 </div>
 
-                @* ADDED: Dedicated Calendar Link *@
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="calendarevents">
                         <span class="bi bi-calendar3-nav-menu" aria-hidden="true"></span> Calendar
@@ -76,7 +75,7 @@
                     <div class="account-row d-flex justify-content-between align-items-center w-100">
                         <div class="notification-container me-3">
                             <NavLink class="nav-link position-relative p-0" href="calendarevents/inbox">
-                                <i class="bi bi-bell-fill text-white fs-5"></i>
+                                <i class="bi bi-person-badge-nav-menu text-white fs-5"></i>
                                 @* This dot represents a "New Invite" alert. In the future, we can bind this to a count *@
                                 <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
                                     <span class="visually-hidden">New alerts</span>

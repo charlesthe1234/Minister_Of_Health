@@ -3,41 +3,48 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Minister_Of_Time.Data;
 
-namespace Minister_Of_Time.Configurations.Entities
+public class UserSeed : IEntityTypeConfiguration<User>
 {
-    public class UserSeed : IEntityTypeConfiguration<User>
+    public void Configure(EntityTypeBuilder<User> builder)
     {
-        public void Configure(EntityTypeBuilder<User> builder)
-        {
-            var hasher = new PasswordHasher<User>();
-
-            builder.HasData(
-                new User
-                {
-                    Id = "3781efa7-66dc-47f0-860f-e506d04102e4",
-                    Email = "admin@localhost.com",
-                    NormalizedEmail = "ADMIN@LOCALHOST.COM",
-                    Name = "Admin",
-                    UserName = "admin@localhost.com",
-                    NormalizedUserName = "ADMIN@LOCALHOST.COM",
-                    PasswordHash = hasher.HashPassword(null, "P@ssword1"),
-                    EmailConfirmed = true,
-                    Gender = "Male"
-                },
-
-                new User
-                {
-                    Id = "4781efa7-66dc-47f0-860f-e506d04102e5", // Different GUID
-                    Email = "user@localhost.com",
-                    NormalizedEmail = "USER@LOCALHOST.COM",
-                    Name = "BumXing",
-                    UserName = "user@localhost.com",
-                    NormalizedUserName = "USER@LOCALHOST.COM",
-                    PasswordHash = hasher.HashPassword(null, "P@ssword1"),
-                    EmailConfirmed = true,
-                    Gender = "Male"
-                }
-            );
-        }
+        var hasher = new PasswordHasher<User>();
+        builder.HasData(
+            new User
+            {
+                Id = "3781efa7-66dc-47f0-860f-e506d04102e4",
+                Email = "admin@localhost.com",
+                NormalizedEmail = "ADMIN@LOCALHOST.COM",
+                Name = "Charles Admin",
+                UserName = "admin@localhost.com",
+                NormalizedUserName = "ADMIN@LOCALHOST.COM",
+                PasswordHash = hasher.HashPassword(null, "P@ssword1"),
+                EmailConfirmed = true,
+                Gender = "Male"
+            },
+            new User
+            {
+                Id = "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
+                Email = "user1@chronos.com",
+                NormalizedEmail = "USER1@CHRONOS.COM",
+                Name = "Lady Time",
+                UserName = "user1@chronos.com",
+                NormalizedUserName = "USER1@CHRONOS.COM",
+                PasswordHash = hasher.HashPassword(null, "P@ssword1"),
+                EmailConfirmed = true,
+                Gender = "Female"
+            },
+            new User
+            {
+                Id = "f9e8d7c6-b5a4-4f3e-2d1c-0b9a8f7e6d5c",
+                Email = "user2@aeon.com",
+                NormalizedEmail = "USER2@AEON.COM",
+                Name = "Sir Aeon",
+                UserName = "user2@aeon.com",
+                NormalizedUserName = "USER2@AEON.COM",
+                PasswordHash = hasher.HashPassword(null, "P@ssword1"),
+                EmailConfirmed = true,
+                Gender = "Male"
+            }
+        );
     }
 }

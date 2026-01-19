@@ -36,7 +36,7 @@
         </div>
     </aside>
 
-    @* --- MAIN CALENDAR (Scrollable) --- *@
+    @* --- MAIN CALENDAR --- *@
     <main class="calendar-main">
         <div class="d-flex justify-content-between align-items-center p-3 bg-white border-bottom sticky-top">
             <h4 class="fw-bold mb-0">@currentMonth.ToString("MMMM yyyy")</h4>
@@ -210,7 +210,8 @@
     private string[] DaysOfWeek = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 
     private Dictionary<string, bool> ActivityFilters = new() {
-        { "Work", true },
+        { "Working Hours", true },
+        { "Exercise", true },
         { "Meetings", true },
         { "Hobby", true },
         { "Life", true },
@@ -246,47 +247,23 @@
     {
         using var context = DbFactory.CreateDbContext();
 
-        // 1. Get all participation records for the current user first
-        // Including EventRole is critical here so we can see "Editor"
+        // Get event IDs where user is host or participant
+        var participantEventIds = await context.EventParticipant
+            .Where(p => p.UserId == currentUserId)
+            .Select(p => p.CalendarEventId)
+            .ToListAsync();
+
+        // Load events with UserActivity AND ActivityType navigation properties
+        var events = await context.CalendarEvent
+            .Include(e => e.UserActivity)
+                .ThenInclude(ua => ua.ActivityType)  // FIXED: Include ActivityType navigation
+            .Where(e => e.HostUserId == currentUserId || participantEventIds.Contains(e.Id))
+            .ToListAsync();
+
         var participation = await context.EventParticipant
             .Where(p => p.UserId == currentUserId)
             .Include(p => p.EventRole)
             .ToListAsync();
-
-        var participantEventIds = participation.Select(p => p.CalendarEventId).ToList();
-
-        // 2. Fetch the events
-        var events = await context.CalendarEvent
-            .Include(e => e.UserActivity)
-            .Where(e => e.HostUserId == currentUserId || participantEventIds.Contains(e.Id))
-            .ToListAsync();
-
-        // 3. Map to DisplayItem
-        allEvents = events.Select(e =>
-        {
-            var pRecord = participation.FirstOrDefault(p => p.CalendarEventId == e.Id);
-
-            // Determine Role: Host always wins, otherwise use the database RoleName
-            string assignedRole = "Viewer";
-            if (e.HostUserId == currentUserId)
-            {
-                assignedRole = "Host";
-            }
-            else if (pRecord?.EventRole != null)
-            {
-                assignedRole = pRecord.EventRole.RoleName; // Ensure this matches "Editor" exactly
-            }
-
-            return new DisplayItem
-            {
-                Event = e,
-                Status = pRecord?.ParticipationStatus ?? "Accepted",
-                Role = assignedRole,
-                ParticipantId = pRecord?.Id ?? 0
-            };
-        })
-        .Where(x => x.Status != "Left" && x.Status != "Rejected")
-        .ToList();
 
         allEvents = events.Select(e =>
         {
@@ -321,6 +298,7 @@
             .Where(e =>
             {
                 if (e.Status == "Pending") return ActivityFilters["Invites"];
+                // FIXED: Get TypeName from ActivityType navigation property
                 var type = e.Event.UserActivity?.ActivityType?.TypeName ?? "Others";
                 return ActivityFilters.ContainsKey(type) && ActivityFilters[type];
             }).ToList();
@@ -361,6 +339,7 @@
     private string GetCssClass(DisplayItem item)
     {
         if (item.Status == "Pending") return "pending-invite";
+        // FIXED: Get TypeName from ActivityType navigation property
         var typeString = item.Event.UserActivity?.ActivityType?.TypeName ?? "Others";
         return Sanitize(typeString);
     }
@@ -371,7 +350,8 @@
     {
         return (type ?? "Others") switch
         {
-            "Work" => "bg-primary text-white",
+            "Working Hours" => "bg-primary text-white",
+            "Work" => "bg-warning text-dark",
             "Meetings" => "bg-info text-dark",
             "Hobby" => "bg-success text-white",
             "Life" => "bg-warning text-dark",

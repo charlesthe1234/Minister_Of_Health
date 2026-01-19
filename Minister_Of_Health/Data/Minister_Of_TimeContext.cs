@@ -52,6 +52,10 @@ namespace Minister_Of_Time.Data
             modelBuilder.ApplyConfiguration(new ActivityTypeSeed());
             modelBuilder.ApplyConfiguration(new UserActivitySeed());
             modelBuilder.ApplyConfiguration(new CalendarEventSeed());
+            modelBuilder.ApplyConfiguration(new CloseConnectionSeed());
+            modelBuilder.ApplyConfiguration(new EventParticipantSeed());
+
+
         }
 
         // Optional: Automate DateCreated/DateUpdated timestamps

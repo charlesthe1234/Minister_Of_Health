@@ -1,36 +1,14 @@
-﻿    using Microsoft.EntityFrameworkCore;
-    using Microsoft.EntityFrameworkCore.Metadata.Builders;
-    using Minister_Of_Time.Domain;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Minister_Of_Time.Domain;
 
-    namespace Minister_Of_Time.Configurations.Entities
+public class EventRoleSeed : IEntityTypeConfiguration<EventRole>
+{
+    public void Configure(EntityTypeBuilder<EventRole> builder)
     {
-        public class EventRoleSeed : IEntityTypeConfiguration<EventRole>
-        {
-            public void Configure(EntityTypeBuilder<EventRole> builder)
-            {
-                builder.HasData(
-                    new EventRole
-                    {
-                        Id = 1,
-                        RoleName = "Organizer",
-                        DateCreated = DateTime.Now,
-                        CreatedBy = "System"
-                    },
-                    new EventRole
-                    {
-                        Id = 2,
-                        RoleName = "Viewer",
-                        DateCreated = DateTime.Now,
-                        CreatedBy = "System"
-                    },
-                    new EventRole
-                    {
-                        Id = 3,
-                        RoleName = "Editor",
-                        DateCreated = DateTime.Now,
-                        CreatedBy = "System"
-                    }
-                );
-            }
-        }
+        builder.HasData(
+            new EventRole { Id = 1, RoleName = "Viewer", CanEditCalendarEventDetails = false, CanInviteOthers = false, CanChangeLocation = false, CanChangeDateTime = false },
+            new EventRole { Id = 2, RoleName = "Editor", CanEditCalendarEventDetails = true, CanInviteOthers = true, CanChangeLocation = true, CanChangeDateTime = true }
+        );
     }
+}

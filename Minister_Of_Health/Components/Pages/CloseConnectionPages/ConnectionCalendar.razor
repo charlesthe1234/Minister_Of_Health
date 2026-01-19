@@ -10,7 +10,6 @@
 
 <div class="dashboard-container">
 
-    <!-- SIDEBAR -->
     <aside class="sidebar-dark">
         <div class="sidebar-header mb-4">
             <h2 class="text-white mb-0">@currentMonth.ToString("MMMM")</h2>
@@ -39,7 +38,6 @@
         </div>
     </aside>
 
-    <!-- MAIN CALENDAR -->
     <main class="calendar-main">
         <div class="calendar-header d-flex justify-content-between align-items-center p-3 bg-white border-bottom">
             <h4 class="fw-bold mb-0 text-dark">@targetUserName's Calendar - @currentMonth.ToString("MMMM yyyy")</h4>
@@ -106,9 +104,9 @@
         { "Work", true },
         { "Meetings", true },
         { "Hobby", true },
-        { "Life", true },
+        { "Exercise", true },   // Updated Name
         { "Family Time", true },
-        { "Others", true }
+        { "General Events", true } // Updated Name
     };
 
     private List<CalendarEvent> allEvents = new();
@@ -123,16 +121,16 @@
     {
         using var ctx = DbFactory.CreateDbContext();
 
-        // Get target user's name
         var targetUser = await ctx.Users.FindAsync(TargetUserId);
         if (targetUser != null)
         {
             targetUserName = targetUser.UserName ?? targetUser.Email ?? "User";
         }
 
-        // Load target user's events
+        // FIX: Added ThenInclude(ua => ua.ActivityType)
         allEvents = await ctx.CalendarEvent
             .Include(e => e.UserActivity)
+                .ThenInclude(ua => ua.ActivityType)
             .Where(e => e.HostUserId == TargetUserId)
             .ToListAsync();
     }
@@ -155,7 +153,8 @@
                         e.EndDateTime.Date >= date.Date)
             .Where(e =>
             {
-                var type = e.UserActivity?.ActivityType.TypeName ?? "Others";
+                // FIX: Added null-conditional for ActivityType
+                var type = e.UserActivity?.ActivityType?.TypeName ?? "General Events";
                 return ActivityFilters.ContainsKey(type) && ActivityFilters[type];
             })
             .ToList();
@@ -172,7 +171,7 @@
     private void GoToToday() { currentMonth = DateTime.Today; GenerateCalendar(); }
 
     private string GetCssClass(CalendarEvent e)
-        => Sanitize(e.UserActivity?.ActivityType.TypeName ?? "Others");
+        => Sanitize(e.UserActivity?.ActivityType?.TypeName ?? "General Events");
 
     private static string Sanitize(string s)
         => s.ToLower().Replace(" ", "");

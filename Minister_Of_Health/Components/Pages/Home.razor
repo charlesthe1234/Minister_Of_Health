@@ -103,29 +103,32 @@
             }
         }
     }
-
     private async Task LoadTodaysAgenda(Minister_Of_Time.Data.Minister_Of_TimeContext context)
     {
         var today = DateTime.Today;
         var tomorrow = today.AddDays(1);
 
-        // Get Hosted
+        // 1. Added ThenInclude for ActivityType
         var hosted = await context.CalendarEvent
             .Include(e => e.UserActivity)
+                .ThenInclude(ua => ua.ActivityType) // <--- Added this
             .Where(e => e.HostUserId == currentUserId && e.StartDateTime >= today && e.StartDateTime < tomorrow)
             .Select(e => new EventWrapper { Event = e, Role = "Host" })
             .ToListAsync();
 
-        // Get Participated
+        // 2. Added ThenInclude for ActivityType here as well
         var participated = await context.EventParticipant
-            .Include(p => p.CalendarEvent).ThenInclude(e => e.UserActivity)
+            .Include(p => p.CalendarEvent)
+                .ThenInclude(e => e.UserActivity)
+                    .ThenInclude(ua => ua.ActivityType) // <--- Added this
+            .Include(p => p.EventRole) // Also included this to fix the Role string conversion
             .Where(p => p.UserId == currentUserId && p.CalendarEvent!.StartDateTime >= today && p.CalendarEvent.StartDateTime < tomorrow)
             .ToListAsync();
 
         var collaborated = participated.Select(p => new EventWrapper
         {
             Event = p.CalendarEvent!,
-            Role = p.EventRole?.ToString() ?? "Viewer"
+            Role = p.EventRole?.RoleName ?? "Viewer" // Use RoleName instead of .ToString()
         });
 
         todaysEvents = hosted.Concat(collaborated)
