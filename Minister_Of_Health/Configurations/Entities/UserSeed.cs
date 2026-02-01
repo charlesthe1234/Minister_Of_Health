@@ -11,6 +11,18 @@ public class UserSeed : IEntityTypeConfiguration<User>
         builder.HasData(
             new User
             {
+                Id = "d666a2c8-3d9c-4ca3-9354-e33305c23414", // Matches your screenshot
+                Email = "ma@local.com",
+                NormalizedEmail = "MA@LOCAL.COM",
+                Name = "Charles",
+                UserName = "ma@local.com",
+                NormalizedUserName = "MA@LOCAL.COM",
+                PasswordHash = hasher.HashPassword(null, "Ma1234567!"),
+                EmailConfirmed = true,
+                Gender = "Male"
+            },
+            new User
+            {
                 Id = "3781efa7-66dc-47f0-860f-e506d04102e4",
                 Email = "admin@localhost.com",
                 NormalizedEmail = "ADMIN@LOCALHOST.COM",
