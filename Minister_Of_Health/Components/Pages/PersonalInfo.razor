@@ -130,10 +130,13 @@
             }
 
             // 2. Stress & Health Calculation (Your existing code)
-            var threeDaysAgo = DateTime.Today.AddDays(-2);
+            var threeDaysAgo = DateTime.Today.AddDays(-2);//start from the day before yesterday
+            var endOfToday = DateTime.Today.AddDays(1);// ends at today
             var recentEvents = await context.CalendarEvent
                 .Include(e => e.UserActivity).ThenInclude(ua => ua.ActivityType)
-                .Where(e => e.HostUserId.ToString() == userIdString && e.StartDateTime >= threeDaysAgo)
+                .Where(e => e.HostUserId.ToString() == userIdString 
+                && e.StartDateTime >= threeDaysAgo
+                && e.StartDateTime < endOfToday)
                 .ToListAsync();
 
             if (recentEvents.Any())
