@@ -1,75 +1,96 @@
-﻿.manage-container {
-    max-width: 1200px;
-    margin: 2rem auto;
+﻿/* Container and Layout */
+.manage-container {
+    padding: 1.5rem;
+    background: #f5f6f8;
+    min-height: 100vh;
 }
 
-.blur-content {
-    filter: blur(5px);
-    pointer-events: none;
-    transition: 0.3s;
+    .manage-container.blur-content {
+        filter: blur(8px);
+        pointer-events: none;
+    }
+
+/* Activity Badge Classes (Tonal Style) */
+.badge-workinghours {
+    background: rgba(0, 122, 255, 0.1);
+    color: #007aff;
+    border: 1px solid rgba(0, 122, 255, 0.2);
 }
 
-/* Same colors as Index */
-.workinghours {
-    border-left-color: #007aff !important;
-}
-
-.meetings {
-    border-left-color: #6f42c1 !important;
-}
-
-.hobby {
-    border-left-color: #34c759 !important;
-}
-
-.life {
-    border-left-color: #fd7e14 !important;
-}
-
-.familytime {
-    border-left-color: #d63384 !important;
-}
-
-.others {
-    border-left-color: #6c757d !important;
-}
-
-/* Custom Purple for Meetings if not in Bootstrap */
-.text-purple {
+.badge-meetings {
+    background: rgba(111, 66, 193, 0.1);
     color: #6f42c1;
+    border: 1px solid rgba(111, 66, 193, 0.2);
 }
 
-.bg-purple-subtle {
-    background-color: #f3eaff;
+.badge-hobby {
+    background: rgba(52, 199, 89, 0.1);
+    color: #34c759;
+    border: 1px solid rgba(52, 199, 89, 0.2);
 }
 
-.duration-tag {
-    font-size: 0.75rem;
+.badge-exercise {
+    background: rgba(255, 204, 0, 0.15);
+    color: #997a00;
+    border: 1px solid rgba(255, 204, 0, 0.3);
 }
 
-.description-box {
-    border-left: 3px solid #dee2e6;
+.badge-life {
+    background: rgba(253, 126, 20, 0.1);
+    color: #fd7e14;
+    border: 1px solid rgba(253, 126, 20, 0.2);
 }
 
-/* Modal specific alignment */
+.badge-familytime {
+    background: rgba(214, 51, 132, 0.1);
+    color: #d63384;
+    border: 1px solid rgba(214, 51, 132, 0.2);
+}
+
+.badge-others {
+    background: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+    border: 1px solid rgba(108, 117, 125, 0.2);
+}
+
+/* Modal and Detail Card Logic */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 2000;
 }
 
-.modal-window {
-    background: white;
-    border-radius: 12px;
-    width: 95%;
-    max-width: 500px;
-    padding: 20px;
-    max-height: 90vh;
+.event-detail-card.workinghours {
+    border-left-color: #007aff;
+}
+
+.event-detail-card.meetings {
+    border-left-color: #6f42c1;
+}
+
+.event-detail-card.hobby {
+    border-left-color: #34c759;
+}
+
+.event-detail-card.exercise {
+    border-left-color: #e6b800;
+}
+
+.event-detail-card.life {
+    border-left-color: #fd7e14;
+}
+
+.event-detail-card.familytime {
+    border-left-color: #d63384;
+}
+
+.event-detail-card.others {
+    border-left-color: #6c757d;
 }

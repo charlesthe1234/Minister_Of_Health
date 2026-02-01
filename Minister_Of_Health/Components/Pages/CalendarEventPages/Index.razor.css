@@ -59,7 +59,7 @@
     }
 
     .dot.exercise {
-        background: #34c759;
+        background: #e6b800;
     }
 
     .dot.life {
@@ -68,10 +68,6 @@
 
     .dot.familytime {
         background: #d63384;
-    }
-
-    .dot.others {
-        background: #6c757d;
     }
 
     .dot.invites {
@@ -85,8 +81,8 @@
     display: flex;
     flex-direction: column;
     background: white;
-    overflow-y: auto; /* Enables vertical scrolling for the whole calendar area */
-    overflow-x: auto; /* Also enable horizontal scroll if needed */
+    overflow-y: auto;
+    overflow-x: auto;
     height: 100%;
     position: relative;
 }
@@ -101,9 +97,9 @@
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    grid-auto-rows: minmax(140px, auto); /* FIXED: Allow rows to grow as needed */
+    grid-auto-rows: minmax(140px, auto);
     border-top: 1px solid #dee2e6;
-    min-width: 800px; /* Prevents cells from becoming too narrow */
+    min-width: 800px;
 }
 
 .grid-header-day {
@@ -116,12 +112,12 @@
     border-bottom: 1px solid #dee2e6;
     border-right: 1px solid #dee2e6;
     position: sticky;
-    top: 0; /* FIXED: Stick to top of scrollable container */
+    top: 0;
     z-index: 4;
 }
 
 .calendar-cell {
-    min-height: 140px; /* Minimum height */
+    min-height: 140px;
     padding: 8px;
     border-right: 1px solid #eee;
     border-bottom: 1px solid #eee;
@@ -143,14 +139,14 @@
 .day-num {
     font-weight: 600;
     font-size: 0.9rem;
-    flex-shrink: 0; /* Prevent day number from shrinking */
+    flex-shrink: 0;
 }
 
 /* Event Pills (Color coded) */
 .event-pills-container {
     margin-top: 5px;
-    flex-grow: 1; /* Allow container to grow */
-    overflow: visible; /* Allow content to be visible */
+    flex-grow: 1;
+    overflow: visible;
 }
 
 .event-pill {
@@ -165,37 +161,37 @@
 }
 
     .event-pill.meetings {
-        background: #f3eaff;
+        background: rgba(111, 66, 193, 0.1);
         color: #6f42c1;
     }
 
     .event-pill.hobby {
-        background: #eafaf1;
+        background: rgba(52, 199, 89, 0.1);
         color: #34c759;
     }
 
     .event-pill.exercise {
-        background: #eafaf1;
-        color: #34c759;
+        background: rgba(255, 204, 0, 0.15);
+        color: #997a00;
     }
 
     .event-pill.workinghours {
-        background: #eafaf1;
+        background: rgba(0, 122, 255, 0.1);
         color: #007aff;
     }
 
     .event-pill.life {
-        background: #fff4e5;
+        background: rgba(253, 126, 20, 0.1);
         color: #fd7e14;
     }
 
     .event-pill.familytime {
-        background: #ffebf5;
+        background: rgba(214, 51, 132, 0.1);
         color: #d63384;
     }
 
     .event-pill.others {
-        background: #f8f9fa;
+        background: rgba(108, 117, 125, 0.1);
         color: #6c757d;
     }
 

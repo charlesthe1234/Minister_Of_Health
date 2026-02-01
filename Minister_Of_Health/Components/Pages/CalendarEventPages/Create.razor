@@ -10,23 +10,24 @@
 @rendermode InteractiveServer
 
 <div class="container mt-5">
-    <div class="card shadow-lg p-4">
+    <div class="card shadow-lg p-4 calendar-card">
+        @* Added custom card class *@
         <h2 class="mb-4">Schedule New Event</h2>
 
         @* Event Type Selection *@
         <div class="btn-group w-100 mb-4" role="group">
-            <button type="button" 
-                    class="btn @(eventCreationType == "Single" ? "btn-primary" : "btn-outline-primary")" 
+            <button type="button"
+                    class="btn @(eventCreationType == "Single" ? "btn-primary" : "btn-outline-primary")"
                     @onclick='() => SetEventCreationType("Single")'>
                 <i class="bi bi-calendar-event me-2"></i>Single Event
             </button>
-            <button type="button" 
-                    class="btn @(eventCreationType == "Batch" ? "btn-primary" : "btn-outline-primary")" 
+            <button type="button"
+                    class="btn @(eventCreationType == "Batch" ? "btn-primary" : "btn-outline-primary")"
                     @onclick='() => SetEventCreationType("Batch")'>
                 <i class="bi bi-calendar3-range me-2"></i>Batch Events (Working Hours)
             </button>
-            <button type="button" 
-                    class="btn @(eventCreationType == "Recurring" ? "btn-primary" : "btn-outline-primary")" 
+            <button type="button"
+                    class="btn @(eventCreationType == "Recurring" ? "btn-primary" : "btn-outline-primary")"
                     @onclick='() => SetEventCreationType("Recurring")'>
                 <i class="bi bi-arrow-repeat me-2"></i>Recurring Event
             </button>
@@ -87,7 +88,7 @@
                                 Type: <span class="badge @GetActivityTypeBadge(selectedActivityType)">@selectedActivityType</span>
                                 @if (!string.IsNullOrEmpty(selectedCategory))
                                 {
-                                    <span class="ms-2">Category: <span class="badge bg-secondary">@selectedCategory</span></span>
+                                    <span class="ms-2">Category: <span class="badge badge-category">@selectedCategory</span></span>
                                 }
                             </small>
                         }
@@ -97,7 +98,7 @@
 
             @if (eventCreationType == "Batch")
             {
-                <div class="alert alert-info mb-3 shadow-sm border-start border-4 border-info">
+                <div class="alert alert-info-custom mb-3 shadow-sm border-start border-4">
                     <i class="bi bi-info-circle-fill me-2"></i>
                     <strong>Batch Mode:</strong> Best for repeating work shifts or consistent schedules.
                 </div>
@@ -105,13 +106,11 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold">Start Time (Daily)</label>
-                        @* Added :after to refresh calculation instantly *@
                         <InputDate Type="InputDateType.Time" @bind-Value="Input.BatchStartTime"
                                    @bind-Value:after="GenerateBatchPreview" class="form-control" />
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold">End Time (Daily)</label>
-                        @* Added :after to refresh calculation instantly *@
                         <InputDate Type="InputDateType.Time" @bind-Value="Input.BatchEndTime"
                                    @bind-Value:after="GenerateBatchPreview" class="form-control" />
                     </div>
@@ -147,28 +146,28 @@
                 </div>
 
                 <div class="row">
-                  <div class="col-md-4 mb-3">
-                      <label class="form-label fw-bold">Activity Name</label>
-                      <InputSelect @bind-Value="Input.UserActivityId" class="form-select">
-                          <option value="0">-- Select an Activity --</option>
-                          @foreach (var activity in Suggestions)
-                          {
-                              <option value="@activity.Id">
-                                  @activity.Name (@(activity.ActivityType?.TypeName ?? "Others"))
-                              </option>
-                          }
-                      </InputSelect>
-                      <ValidationMessage For="() => Input.UserActivityId" class="text-danger" />
-                  </div>
-              </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold">Activity Name</label>
+                        <InputSelect @bind-Value="Input.UserActivityId" class="form-select">
+                            <option value="0">-- Select an Activity --</option>
+                            @foreach (var activity in Suggestions)
+                            {
+                                <option value="@activity.Id">
+                                    @activity.Name (@(activity.ActivityType?.TypeName ?? "Others"))
+                                </option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="() => Input.UserActivityId" class="text-danger" />
+                    </div>
+                </div>
             }
 
             @* RECURRING EVENT FIELDS *@
             @if (eventCreationType == "Recurring")
             {
-                <div class="alert alert-info mb-3">
+                <div class="alert alert-info-custom mb-3">
                     <i class="bi bi-info-circle me-2"></i>
-                    <strong>Recurring Events:</strong> Schedule events that repeat (e.g., Weekly team meeting, Annual birthday)
+                    <strong>Recurring Events:</strong> Schedule events that repeat (e.g., Weekly team meeting)
                 </div>
 
                 <div class="row">
@@ -227,19 +226,19 @@
                         {
                             @if (status.IsDuplicate)
                             {
-                                <span class="badge bg-danger me-1" title="Duplicate or Host Email">
+                                <span class="badge badge-error me-1" title="Duplicate or Host Email">
                                     @status.Email <i class="bi bi-exclamation-triangle-fill"></i>
                                 </span>
                             }
                             else if (!status.IsValidRole)
                             {
-                                <span class="badge bg-danger me-1" title="Invalid Role">
+                                <span class="badge badge-error me-1" title="Invalid Role">
                                     @status.Email (@status.RoleName) <i class="bi bi-x-circle-fill"></i>
                                 </span>
                             }
                             else
                             {
-                                <span class="badge @(status.IsRegistered ? "bg-success" : "bg-warning text-dark") me-1">
+                                <span class="badge @(status.IsRegistered ? "badge-success" : "badge-pending") me-1">
                                     @status.Email (@status.RoleName) @(status.IsRegistered ? "✓" : "?")
                                 </span>
                             }
@@ -262,7 +261,7 @@
             @* Preview for batch/recurring events *@
             @if ((eventCreationType == "Batch" || eventCreationType == "Recurring") && eventsPreview.Any())
             {
-                <div class="alert alert-secondary">
+                <div class="alert alert-preview">
                     <strong>Preview:</strong> @eventsPreview.Count event(s) will be created
                     <div class="mt-2 small">
                         @foreach (var preview in eventsPreview.Take(5))
@@ -294,6 +293,7 @@
         </EditForm>
     </div>
 </div>
+
 @code {
     private string? errorMessage;
     private bool isSubmitting = false;
@@ -747,19 +747,3 @@
         public DateTime RecurrenceEndDate { get; set; }
     }
 }
-@* 
-## Key Features Implemented:
-
-### Edit Page:
-1. ✅ **Auto-Status Detection** - Status calculated from changes, not user-selected
-2. ✅ **Change Tracking** - Detects schedule, duration, and location changes
-3. ✅ **Participant Notifications** - Sends detailed change summaries
-4. ✅ **Optional Reason Field** - Users can explain why changes were made
-5. ✅ **Status Types**: Upcoming, Ongoing, Postponed, Brought Forward, On Hold, Cancelled
-
-### Create Page:
-1. ✅ **3 Mutually Exclusive Modes** - Single, Batch, Recurring
-2. ✅ **Batch Events** - Working hours with day selection, 6-month limit
-3. ✅ **Recurring Events** - Daily/Weekly/Monthly/Yearly patterns
-4. ✅ **Event Preview** - Shows what will be created
-5. ✅ **Batch ID Tracking** - Groups related events with GUID *@

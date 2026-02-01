@@ -1,0 +1,53 @@
+﻿/* Custom Activity Type Badges */
+.badge-workinghours {
+    background-color: rgba(0, 122, 255, 0.1);
+    color: #007aff;
+    border: 1px solid rgba(0, 122, 255, 0.2);
+}
+
+.badge-meetings {
+    background-color: rgba(111, 66, 193, 0.1);
+    color: #6f42c1;
+    border: 1px solid rgba(111, 66, 193, 0.2);
+}
+
+.badge-hobby {
+    background-color: rgba(52, 199, 89, 0.1);
+    color: #34c759;
+    border: 1px solid rgba(52, 199, 89, 0.2);
+}
+
+.badge-exercise {
+    background-color: rgba(255, 204, 0, 0.15);
+    color: #997a00;
+    border: 1px solid rgba(255, 204, 0, 0.3);
+}
+
+.badge-life {
+    background-color: rgba(253, 126, 20, 0.1);
+    color: #fd7e14;
+    border: 1px solid rgba(253, 126, 20, 0.2);
+}
+
+.badge-familytime {
+    background-color: rgba(214, 51, 132, 0.1);
+    color: #d63384;
+    border: 1px solid rgba(214, 51, 132, 0.2);
+}
+
+.badge-others {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+    border: 1px solid rgba(108, 117, 125, 0.2);
+}
+
+/* Card Styling */
+.card {
+    border: none;
+    border-radius: 12px;
+}
+
+.btn-group .btn {
+    padding: 0.75rem;
+    font-weight: 500;
+}
