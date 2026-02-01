@@ -137,7 +137,7 @@
                                     </div>
                                 </div>
                                 <span class="badge rounded-pill @GetActivityTypeBadge(item.Event.UserActivity?.ActivityType?.TypeName)">
-                                    @(item.Event.UserActivity?.ActivityType?.TypeName ?? "Others")
+                                    @(item.Event.UserActivity?.ActivityType?.TypeName ?? "General Events")
                                 </span>
                             </div>
 
@@ -216,7 +216,7 @@
         { "Hobby", true },
         { "Life", true },
         { "Family Time", true },
-        { "Others", true },
+        { "General Events", true },
         { "Invites", true }
     };
 
@@ -299,7 +299,7 @@
             {
                 if (e.Status == "Pending") return ActivityFilters["Invites"];
                 // FIXED: Get TypeName from ActivityType navigation property
-                var type = e.Event.UserActivity?.ActivityType?.TypeName ?? "Others";
+                var type = e.Event.UserActivity?.ActivityType?.TypeName ?? "General Events";
                 return ActivityFilters.ContainsKey(type) && ActivityFilters[type];
             }).ToList();
     }
@@ -340,7 +340,7 @@
     {
         if (item.Status == "Pending") return "pending-invite";
         // FIXED: Get TypeName from ActivityType navigation property
-        var typeString = item.Event.UserActivity?.ActivityType?.TypeName ?? "Others";
+        var typeString = item.Event.UserActivity?.ActivityType?.TypeName ?? "General Events";
         return Sanitize(typeString);
     }
 
@@ -348,7 +348,7 @@
 
     private string GetActivityTypeBadge(string? type)
     {
-        return (type ?? "Others") switch
+        return (type ?? "General Events") switch
         {
             "Working Hours" => "bg-primary text-white",
             "Work" => "bg-warning text-dark",

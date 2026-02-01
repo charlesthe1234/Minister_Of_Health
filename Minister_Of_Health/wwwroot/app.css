@@ -72,3 +72,36 @@ article.content {
     position: relative;
     z-index: 5;
 }
+
+/* Ensure the container has a light background so white text is visible if colors fail */
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+
+/* Custom Badge Colors */
+.badge-success {
+    background-color: #198754 !important; /* Green */
+    color: #ffffff !important;
+    padding: 0.5em 0.7em;
+    border-radius: 0.25rem;
+}
+
+.badge-pending {
+    background-color: #ffc107 !important; /* Yellow */
+    color: #000000 !important; /* Black text for readability */
+    padding: 0.5em 0.7em;
+    border-radius: 0.25rem;
+}
+
+.badge-error {
+    background-color: #dc3545 !important; /* Red */
+    color: #ffffff !important;
+    padding: 0.5em 0.7em;
+    border-radius: 0.25rem;
+}
+
+.badge-category {
+    background-color: #6c757d !important; /* Gray */
+    color: #ffffff !important;
+    padding: 0.3em 0.5em;
+}

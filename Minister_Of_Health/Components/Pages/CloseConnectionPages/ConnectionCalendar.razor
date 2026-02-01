@@ -106,7 +106,7 @@
         { "Hobby", true },
         { "Exercise", true },   
         { "Family Time", true },
-        { "Others", true } 
+        { "General Events", true } 
     };
 
     private List<CalendarEvent> allEvents = new();
@@ -127,11 +127,10 @@
             targetUserName = targetUser.UserName ?? targetUser.Email ?? "User";
         }
 
-        // FIX: Added ThenInclude(ua => ua.ActivityType)
         allEvents = await ctx.CalendarEvent
             .Include(e => e.UserActivity)
                 .ThenInclude(ua => ua.ActivityType)
-            .Where(e => e.HostUserId == TargetUserId)
+            .Where(e => e.HostUserId == TargetUserId || e.EventParticipant.Any(p => p.UserId == TargetUserId))
             .ToListAsync();
     }
 

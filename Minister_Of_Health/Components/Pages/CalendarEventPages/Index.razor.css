@@ -34,10 +34,10 @@
 }
 
     .form-check-label:hover {
-        color: #fff !important;
+        color: #fff;
     }
 
-/* Activity Dots (Matching the 7 logic types) */
+/* Activity Dots to show colour legend */
 .dot {
     width: 10px;
     height: 10px;
@@ -45,6 +45,7 @@
     display: inline-block;
     margin-right: 8px;
 }
+
 
     .dot.workinghours {
         background: #007aff;
@@ -72,7 +73,10 @@
 
     .dot.invites {
         background: #ffc107;
-        border: 1px solid #000;
+    }
+
+    .dot.generalevents {
+        background: #6c757d;
     }
 
 /* Calendar Grid & Scrolling Logic */
@@ -190,7 +194,7 @@
         color: #d63384;
     }
 
-    .event-pill.others {
+    .event-pill.generalevents {
         background: rgba(108, 117, 125, 0.1);
         color: #6c757d;
     }
@@ -254,37 +258,40 @@
 
 .event-detail-card {
     transition: transform 0.2s;
-    border-left-width: 5px !important;
+    border-left-width: 5px;
 }
-
     /* Color Synchronization for Modal Cards */
-    .event-detail-card.work {
-        border-left-color: #007aff !important;
+    .event-detail-card.workinghours {
+        border-left-color: #007aff;
     }
 
     .event-detail-card.meetings {
-        border-left-color: #6f42c1 !important;
+        border-left-color: #6f42c1;
     }
 
     .event-detail-card.hobby {
-        border-left-color: #34c759 !important;
+        border-left-color: #34c759;
+    }
+
+    .event-detail-card.exercise {
+        border-left-color: #e6b800;
     }
 
     .event-detail-card.life {
-        border-left-color: #fd7e14 !important;
+        border-left-color: #fd7e14;
     }
 
     .event-detail-card.familytime {
-        border-left-color: #d63384 !important;
+        border-left-color: #d63384;
     }
 
-    .event-detail-card.others {
-        border-left-color: #6c757d !important;
+    .event-detail-card.generalevents {
+        border-left-color: #6c757d;
     }
 
     .event-detail-card.pending-invite {
-        border-left-color: #ffc107 !important;
-        border-style: dashed !important;
+        border-left-color: #ffc107;
+        border-style: dashed;
     }
 
 /* Action Buttons */
