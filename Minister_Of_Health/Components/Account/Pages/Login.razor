@@ -20,12 +20,9 @@
     </video>
 
     <div class="content-overlay">
-        @* --- Branding Section from Home Page --- *@
-        @* currently empty *@
-
         @* --- Login Form Section --- *@
         <div class="login-card">
-            <StatusMessage Message="@errorMessage" />
+            <StatusMessage Message="@errorMessage" />@* output the message if it wrong *@
             <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
                 <div class = "login-form-container">
 

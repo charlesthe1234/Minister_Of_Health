@@ -92,10 +92,10 @@
                 currentUserId = user.FindFirstValue(ClaimTypes.NameIdentifier);
                 using var context = DbFactory.CreateDbContext();
 
-                // Fetch User Name
+                // Fetch User Name using DB, this uses different approach so we can know where goes wrong if any error
                 string loginEmail = user.Identity.Name ?? "";
                 var dbUser = await context.Set<User>()
-                    .FirstOrDefaultAsync(u => u.Email.ToLower() == loginEmail.ToLower());
+                    .FirstOrDefaultAsync(u => u.Email.ToLower() == loginEmail.ToLower());//maching using email
                 displayName = dbUser?.Name ?? loginEmail;
 
                 await LoadTodaysAgenda(context);
@@ -103,6 +103,8 @@
             }
         }
     }
+
+    //By HengJun
     private async Task LoadTodaysAgenda(Minister_Of_Time.Data.Minister_Of_TimeContext context)
     {
         var today = DateTime.Today;
