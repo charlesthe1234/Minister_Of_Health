@@ -1,0 +1,109 @@
+v1.5.4
+Lifepage & Workpage UI improvement
+Stress level needle can change colour now
+
+v1.5.3
+Alignment in the Work Page
+Icon for calendar option in nav bar
+Position of the calendar option
+API checking
+
+v1.5.2
+Fixed the css issue where the blue coloured pills v... (cut off)
+
+v1.5.0
+All known bugs because of merge are fixed
+Notification icon
+Calendar pill colour
+Exercise not showing
+
+v1.3.0
+API
+
+v1.0.0 (Full Release)
+Stress level showing with remarks
+Health level showing with remarks
+Edit personal info
+Workpage fixed
+Properly Aligned
+
+
+
+v0.7.1.1
+(0.7.1 has a significant bug that makes me redo)
+
+v0.7.0
+A working Linechart which can show the events tim... (cut off)
+
+v0.6.1
+Add Category Life/Work to distinguish activities
+User can set the category when creating the new
+Category will be displayed behind the activity w... (cut off)
+
+v0.6.0
+A working piechart based on database
+User can create new Activity (Every event suppo... (cut off)
+Activity can be chosen inside calendar pageV0... (cut off)
+
+v0.5.2
+[Working] UX: authorize identity
+Page [Edit]: CalendarEventPages/Create.razor
+Logic edit: Structural Logic issue
+Page edit: CalendarEventPages/Edit.razor
+Page edit: CalendarEventPages/Index.razor
+Logic edit: Structure of roles hierarchy
+
+v0.5.1
+NOTE!
+Bug Fixed
+New Feature
+
+v0.5.0
+[WIP] New Feature
+Note
+New Page
+Ideas
+[WIP] Bug Fixed
+
+v0.4.5
+Bug fixed
+[WIP]
+Ideas to implement
+
+v0.4.4 
+UX Improvement
+Bug Fixed
+Ideas to implement / Next thing to work on
+
+v0.4.3 HJ
+Bug Fixed
+[WIP] Visual
+Note
+UX Improvement / [WIP] UX Improvement
+
+v0.4.2
+Bug Fixed
+
+v0.4.1 (A follow up update)
+Visual Updates (x3)
+
+v0.4.0
+New Feature
+Visual Updates (x3)
+UX Improvement
+New Page
+Bug Fixed
+
+v0.3.2
+Fixed the overlapping Logo and brand problem on... (cut off)
+Fixed the logout button position problem
+Changed few texts
+
+v0.3.1 (Small version updates as it fixes basic feature...)
+Making the logout function work
+Hide UnAuthorized pages from guests
+Name of "Login" page changes to "Switch account"
+
+v0.3.0 (Big Version Updates as the New Working Webpage Completed)
+Completed Login Function (From Hengjun)
+Completed home page
