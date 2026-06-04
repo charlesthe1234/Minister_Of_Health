@@ -22,5 +22,5 @@ Minister of Time is a web application assistant developed by Sing Time Health Te
 This project was developed as part of the Full Stack Development (ESE3014) module at Temasek Polytechnic.
 
 **Development Team (PE02 Group 1):**
-* **Ma Haoran:** Group Leader (Home Page, Login/Register Pages, Life/Work Dashboards, Personal Info Page, Activity Creation).
-* **Tan Heng Jun:** Member (Calendar Views, Event Creation Logic, Invite Management, Close Connections).
+* **Ma Haoran:** (Home Page, Login/Register Pages, Life/Work Dashboards, Personal Info Page, Activity Creation).
+* **Tan Heng Jun:** (Calendar Views, Event Creation Logic, Invite Management, Close Connections).
